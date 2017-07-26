@@ -29,6 +29,7 @@ public class CharacterScript : MonoBehaviour {
         accessories[0] = "Ring of DEATH";
         stats = new int[(int)sts.TOT];
         stats[(int)sts.HP] = 12;
+        stats[(int)sts.SPD] = 10;
         stats[(int)sts.MOV] = 5;
         tempStats = new int[(int)sts.TOT];
 
@@ -222,7 +223,19 @@ public class CharacterScript : MonoBehaviour {
     {
         PanelScript sPScript = boardScript.panels[(int)BoardScript.pnls.STATUS_PANEL].GetComponent<PanelScript>();
         PanelScript mainPanScript = boardScript.panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
-        mainPanScript.inView = false;
+        PanelScript auxPanScript = boardScript.panels[(int)BoardScript.pnls.AUXILIARY_PANEL].GetComponent<PanelScript>();
+
+        if (mainPanScript.inView)
+        {
+            mainPanScript.inView = false;
+            sPScript.parent = boardScript.panels[(int)BoardScript.pnls.MAIN_PANEL];
+        }
+        else if (auxPanScript.inView)
+        {
+            auxPanScript.inView = false;
+            sPScript.parent = boardScript.panels[(int)BoardScript.pnls.AUXILIARY_PANEL];
+        }
+
         sPScript.inView = true;
         sPScript.character = gameObject;
         sPScript.cScript = this;

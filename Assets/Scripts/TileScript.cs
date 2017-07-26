@@ -31,7 +31,8 @@ public class TileScript : MonoBehaviour {
         PanelScript mainPanScript = boardScript.panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
         PanelScript ActionPanScript = boardScript.panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
         PanelScript StsPanScript = boardScript.panels[(int)BoardScript.pnls.STATUS_PANEL].GetComponent<PanelScript>();
-        if (mainPanScript.inView == true || ActionPanScript.inView == true || StsPanScript.inView == true)
+        PanelScript AuxPanScript = boardScript.panels[(int)BoardScript.pnls.AUXILIARY_PANEL].GetComponent<PanelScript>();
+        if (mainPanScript.inView == true || ActionPanScript.inView == true || StsPanScript.inView == true || AuxPanScript.inView == true)
             return;
 
         boardScript.selected = gameObject;
@@ -69,7 +70,16 @@ public class TileScript : MonoBehaviour {
                 mainPanScript.cScript = cScript;
                 mainPanScript.SetButtons();
             }
-            // TODO: else if not selected, show char stats only
+            else
+            {
+                AuxPanScript.inView = true;
+
+                // Assign character to panels
+                AuxPanScript.character = holding;
+                CharacterScript cScript = holding.GetComponent<CharacterScript>();
+                AuxPanScript.cScript = cScript;
+                AuxPanScript.SetButtons();
+            }
         }
     }
 

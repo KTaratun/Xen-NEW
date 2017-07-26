@@ -96,6 +96,8 @@ public class PanelScript : MonoBehaviour {
             buttons[2].onClick.AddListener(() => menuScript.PresetCharacter());
             buttons[2].onClick.AddListener(() => menuScript.RandomCharacter());
         }
+        else if (name == "Auxiliary Panel")
+            buttons[0].onClick.AddListener(() => cScript.Status());
     }
 
     // Action Panel
@@ -360,7 +362,7 @@ public class PanelScript : MonoBehaviour {
                 panRect = pan.GetComponent<RectTransform>();
                 float height = 61.2f; // The differnce in y each panel is
 
-                if (pan.activeSelf && panRect.offsetMax.y > 180 + height * i - height * (bScript.players.Count - bScript.currRound.Count))
+                if (pan.activeSelf && panRect.offsetMax.y > 180 + height * i - height * (bScript.characters.Count - bScript.currRound.Count))
                     pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x, pan.transform.position.y - 10.0f, pan.transform.position.z), pan.transform.rotation);
 
                 if (pan.activeSelf && panRect.offsetMax.x < 45)

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class BoardScript : MonoBehaviour {
 
-    public enum pnls { MAIN_PANEL, ACTION_PANEL, STATUS_PANEL, HUD_LEFT_PANEL, HUD_RIGHT_PANEL, ROUND_PANEL, TOTAL_PANEL }
+    public enum pnls { MAIN_PANEL, ACTION_PANEL, STATUS_PANEL, HUD_LEFT_PANEL, HUD_RIGHT_PANEL, ROUND_PANEL, AUXILIARY_PANEL, TOTAL_PANEL }
 
     public Camera camera; // Why it do that squiggle?
     public int roundCount;
@@ -16,11 +16,11 @@ public class BoardScript : MonoBehaviour {
     public int width; // Width of the board
     public int height; // Height of the board
     public GameObject selected; // Currently selected tile/character
-    private GameObject highlightedPlayer;
+    private GameObject highlightedCharacter;
     private GameObject oldTile; // A pointer to the previously hovered over tile
     public GameObject currTile; // The tile of the player who's turn is currently up
     public GameObject currPlayer; // A pointer to the player that's turn is currently up
-    public List<GameObject> players; // A list of all players within the game
+    public List<GameObject> characters; // A list of all players within the game
     public List<GameObject> currRound; // A list of the players who have taken a turn in the current round
 
 	// Use this for initialization
@@ -172,7 +172,7 @@ public class BoardScript : MonoBehaviour {
                     cScript.tile = tiles[randX + randZ * width];
                     cScript.boardScript = GetComponent<BoardScript>();
 
-                    players.Add(newChar);
+                    characters.Add(newChar);
                 }
             }
     }
@@ -221,7 +221,7 @@ public class BoardScript : MonoBehaviour {
                     turnPanImage.color = Color.cyan;
                 }
                 // Reveal right HUD with highlighted character's data
-                highlightedPlayer = hit.collider.gameObject;
+                highlightedCharacter = hit.collider.gameObject;
                 hudPanScript.text[0].text = colScript.name;
                 hudPanScript.text[1].text = "HP: " + colScript.tempStats[(int)CharacterScript.sts.HP] + "/" + colScript.stats[(int)CharacterScript.sts.HP];
                 hudPanScript.inView = true;
@@ -243,9 +243,9 @@ public class BoardScript : MonoBehaviour {
 
             oldTile = colScript.tile;
         }
-        else if (highlightedPlayer)
+        else if (highlightedCharacter)
         {
-            CharacterScript colScript = highlightedPlayer.GetComponent<CharacterScript>();
+            CharacterScript colScript = highlightedCharacter.GetComponent<CharacterScript>();
             if (colScript.turnPanel)
             {
                 Image turnPanImage = colScript.turnPanel.GetComponent<Image>();
@@ -287,8 +287,46 @@ public class BoardScript : MonoBehaviour {
 
     public void NewRound()
     {
-        for (int i = 0; i < players.Count; i++)
-            currRound.Add(players[i]);
+        int numPool;
+        do
+        {
+            numPool = 0;
+            // Gather all characters speed to pull from
+            for (int i = 0; i < characters.Count; i++)
+            {
+                CharacterScript charScript = characters[i].GetComponent<CharacterScript>();
+                numPool += charScript.tempStats[(int)CharacterScript.sts.SPD];
+            }
+
+            int randNum = Random.Range(0, numPool);
+            int currNum = 0;
+
+            for (int i = 0; i < characters.Count; i++)
+            {
+                CharacterScript charScript = characters[i].GetComponent<CharacterScript>();
+                if (charScript.tempStats[(int)CharacterScript.sts.SPD] <= 0 || charScript.stats[(int)CharacterScript.sts.HP] <= 0)
+                    continue;
+
+                currNum += charScript.tempStats[(int)CharacterScript.sts.SPD];
+
+                if (randNum < currNum)
+                {
+                    if (charScript.tempStats[(int)CharacterScript.sts.SPD] >= 10)
+                        numPool -= 10;
+                    else
+                        numPool -= charScript.tempStats[(int)CharacterScript.sts.SPD];
+
+                    charScript.tempStats[(int)CharacterScript.sts.SPD] -= 10;
+                    currRound.Add(characters[i]);
+                }
+            }
+        } while (currRound.Count < characters.Count && numPool > 0);
+
+        for (int i = 0; i < characters.Count; i++)
+        {
+            CharacterScript charScript = characters[i].GetComponent<CharacterScript>();
+            charScript.tempStats[(int)CharacterScript.sts.SPD] += 10;
+        }
 
         roundCount++;
         PanelScript roundPanScript = panels[(int)pnls.ROUND_PANEL].GetComponent<PanelScript>();
