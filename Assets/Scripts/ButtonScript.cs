@@ -9,6 +9,7 @@ public class ButtonScript : MonoBehaviour {
     public GameObject actionViewer;
     public GameObject actionPanel;
     public GameObject character;
+    public GameObject camera;
     public GameObject[] energyPanel;
     public string action;
 
@@ -184,4 +185,10 @@ public class ButtonScript : MonoBehaviour {
     //            orbs[i + 1].color = new Color(.1f, .1f, .9f, 1);
     //    }
     //}
+
+    public void SetCameraTarget()
+    {
+        CameraScript camScript = camera.GetComponent<CameraScript>();
+        camScript.target = character;
+    }
 }
