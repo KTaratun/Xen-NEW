@@ -135,25 +135,37 @@ public class CharacterScript : MonoBehaviour {
         mainPanelScript.buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
 
         string[] actsSeparated = currAction.Split('|');
+        string[] hit = actsSeparated[3].Split(':');
         string[] dmg = actsSeparated[4].Split(':');
+        string[] crt = actsSeparated[6].Split(':');
 
         for (int i = 0; i < targets.Length; i++)
         {
             CharacterScript targetScript = targets[i].GetComponent<CharacterScript>();
-            targetScript.tempStats[(int)sts.HP] -= int.Parse(dmg[1]);
             targetScript.popupText.SetActive(true);
             TextMesh textMesh = targetScript.popupText.GetComponent<TextMesh>();
-            textMesh.text = dmg[1];
-        }
 
-        //if (enemyTile.holding)
-        //{
-        //    Renderer eR = enemyTile.holding.GetComponent<Renderer>();
-        //    eR.material.color = new Color(1, 1, 0, 0.5f);
-        //
-        //    //Text t = new Text();
-        //    //Text.
-        //}
+            int roll = Random.Range(0, 20);
+
+            if (roll >= int.Parse(crt[1]))
+            {
+                targetScript.tempStats[(int)sts.HP] -= int.Parse(dmg[1]) * 2;
+                textMesh.text = (int.Parse(dmg[1]) * 2).ToString();
+                textMesh.color = Color.red;
+
+                return;
+            }
+
+            textMesh.color = Color.white;
+
+            if (roll < int.Parse(hit[1]))
+                textMesh.text = "MISS";
+            else
+            {
+                targetScript.tempStats[(int)sts.HP] -= int.Parse(dmg[1]);
+                textMesh.text = dmg[1];
+            }
+        }
     }
 
     private void FetchTilesWithinRange(int range, Color color, bool isMove)
