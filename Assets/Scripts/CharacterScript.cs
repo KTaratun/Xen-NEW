@@ -12,6 +12,7 @@ public class CharacterScript : MonoBehaviour {
     public GameObject tile;
     public BoardScript boardScript;
     public GameObject turnPanel;
+    public GameObject healthBar;
     public GameObject popupText;
     public GameObject player;
     public string[] actions;
@@ -68,8 +69,19 @@ public class CharacterScript : MonoBehaviour {
             }
         }
 
+        if (healthBar.activeSelf)
+        {
+            healthBar.transform.LookAt(2 * healthBar.transform.position - boardScript.camera.transform.position);
+            float ratio = ((float)stats[(int)sts.HP] - (float)tempStats[(int)sts.HP]) / (float)stats[(int)sts.HP];
+
+            Renderer hpRend = healthBar.GetComponent<Renderer>();
+            hpRend.material.color = new Color(ratio + 0.2f, 1 - ratio + 0.2f, 0, 1);
+            healthBar.transform.localScale = new Vector3(1 - ratio, 0.2f, 1);
+        }
+
         if (popupText.activeSelf)
         {
+
             float fadeSpeed = .01f;
             popupText.transform.LookAt(2 * popupText.transform.position - boardScript.camera.transform.position);
             TextMesh textMesh = popupText.GetComponent<TextMesh>();
