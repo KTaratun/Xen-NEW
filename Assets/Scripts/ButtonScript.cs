@@ -6,16 +6,16 @@ using UnityEngine.EventSystems;
 
 public class ButtonScript : MonoBehaviour {
 
-    public GameObject actionViewer;
-    public GameObject actionPanel;
-    public GameObject character;
-    public GameObject camera;
-    public GameObject[] energyPanel;
-    public string action;
+    public GameObject m_actionViewer;
+    public GameObject m_actionPanel;
+    public GameObject m_character;
+    public GameObject m_camera;
+    public GameObject[] m_energyPanel;
+    public string m_action;
 
 	// Use this for initialization
-	void Start () {
-		
+	void Start ()
+    {
 	}
 	
 	// Update is called once per frame
@@ -27,33 +27,33 @@ public class ButtonScript : MonoBehaviour {
     {
         if (GetComponent<Button>().name == "Turn Panel Energy Button")
         {
-            CharacterScript charScript = character.GetComponent<CharacterScript>();
+            CharacterScript charScript = m_character.GetComponent<CharacterScript>();
 
             //Image turnPanImage = charScript.turnPanel.GetComponent<Image>();
             //turnPanImage.color = Color.cyan;
-            Renderer charRenderer = character.GetComponent<Renderer>();
+            Renderer charRenderer = m_character.GetComponent<Renderer>();
             charRenderer.material.color = Color.cyan;
-            PanelScript hudPanScript = charScript.boardScript.panels[(int)BoardScript.pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
-            hudPanScript.text[0].text = charScript.name;
-            hudPanScript.text[1].text = "HP: " + charScript.tempStats[(int)CharacterScript.sts.HP] + "/" + charScript.stats[(int)CharacterScript.sts.HP];
-            hudPanScript.inView = true;
+            PanelScript hudPanScript = charScript.m_boardScript.m_panels[(int)BoardScript.pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
+            hudPanScript.m_text[0].text = charScript.name;
+            hudPanScript.m_text[1].text = "HP: " + charScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + charScript.m_stats[(int)CharacterScript.sts.HP];
+            hudPanScript.m_inView = true;
 
             return;
         }
 
         Text text = GetComponent<Button>().GetComponentInChildren<Text>();
 
-        if (text.text == "EMPTY" || !actionViewer)
+        if (text.text == "EMPTY" || !m_actionViewer)
             return;
 
-        PanelScript actViewScript = actionViewer.GetComponent<PanelScript>();
-        actViewScript.inView = true;
+        PanelScript actViewScript = m_actionViewer.GetComponent<PanelScript>();
+        actViewScript.m_inView = true;
 
-        PanelScript actPanScript = actionPanel.GetComponent<PanelScript>();
-        actViewScript.character = actPanScript.character;
-        actViewScript.cScript = actPanScript.cScript;
-        if (actPanScript.inView)
-            actViewScript.cScript.currAction = name;
+        PanelScript actPanScript = m_actionPanel.GetComponent<PanelScript>();
+        actViewScript.m_character = actPanScript.m_character;
+        actViewScript.m_cScript = actPanScript.m_cScript;
+        if (actPanScript.m_inView)
+            actViewScript.m_cScript.m_currAction = name;
         actViewScript.PopulateText();
     }
 
@@ -61,51 +61,51 @@ public class ButtonScript : MonoBehaviour {
     {
         if (GetComponent<Button>().name == "Turn Panel Energy Button")
         {
-            CharacterScript charScript = character.GetComponent<CharacterScript>();
+            CharacterScript charScript = m_character.GetComponent<CharacterScript>();
 
             //Image turnPanImage = charScript.turnPanel.GetComponent<Image>();
             //turnPanImage.color = Color.cyan;
-            Renderer charRenderer = character.GetComponent<Renderer>();
+            Renderer charRenderer = m_character.GetComponent<Renderer>();
             charRenderer.material.color = Color.white;
-            PanelScript hudPanScript = charScript.boardScript.panels[(int)BoardScript.pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
-            hudPanScript.inView = false;
+            PanelScript hudPanScript = charScript.m_boardScript.m_panels[(int)BoardScript.pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
+            hudPanScript.m_inView = false;
             
             return;
         }
 
-        if (!actionViewer)
+        if (!m_actionViewer)
             return;
 
-        PanelScript actPanel = actionViewer.GetComponent<PanelScript>();
-        actPanel.inView = false;
+        PanelScript actPanel = m_actionViewer.GetComponent<PanelScript>();
+        actPanel.m_inView = false;
     }
 
     public void SetTotalEnergy(string energy)
     {
         // Initialize panel with anything
-        GameObject panel = energyPanel[0];
+        GameObject panel = m_energyPanel[0];
 
         // Check to see how many energy symbols we are going to need
         if (energy.Length == 1)
         {
-            energyPanel[0].SetActive(true);
-            energyPanel[1].SetActive(false);
-            energyPanel[2].SetActive(false);
-            panel = energyPanel[0];
+            m_energyPanel[0].SetActive(true);
+            m_energyPanel[1].SetActive(false);
+            m_energyPanel[2].SetActive(false);
+            panel = m_energyPanel[0];
         }
         else if (energy.Length == 2)
         {
-            energyPanel[1].SetActive(true);
-            energyPanel[0].SetActive(false);
-            energyPanel[2].SetActive(false);
-            panel = energyPanel[1];
+            m_energyPanel[1].SetActive(true);
+            m_energyPanel[0].SetActive(false);
+            m_energyPanel[2].SetActive(false);
+            panel = m_energyPanel[1];
         }
         else if (energy.Length == 3)
         {
-            energyPanel[2].SetActive(true);
-            energyPanel[0].SetActive(false);
-            energyPanel[1].SetActive(false);
-            panel = energyPanel[2];
+            m_energyPanel[2].SetActive(true);
+            m_energyPanel[0].SetActive(false);
+            m_energyPanel[1].SetActive(false);
+            panel = m_energyPanel[2];
         }
 
         // Gather engergy symbols into an array
@@ -190,7 +190,7 @@ public class ButtonScript : MonoBehaviour {
 
     public void SetCameraTarget()
     {
-        CameraScript camScript = camera.GetComponent<CameraScript>();
-        camScript.target = character;
+        CameraScript camScript = m_camera.GetComponent<CameraScript>();
+        camScript.m_target = m_character;
     }
 }

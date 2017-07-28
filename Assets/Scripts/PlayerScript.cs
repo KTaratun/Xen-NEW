@@ -7,15 +7,15 @@ public class PlayerScript : MonoBehaviour {
 
     public enum eng { GRN, RED, WHT, BLU }
 
-    public List<GameObject> characters;
-    public GameObject energyPanel;
-    public int num;
-    public int[] energy;
+    public List<GameObject> m_characters;
+    public GameObject m_energyPanel;
+    public int m_num;
+    public int[] m_energy;
 
 	// Use this for initialization
 	void Start ()
     {
-        energy = new int[4];
+        m_energy = new int[4];
 	}
 	
 	// Update is called once per frame
@@ -25,10 +25,10 @@ public class PlayerScript : MonoBehaviour {
 
     public void SetEnergyPanel()
     {
-        Text[] text = energyPanel.GetComponentsInChildren<Text>();
+        Text[] text = m_energyPanel.GetComponentsInChildren<Text>();
 
         for (int i = 0; i < text.Length; i++)
-            text[i].text = energy[i].ToString();
+            text[i].text = m_energy[i].ToString();
     }
 
     public bool CheckEnergy(string eng)
@@ -50,8 +50,8 @@ public class PlayerScript : MonoBehaviour {
                 engCheck[3]++;
         }
 
-        for (int i = 0; i < energy.Length; i++)
-            if (engCheck[i] > energy[i])
+        for (int i = 0; i < m_energy.Length; i++)
+            if (engCheck[i] > m_energy[i])
                 return false;
 
         return true;

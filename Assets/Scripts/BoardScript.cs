@@ -7,33 +7,33 @@ public class BoardScript : MonoBehaviour {
 
     public enum pnls { MAIN_PANEL, ACTION_PANEL, STATUS_PANEL, HUD_LEFT_PANEL, HUD_RIGHT_PANEL, ROUND_PANEL, AUXILIARY_PANEL, TOTAL_PANEL }
 
-    public Camera camera; // Why it do that squiggle?
-    public int roundCount;
-    public GameObject[] panels; // All movable GUI on screen
-    private GameObject[] tiles; // All tiles on the board
-    public GameObject tile; // A reference to the tile prefab
-    public GameObject character; // A reference to the character prefab
-    public int width; // Width of the board
-    public int height; // Height of the board
-    public GameObject selected; // Currently selected tile/character
-    private GameObject highlightedCharacter;
-    private GameObject oldTile; // A pointer to the previously hovered over tile
-    public GameObject currTile; // The tile of the player who's turn is currently up
-    public GameObject currPlayer; // A pointer to the player that's turn is currently up
-    public List<GameObject> characters; // A list of all players within the game
-    public GameObject[] players;
-    public List<GameObject> currRound; // A list of the players who have taken a turn in the current round
+    public Camera m_camera; // Why it do that squiggle?
+    public int m_roundCount;
+    public GameObject[] m_panels; // All movable GUI on screen
+    private GameObject[] m_tiles; // All m_tiles on the board
+    public GameObject m_tile; // A reference to the m_tile prefab
+    public GameObject m_character; // A reference to the character prefab
+    public int m_width; // Width of the board
+    public int m_height; // Height of the board
+    public GameObject m_selected; // Currently selected m_tile/character
+    private GameObject m_highlightedCharacter;
+    private GameObject m_oldTile; // A pointer to the previously hovered over m_tile
+    public GameObject m_currTile; // The m_tile of the player who's turn is currently up
+    public GameObject m_currPlayer; // A pointer to the player that's turn is currently up
+    public List<GameObject> m_characters; // A list of all players within the game
+    public GameObject[] m_players;
+    public List<GameObject> m_currRound; // A list of the players who have taken a turn in the current round
 
 	// Use this for initialization
 	void Start ()
     {
-        roundCount = 0;
+        m_roundCount = 0;
         Renderer r = GetComponent<Renderer>();
-        // If the user didn't assign a tile size in the editor, auto adjust the tiles to fit the board
-        if (height == 0 && width == 0)
+        // If the user didn't assign a m_tile size in the editor, auto adjust the m_tiles to fit the board
+        if (m_height == 0 && m_width == 0)
         {
-            width = (int) (r.bounds.size.x / tile.GetComponent<Renderer>().bounds.size.x);
-            height = (int)(r.bounds.size.z / tile.GetComponent<Renderer>().bounds.size.z);
+            m_width = (int) (r.bounds.size.x / m_tile.GetComponent<Renderer>().bounds.size.x);
+            m_height = (int)(r.bounds.size.z / m_tile.GetComponent<Renderer>().bounds.size.z);
         }
 
         InitBoardTiles();
@@ -49,7 +49,7 @@ public class BoardScript : MonoBehaviour {
 
         Hover();
 
-        if (currPlayer == null)
+        if (m_currPlayer == null)
         {
             NewRound();
             NewTurn();
@@ -58,77 +58,77 @@ public class BoardScript : MonoBehaviour {
 
     public void OnRightClick()
     {
-        CharacterScript charScript = currPlayer.GetComponent<CharacterScript>();
-        TileScript currPScript = charScript.tile.GetComponent<TileScript>();
+        CharacterScript charScript = m_currPlayer.GetComponent<CharacterScript>();
+        TileScript currPScript = charScript.m_tile.GetComponent<TileScript>();
 
-        if (currPScript.radius.Count == 0)
+        if (currPScript.m_radius.Count == 0)
             return;
 
-        Renderer sRend = currPScript.radius[0].GetComponent<Renderer>();
+        Renderer sRend = currPScript.m_radius[0].GetComponent<Renderer>();
         if (sRend.material.color == new Color(1, 0, 0, 0.5f))
         {
-            PanelScript actPan = panels[(int)pnls.ACTION_PANEL].GetComponent<PanelScript>();
-            actPan.inView = true;
+            PanelScript actPan = m_panels[(int)pnls.ACTION_PANEL].GetComponent<PanelScript>();
+            actPan.m_inView = true;
         }
         else if (sRend.material.color == new Color(0, 0, 1, 0.5f))
         {
-            PanelScript panScript = panels[(int)pnls.MAIN_PANEL].GetComponent<PanelScript>();
-            panScript.inView = true;
+            PanelScript panScript = m_panels[(int)pnls.MAIN_PANEL].GetComponent<PanelScript>();
+            panScript.m_inView = true;
         }
 
-        for (int i = 0; i < currPScript.radius.Count; i++)
+        for (int i = 0; i < currPScript.m_radius.Count; i++)
         {
-            sRend = currPScript.radius[i].GetComponent<Renderer>();
+            sRend = currPScript.m_radius[i].GetComponent<Renderer>();
             sRend.material.color = new Color(1, 1, 1, 0f);
         }
-        currPScript.radius.Clear();
+        currPScript.m_radius.Clear();
     }
 
     public void InitBoardTiles()
     {
         Renderer r = GetComponent<Renderer>();
-        tiles = new GameObject[width * height];
+        m_tiles = new GameObject[m_width * m_height];
 
-        for (int z = 0; z < height; z++)
+        for (int z = 0; z < m_height; z++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < m_width; x++)
             {
-                GameObject newTile = Instantiate(tile);
+                GameObject newm_tile = Instantiate(m_tile);
 
-                Renderer ntR = newTile.GetComponent<Renderer>();
+                Renderer ntR = newm_tile.GetComponent<Renderer>();
                 ntR.material.color = new Color(1, 1, 1, 0f);
 
-                newTile.transform.SetPositionAndRotation(new Vector3(x * ntR.bounds.size.x + (r.bounds.min.x + ntR.bounds.size.x / 2), transform.position.y + 0.1f, z * ntR.bounds.size.z + (r.bounds.min.z + ntR.bounds.size.z / 2)), new Quaternion());
+                newm_tile.transform.SetPositionAndRotation(new Vector3(x * ntR.bounds.size.x + (r.bounds.min.x + ntR.bounds.size.x / 2), transform.position.y + 0.1f, z * ntR.bounds.size.z + (r.bounds.min.z + ntR.bounds.size.z / 2)), new Quaternion());
 
-                TileScript tScript = newTile.GetComponent<TileScript>();
-                tScript.x = x;
-                tScript.z = z;
-                tScript.boardScript = GetComponent<BoardScript>();
+                TileScript tScript = newm_tile.GetComponent<TileScript>();
+                tScript.m_x = x;
+                tScript.m_z = z;
+                tScript.m_boardScript = GetComponent<BoardScript>();
 
-                tiles[x + z * width] = newTile;
+                m_tiles[x + z * m_width] = newm_tile;
             }
         }
     }
 
     public void AssignNeighbors()
     {
-        for (int z = 0; z < height; z++)
+        for (int z = 0; z < m_height; z++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < m_width; x++)
             {
-                GameObject tempTile = tiles[x + z * width];
-                TileScript tScript = tempTile.GetComponent<TileScript>();
+                GameObject tempm_tile = m_tiles[x + z * m_width];
+                TileScript tScript = tempm_tile.GetComponent<TileScript>();
 
-                tScript.neighbors = new GameObject[4];
+                tScript.m_neighbors = new GameObject[4];
 
                 if (x != 0)
-                    tScript.neighbors[(int)TileScript.nbors.left] = tiles[(x + z * width) - 1];
-                if (x < width - 1)
-                    tScript.neighbors[(int)TileScript.nbors.right] = tiles[(x + z * width) + 1];
+                    tScript.m_neighbors[(int)TileScript.nbors.left] = m_tiles[(x + z * m_width) - 1];
+                if (x < m_width - 1)
+                    tScript.m_neighbors[(int)TileScript.nbors.right] = m_tiles[(x + z * m_width) + 1];
                 if (z != 0)
-                    tScript.neighbors[(int)TileScript.nbors.bottom] = tiles[(x + z * width) - width];
-                if (z < height - 1)
-                    tScript.neighbors[(int)TileScript.nbors.top] = tiles[(x + z * width) + width];
+                    tScript.m_neighbors[(int)TileScript.nbors.bottom] = m_tiles[(x + z * m_width) - m_width];
+                if (z < m_height - 1)
+                    tScript.m_neighbors[(int)TileScript.nbors.top] = m_tiles[(x + z * m_width) + m_width];
             }
         }
     }
@@ -143,17 +143,18 @@ public class BoardScript : MonoBehaviour {
                 if (name.Length > 0)
                 {
                     // Set up character
-                    GameObject newChar = Instantiate(character);
+                    GameObject newChar = Instantiate(m_character);
                     CharacterScript cScript = newChar.GetComponent<CharacterScript>();
 
                     cScript.name = name;
                     key = i.ToString() + ',' + j.ToString() + ",color";
                     string color = PlayerPrefs.GetString(key);
-                    cScript.color = color;
+                    cScript.m_color = color;
+                    //cScript.SetCharColor();
                     
                     key = i.ToString() + ',' + j.ToString() + ",actions";
                     string[] acts = PlayerPrefs.GetString(key).Split(';');
-                    cScript.actions = acts;
+                    cScript.m_actions = acts;
 
                     // Set up position
                     TileScript script;
@@ -162,23 +163,23 @@ public class BoardScript : MonoBehaviour {
                     
                     do
                     {
-                        randX = Random.Range(0, width - 1);
-                        randZ = Random.Range(0, height - 1);
+                        randX = Random.Range(0, m_width - 1);
+                        randZ = Random.Range(0, m_height - 1);
                     
-                        script = tiles[randX + randZ * width].GetComponent<TileScript>();
-                    } while (script.holding);
+                        script = m_tiles[randX + randZ * m_width].GetComponent<TileScript>();
+                    } while (script.m_holding);
                     
-                    script.holding = newChar;
-                    newChar.transform.SetPositionAndRotation(tiles[randX + randZ * width].transform.position, new Quaternion());
-                    cScript.tile = tiles[randX + randZ * width];
-                    cScript.boardScript = GetComponent<BoardScript>();
+                    script.m_holding = newChar;
+                    newChar.transform.SetPositionAndRotation(m_tiles[randX + randZ * m_width].transform.position, new Quaternion());
+                    cScript.m_tile = m_tiles[randX + randZ * m_width];
+                    cScript.m_boardScript = GetComponent<BoardScript>();
 
-                    characters.Add(newChar);
+                    m_characters.Add(newChar);
 
                     // Link to player
-                    cScript.player = players[i];
-                    PlayerScript playScript = players[i].GetComponent<PlayerScript>();
-                    playScript.characters.Add(newChar);
+                    cScript.m_player = m_players[i];
+                    PlayerScript playScript = m_players[i].GetComponent<PlayerScript>();
+                    playScript.m_characters.Add(newChar);
                 }
             }
     }
@@ -193,17 +194,17 @@ public class BoardScript : MonoBehaviour {
         if (!Physics.Raycast(ray, out hit))
             return;
 
-        if (hit.collider.gameObject.tag == "Tile" || hit.collider.gameObject.tag == "Player" && hit.collider.gameObject != currPlayer)
+        if (hit.collider.gameObject.tag == "Tile" || hit.collider.gameObject.tag == "Player" && hit.collider.gameObject != m_currPlayer)
         {
-            if (hit.collider.gameObject != oldTile) // REFACTOR ALL THE CODE IN THIS IF STATEMENT
+            if (hit.collider.gameObject != m_oldTile) // REFACTOR ALL THE CODE IN THIS IF STATEMENT
             {
-                if (oldTile)
+                if (m_oldTile)
                 {
-                    Renderer oTR = oldTile.GetComponent<Renderer>();
+                    Renderer oTR = m_oldTile.GetComponent<Renderer>();
                     if (oTR.material.color.a != 0)
                         oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a - 0.5f);
 
-                    // Hacky fix for when you spawn colored tiles for range and your cursor starts on one of the tiles
+                    // Hacky fix for when you spawn colored m_tiles for range and your cursor starts on one of the m_tiles
                     if (oTR.material.color.r == 0 && oTR.material.color.b == 1 && oTR.material.color.a == 0f)
                         oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a + 0.5f);
                 }
@@ -211,87 +212,87 @@ public class BoardScript : MonoBehaviour {
                 Renderer hR = hit.collider.GetComponent<Renderer>();
                 hR.material.color = new Color(hR.material.color.r, hR.material.color.g, hR.material.color.b, hR.material.color.a + 0.5f);
             }
-            oldTile = hit.collider.gameObject;
+            m_oldTile = hit.collider.gameObject;
         }
         
-        PanelScript hudPanScript = panels[(int)pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
+        PanelScript hudPanScript = m_panels[(int)pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
         if (hit.collider.gameObject.tag == "Player")
         {
             CharacterScript colScript = hit.collider.gameObject.GetComponent<CharacterScript>();
-            if (hit.collider.gameObject != currPlayer)
+            if (hit.collider.gameObject != m_currPlayer)
             {
                 // Change color of turn panel to indicate where the character is in the turn order
-                if (colScript.turnPanel)
+                if (colScript.m_turnPanel)
                 {
-                    Image turnPanImage = colScript.turnPanel.GetComponent<Image>();
+                    Image turnPanImage = colScript.m_turnPanel.GetComponent<Image>();
                     turnPanImage.color = Color.cyan;
                 }
                 // Reveal right HUD with highlighted character's data
-                highlightedCharacter = hit.collider.gameObject;
-                hudPanScript.character = hit.collider.gameObject;
-                hudPanScript.cScript = colScript;
+                m_highlightedCharacter = hit.collider.gameObject;
+                hudPanScript.m_character = hit.collider.gameObject;
+                hudPanScript.m_cScript = colScript;
                 hudPanScript.PopulateText();
-                hudPanScript.inView = true;
+                hudPanScript.m_inView = true;
             }
 
-            if (oldTile)
+            if (m_oldTile)
             {
-                Renderer oTR = oldTile.GetComponent<Renderer>();
+                Renderer oTR = m_oldTile.GetComponent<Renderer>();
                 if (oTR.material.color.a != 0)
                     oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a - 0.5f);
 
-                // Hacky fix for when you spawn colored tiles for range and your cursor starts on one of the tiles
+                // Hacky fix for when you spawn colored m_tiles for range and your cursor starts on one of the m_tiles
                 if (oTR.material.color.r == 0 && oTR.material.color.b == 1 && oTR.material.color.a == 0f)
                     oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a + 0.5f);
             }
 
-            Renderer hR = colScript.tile.GetComponent<Renderer>();
+            Renderer hR = colScript.m_tile.GetComponent<Renderer>();
             hR.material.color = new Color(hR.material.color.r, hR.material.color.g, hR.material.color.b, hR.material.color.a + 0.5f);
 
-            oldTile = colScript.tile;
+            m_oldTile = colScript.m_tile;
         }
-        else if (highlightedCharacter)
+        else if (m_highlightedCharacter)
         {
-            CharacterScript colScript = highlightedCharacter.GetComponent<CharacterScript>();
-            if (colScript.turnPanel)
+            CharacterScript colScript = m_highlightedCharacter.GetComponent<CharacterScript>();
+            if (colScript.m_turnPanel)
             {
-                Image turnPanImage = colScript.turnPanel.GetComponent<Image>();
+                Image turnPanImage = colScript.m_turnPanel.GetComponent<Image>();
                 turnPanImage.color = Color.white;
             }
-            hudPanScript.inView = false;
+            hudPanScript.m_inView = false;
         }
     }
 
     public void NewTurn()
     {
-        if (currRound.Count == 0)
+        if (m_currRound.Count == 0)
             NewRound();
 
         // Turn previous character back to original color
-        if (currPlayer)
+        if (m_currPlayer)
         {
-            Renderer oldRenderer = currPlayer.GetComponent<Renderer>();
+            Renderer oldRenderer = m_currPlayer.GetComponent<Renderer>();
             oldRenderer.material.color = Color.white;
         }
 
-        currPlayer = currRound[0];
-        CharacterScript charScript = currPlayer.GetComponent<CharacterScript>();
-        currTile = charScript.tile;
+        m_currPlayer = m_currRound[0];
+        CharacterScript charScript = m_currPlayer.GetComponent<CharacterScript>();
+        m_currTile = charScript.m_tile;
 
-        PanelScript HUDLeftScript = panels[(int)pnls.HUD_LEFT_PANEL].GetComponent<PanelScript>();
-        HUDLeftScript.character = currPlayer;
-        HUDLeftScript.cScript = currPlayer.GetComponent<CharacterScript>();
+        PanelScript HUDLeftScript = m_panels[(int)pnls.HUD_LEFT_PANEL].GetComponent<PanelScript>();
+        HUDLeftScript.m_character = m_currPlayer;
+        HUDLeftScript.m_cScript = m_currPlayer.GetComponent<CharacterScript>();
         HUDLeftScript.PopulateText();
-        PlayerScript playScript = charScript.player.GetComponent<PlayerScript>();
+        PlayerScript playScript = charScript.m_player.GetComponent<PlayerScript>();
         if (playScript)
             playScript.SetEnergyPanel();
  
-        currRound.Remove(currPlayer);
+        m_currRound.Remove(m_currPlayer);
 
-        CameraScript camScript = camera.GetComponent<CameraScript>();
-        camScript.target = currPlayer;
+        CameraScript camScript = m_camera.GetComponent<CameraScript>();
+        camScript.m_target = m_currPlayer;
 
-        Renderer charRenderer = currPlayer.GetComponent<Renderer>();
+        Renderer charRenderer = m_currPlayer.GetComponent<Renderer>();
         charRenderer.material.color = Color.green;
     }
 
@@ -302,44 +303,44 @@ public class BoardScript : MonoBehaviour {
         {
             numPool = 0;
             // Gather all characters speed to pull from
-            for (int i = 0; i < characters.Count; i++)
+            for (int i = 0; i < m_characters.Count; i++)
             {
-                CharacterScript charScript = characters[i].GetComponent<CharacterScript>();
-                numPool += charScript.tempStats[(int)CharacterScript.sts.SPD];
+                CharacterScript charScript = m_characters[i].GetComponent<CharacterScript>();
+                numPool += charScript.m_tempStats[(int)CharacterScript.sts.SPD];
             }
 
             int randNum = Random.Range(0, numPool);
             int currNum = 0;
 
-            for (int i = 0; i < characters.Count; i++)
+            for (int i = 0; i < m_characters.Count; i++)
             {
-                CharacterScript charScript = characters[i].GetComponent<CharacterScript>();
-                if (charScript.tempStats[(int)CharacterScript.sts.SPD] <= 0 || charScript.stats[(int)CharacterScript.sts.HP] <= 0)
+                CharacterScript charScript = m_characters[i].GetComponent<CharacterScript>();
+                if (charScript.m_tempStats[(int)CharacterScript.sts.SPD] <= 0 || charScript.m_stats[(int)CharacterScript.sts.HP] <= 0)
                     continue;
 
-                currNum += charScript.tempStats[(int)CharacterScript.sts.SPD];
+                currNum += charScript.m_tempStats[(int)CharacterScript.sts.SPD];
 
                 if (randNum < currNum)
                 {
-                    if (charScript.tempStats[(int)CharacterScript.sts.SPD] >= 10)
+                    if (charScript.m_tempStats[(int)CharacterScript.sts.SPD] >= 10)
                         numPool -= 10;
                     else
-                        numPool -= charScript.tempStats[(int)CharacterScript.sts.SPD];
+                        numPool -= charScript.m_tempStats[(int)CharacterScript.sts.SPD];
 
-                    charScript.tempStats[(int)CharacterScript.sts.SPD] -= 10;
-                    currRound.Add(characters[i]);
+                    charScript.m_tempStats[(int)CharacterScript.sts.SPD] -= 10;
+                    m_currRound.Add(m_characters[i]);
                 }
             }
-        } while (currRound.Count < characters.Count && numPool > 0);
+        } while (m_currRound.Count < m_characters.Count && numPool > 0);
 
-        for (int i = 0; i < characters.Count; i++)
+        for (int i = 0; i < m_characters.Count; i++)
         {
-            CharacterScript charScript = characters[i].GetComponent<CharacterScript>();
-            charScript.tempStats[(int)CharacterScript.sts.SPD] += 10;
+            CharacterScript charScript = m_characters[i].GetComponent<CharacterScript>();
+            charScript.m_tempStats[(int)CharacterScript.sts.SPD] += 10;
         }
 
-        roundCount++;
-        PanelScript roundPanScript = panels[(int)pnls.ROUND_PANEL].GetComponent<PanelScript>();
+        m_roundCount++;
+        PanelScript roundPanScript = m_panels[(int)pnls.ROUND_PANEL].GetComponent<PanelScript>();
         roundPanScript.PopulateText();
     }
 }

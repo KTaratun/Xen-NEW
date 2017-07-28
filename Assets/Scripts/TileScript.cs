@@ -7,17 +7,17 @@ public class TileScript : MonoBehaviour {
     public enum nbors {left, right, top, bottom};
 
     //public GameObject camera;
-    public GameObject holding;
-    public GameObject[] neighbors;
-    public List<GameObject> radius;
-    public int x;
-    public int z;
-    public BoardScript boardScript;
+    public GameObject m_holding;
+    public GameObject[] m_neighbors;
+    public List<GameObject> m_radius;
+    public int m_x;
+    public int m_z;
+    public BoardScript m_boardScript;
 
 	// Use this for initialization
 	void Start ()
     {
-        radius = new List<GameObject>();
+        m_radius = new List<GameObject>();
     }
 	
 	// Update is called once per frame
@@ -28,18 +28,18 @@ public class TileScript : MonoBehaviour {
     public void OnMouseDown()
     {
         // REFACTOR: Disallow the clicking of tiles if any menu is up
-        PanelScript mainPanScript = boardScript.panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
-        PanelScript ActionPanScript = boardScript.panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
-        PanelScript StsPanScript = boardScript.panels[(int)BoardScript.pnls.STATUS_PANEL].GetComponent<PanelScript>();
-        PanelScript AuxPanScript = boardScript.panels[(int)BoardScript.pnls.AUXILIARY_PANEL].GetComponent<PanelScript>();
-        if (mainPanScript.inView == true || ActionPanScript.inView == true || StsPanScript.inView == true || AuxPanScript.inView == true)
+        PanelScript mainPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
+        PanelScript ActionPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
+        PanelScript StsPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.STATUS_PANEL].GetComponent<PanelScript>();
+        PanelScript AuxPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.AUXILIARY_PANEL].GetComponent<PanelScript>();
+        if (mainPanScript.m_inView == true || ActionPanScript.m_inView == true || StsPanScript.m_inView == true || AuxPanScript.m_inView == true)
             return;
 
-        boardScript.selected = gameObject;
+        m_boardScript.m_selected = gameObject;
 
         Renderer renderer = GetComponent<Renderer>();
-        CharacterScript currPlayerScript = boardScript.currPlayer.GetComponent<CharacterScript>();
-        TileScript currTileScript = boardScript.currTile.GetComponent<TileScript>();
+        CharacterScript currPlayerScript = m_boardScript.m_currPlayer.GetComponent<CharacterScript>();
+        TileScript currTileScript = m_boardScript.m_currTile.GetComponent<TileScript>();
         if (renderer.material.color == Color.blue) // If tile is blue when clicked, perform movement code
         {
             currPlayerScript.Movement(currTileScript, GetComponent<TileScript>());
@@ -47,37 +47,37 @@ public class TileScript : MonoBehaviour {
 
             return;
         }
-        else if (renderer.material.color == new Color(1, 0, 0, 1) && holding) // Otherwise if color is red, perform action code
+        else if (renderer.material.color == new Color(1, 0, 0, 1) && m_holding) // Otherwise if color is red, perform action code
         {
             GameObject[] targets = new GameObject[1];
-            targets[0] = holding;
+            targets[0] = m_holding;
             currPlayerScript.Action(targets);
             ClearRadius(currTileScript);
 
             return;
         }
 
-        if (holding && holding.tag == "Player")
+        if (m_holding && m_holding.tag == "Player")
         {
-            Renderer holdingR = holding.GetComponent<Renderer>();
+            Renderer holdingR = m_holding.GetComponent<Renderer>();
             if (holdingR.material.color == Color.green)
             {
-                mainPanScript.inView = true;
+                mainPanScript.m_inView = true;
 
                 // Assign character to panels
-                mainPanScript.character = holding;
-                CharacterScript cScript = holding.GetComponent<CharacterScript>();
-                mainPanScript.cScript = cScript;
+                mainPanScript.m_character = m_holding;
+                CharacterScript cScript = m_holding.GetComponent<CharacterScript>();
+                mainPanScript.m_cScript = cScript;
                 mainPanScript.SetButtons();
             }
             else
             {
-                AuxPanScript.inView = true;
+                AuxPanScript.m_inView = true;
 
                 // Assign character to panels
-                AuxPanScript.character = holding;
-                CharacterScript cScript = holding.GetComponent<CharacterScript>();
-                AuxPanScript.cScript = cScript;
+                AuxPanScript.m_character = m_holding;
+                CharacterScript cScript = m_holding.GetComponent<CharacterScript>();
+                AuxPanScript.m_cScript = cScript;
                 AuxPanScript.SetButtons();
             }
         }
@@ -86,14 +86,14 @@ public class TileScript : MonoBehaviour {
     // Reset all tiles to their original color
     private void ClearRadius(TileScript _tS)
     {
-        if (_tS.radius.Count > 0)
+        if (_tS.m_radius.Count > 0)
         {
-            for (int i = 0; i < _tS.radius.Count; i++)
+            for (int i = 0; i < _tS.m_radius.Count; i++)
             {
-                Renderer sRend = _tS.radius[i].GetComponent<Renderer>();
+                Renderer sRend = _tS.m_radius[i].GetComponent<Renderer>();
                 sRend.material.color = new Color(1, 1, 1, 0f);
             }
-            _tS.radius.Clear();
+            _tS.m_radius.Clear();
         }
     }
 }

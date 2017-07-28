@@ -8,41 +8,41 @@ public class PanelScript : MonoBehaviour {
     public enum butts { MOV_BUTT, ACT_BUTT, PASS_BUTT, STATUS_BUTT }
     public enum dir { UP, DOWN, LEFT, RIGHT, NULL}
 
-    public bool inView;
-    public dir direction;
-    public int boundryDis;
-    public GameObject character;
-    public CharacterScript cScript;
-    public GameObject main;
-    public GameObject parent;
-    public Button[] buttons;
-    public GameObject[] panels;
-    public Text[] text;
+    public bool m_inView;
+    public dir m_direction;
+    public int m_boundryDis;
+    public GameObject m_character;
+    public CharacterScript m_cScript;
+    public GameObject m_main;
+    public GameObject m_parent;
+    public Button[] m_buttons;
+    public GameObject[] m_panels;
+    public Text[] m_text;
 
     // Use this for initialization
     void Start ()
     {
 
-        buttons = GetComponentsInChildren<Button>();
+        m_buttons = GetComponentsInChildren<Button>();
 
-        if (boundryDis == 0)
+        if (m_boundryDis == 0)
         {
-            if (direction == dir.UP)
-                boundryDis = 180;
-            else if (direction == dir.RIGHT)
-                boundryDis = 470;
-            else if (direction == dir.LEFT)
-                boundryDis = -571;
-            else if (direction == dir.DOWN)
-                boundryDis = -180;
+            if (m_direction == dir.UP)
+                m_boundryDis = 180;
+            else if (m_direction == dir.RIGHT)
+                m_boundryDis = 470;
+            else if (m_direction == dir.LEFT)
+                m_boundryDis = -571;
+            else if (m_direction == dir.DOWN)
+                m_boundryDis = -180;
         }
 
         if (GetComponentsInChildren<Text>().Length > 0)
-            text = GetComponentsInChildren<Text>();
+            m_text = GetComponentsInChildren<Text>();
 
         if (name == "Turn Panel")
-            for (int i = 0; i < panels.Length; i++)
-                panels[i].SetActive(false);
+            for (int i = 0; i < m_panels.Length; i++)
+                m_panels[i].SetActive(false);
     }
 	
 	// Update is called once per frame
@@ -50,22 +50,22 @@ public class PanelScript : MonoBehaviour {
     {
         RectTransform recTrans = GetComponent<RectTransform>();
 
-        if (Input.GetMouseButtonDown(1) && inView)
+        if (Input.GetMouseButtonDown(1) && m_inView)
         {
-            if (direction == dir.UP && recTrans.offsetMax.y < 200)
+            if (m_direction == dir.UP && recTrans.offsetMax.y < 200)
             {
                 //PanelScript hudPanScript = hudPanel.GetComponent<PanelScript>();
                 //hudPanScript.inView = false;
-                inView = false;
+                m_inView = false;
           
-                if (cScript && cScript.boardScript)
-                    cScript.boardScript.selected = null;
+                if (m_cScript && m_cScript.m_boardScript)
+                    m_cScript.m_boardScript.m_selected = null;
             }
-            if (parent && recTrans.offsetMax.y < 200)
+            if (m_parent && recTrans.offsetMax.y < 200)
             {
-                PanelScript parentScript = parent.GetComponent<PanelScript>();
-                parentScript.inView = true;
-                inView = false;
+                PanelScript parentScript = m_parent.GetComponent<PanelScript>();
+                parentScript.m_inView = true;
+                m_inView = false;
             }
         }
 
@@ -78,26 +78,26 @@ public class PanelScript : MonoBehaviour {
     // MainPanel
     public void SetButtons()
     {
-        for (int i = 0; i < buttons.Length; i++)
-            buttons[i].onClick.RemoveAllListeners();
+        for (int i = 0; i < m_buttons.Length; i++)
+            m_buttons[i].onClick.RemoveAllListeners();
 
         if (name == "Main Panel")
         {
-            buttons[(int)butts.MOV_BUTT].onClick.AddListener(() => cScript.MovementSelection());
-            buttons[(int)butts.ACT_BUTT].onClick.AddListener(() => cScript.ActionSelection());
-            buttons[(int)butts.PASS_BUTT].onClick.AddListener(() => cScript.Pass());
-            buttons[(int)butts.STATUS_BUTT].onClick.AddListener(() => cScript.Status());
+            m_buttons[(int)butts.MOV_BUTT].onClick.AddListener(() => m_cScript.MovementSelection());
+            m_buttons[(int)butts.ACT_BUTT].onClick.AddListener(() => m_cScript.ActionSelection());
+            m_buttons[(int)butts.PASS_BUTT].onClick.AddListener(() => m_cScript.Pass());
+            m_buttons[(int)butts.STATUS_BUTT].onClick.AddListener(() => m_cScript.Status());
         }
         else if (name == "Character Panel")
         {
-            MenuScript menuScript = main.GetComponent<MenuScript>();
-            buttons[0].onClick.AddListener(() => menuScript.NewCharacter());
-            buttons[1].onClick.AddListener(() => menuScript.LoadCharacter());
-            buttons[2].onClick.AddListener(() => menuScript.PresetCharacter());
-            buttons[2].onClick.AddListener(() => menuScript.RandomCharacter());
+            MenuScript menuScript = m_main.GetComponent<MenuScript>();
+            m_buttons[0].onClick.AddListener(() => menuScript.NewCharacter());
+            m_buttons[1].onClick.AddListener(() => menuScript.LoadCharacter());
+            m_buttons[2].onClick.AddListener(() => menuScript.PresetCharacter());
+            m_buttons[2].onClick.AddListener(() => menuScript.RandomCharacter());
         }
         else if (name == "Auxiliary Panel")
-            buttons[0].onClick.AddListener(() => cScript.Status());
+            m_buttons[0].onClick.AddListener(() => m_cScript.Status());
     }
 
     // Action Panel
@@ -111,13 +111,13 @@ public class PanelScript : MonoBehaviour {
             string[] eng = actsSeparated[2].Split(':');
 
             if (eng[1][0] == 'g' || eng[1][0] == 'r' || eng[1][0] == 'w' || eng[1][0] == 'b')
-                FirstActionAvailable(panels[0], actions[i]);
+                FirstActionAvailable(m_panels[0], actions[i]);
             else if (eng[1].Length == 1)
-                FirstActionAvailable(panels[1], actions[i]);
+                FirstActionAvailable(m_panels[1], actions[i]);
             else if (eng[1].Length == 2)
-                FirstActionAvailable(panels[2], actions[i]);
+                FirstActionAvailable(m_panels[2], actions[i]);
             else if (eng[1].Length == 3)
-                FirstActionAvailable(panels[3], actions[i]);
+                FirstActionAvailable(m_panels[3], actions[i]);
         }
     }
 
@@ -134,7 +134,7 @@ public class PanelScript : MonoBehaviour {
 
             buttons[i].name = action;
             ButtonScript buttScript = buttons[i].GetComponent<ButtonScript>();
-            buttScript.action = action;
+            buttScript.m_action = action;
 
             Text t = buttons[i].GetComponentInChildren<Text>();
             string[] actsSeparated = action.Split('|');
@@ -144,11 +144,11 @@ public class PanelScript : MonoBehaviour {
             t.text = name[1];
             buttScript.SetTotalEnergy(eng[1]);
 
-            PlayerScript playScript = cScript.player.GetComponent<PlayerScript>();
+            PlayerScript playScript = m_cScript.m_player.GetComponent<PlayerScript>();
             if (playScript.CheckEnergy(eng[1]))
             {
-                if (cScript)
-                    buttons[i].onClick.AddListener(() => cScript.ActionTargeting());
+                if (m_cScript)
+                    buttons[i].onClick.AddListener(() => m_cScript.ActionTargeting());
                 buttons[i].interactable = true;
             }
 
@@ -158,9 +158,9 @@ public class PanelScript : MonoBehaviour {
 
     public void ResetButtons()
     {
-        for (int i = 0; i < panels.Length; i++)
+        for (int i = 0; i < m_panels.Length; i++)
         {
-            Button[] buttons = panels[i].GetComponentsInChildren<Button>();
+            Button[] buttons = m_panels[i].GetComponentsInChildren<Button>();
 
             for (int j = 0; j < buttons.Length; j++)
             {
@@ -170,8 +170,8 @@ public class PanelScript : MonoBehaviour {
                 t.text = "EMPTY";
                 ButtonScript buttScript = buttons[j].GetComponent<ButtonScript>();
 
-                for (int k = 0; k < buttScript.energyPanel.Length; k++)
-                    buttScript.energyPanel[k].SetActive(false);
+                for (int k = 0; k < buttScript.m_energyPanel.Length; k++)
+                    buttScript.m_energyPanel[k].SetActive(false);
             }
         }
     }
@@ -181,31 +181,31 @@ public class PanelScript : MonoBehaviour {
     {
         if (name == "Round Panel")
         {
-            BoardScript bScript = main.GetComponent<BoardScript>();
-            if (text != null)
-                text[0].text = "Round: " + bScript.roundCount;
+            BoardScript bScript = m_main.GetComponent<BoardScript>();
+            if (m_text != null)
+                m_text[0].text = "Round: " + bScript.m_roundCount;
         }
         else if (name == "Status Panel")
         {
-            text[(int)CharacterScript.sts.HP].text = "HP: " + cScript.tempStats[(int)CharacterScript.sts.HP] + "/" + cScript.stats[(int)CharacterScript.sts.HP];
-            text[(int)CharacterScript.sts.SPD].text = "SPD: " + cScript.stats[(int)CharacterScript.sts.SPD];
-            text[(int)CharacterScript.sts.HIT].text = "HIT: " + cScript.stats[(int)CharacterScript.sts.HIT];
-            text[(int)CharacterScript.sts.EVA].text = "EVA: " + cScript.stats[(int)CharacterScript.sts.EVA];
-            text[(int)CharacterScript.sts.CRT].text = "CRT: " + cScript.stats[(int)CharacterScript.sts.CRT];
-            text[(int)CharacterScript.sts.DMG].text = "DMG: " + cScript.stats[(int)CharacterScript.sts.DMG];
-            text[(int)CharacterScript.sts.DEF].text = "DEF: " + cScript.stats[(int)CharacterScript.sts.DEF];
-            text[(int)CharacterScript.sts.MOV].text = "MOV: " + cScript.stats[(int)CharacterScript.sts.MOV];
-            text[(int)CharacterScript.sts.RNG].text = "RNG: " + cScript.stats[(int)CharacterScript.sts.RNG];
-            if (cScript.accessories[0] != null)
-                text[9].text = "ACC: " + cScript.accessories[0];
-            if (cScript.accessories[1] != null)
-                text[10].text = "ACC: " + cScript.accessories[1];
+            m_text[(int)CharacterScript.sts.HP].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
+            m_text[(int)CharacterScript.sts.SPD].text = "SPD: " + m_cScript.m_stats[(int)CharacterScript.sts.SPD];
+            m_text[(int)CharacterScript.sts.HIT].text = "HIT: " + m_cScript.m_stats[(int)CharacterScript.sts.HIT];
+            m_text[(int)CharacterScript.sts.EVA].text = "EVA: " + m_cScript.m_stats[(int)CharacterScript.sts.EVA];
+            m_text[(int)CharacterScript.sts.CRT].text = "CRT: " + m_cScript.m_stats[(int)CharacterScript.sts.CRT];
+            m_text[(int)CharacterScript.sts.DMG].text = "DMG: " + m_cScript.m_stats[(int)CharacterScript.sts.DMG];
+            m_text[(int)CharacterScript.sts.DEF].text = "DEF: " + m_cScript.m_stats[(int)CharacterScript.sts.DEF];
+            m_text[(int)CharacterScript.sts.MOV].text = "MOV: " + m_cScript.m_stats[(int)CharacterScript.sts.MOV];
+            m_text[(int)CharacterScript.sts.RNG].text = "RNG: " + m_cScript.m_stats[(int)CharacterScript.sts.RNG];
+            if (m_cScript.m_accessories[0] != null)
+                m_text[9].text = "ACC: " + m_cScript.m_accessories[0];
+            if (m_cScript.m_accessories[1] != null)
+                m_text[10].text = "ACC: " + m_cScript.m_accessories[1];
         }
         else if (name == "ActionViewer Panel")
         {
-            string[] actStats = cScript.currAction.Split('|');
+            string[] actStats = m_cScript.m_currAction.Split('|');
             string[] currStat = actStats[1].Split(':');
-            text[0].text = currStat[1];
+            m_text[0].text = currStat[1];
 
             currStat = actStats[2].Split(':');
             Button energy = GetComponentInChildren<Button>();
@@ -213,33 +213,33 @@ public class PanelScript : MonoBehaviour {
             engScript.SetTotalEnergy(currStat[1]);
 
             currStat = actStats[3].Split(':');
-            text[2].text = "HIT: " + currStat[1];
-            if (cScript.stats[(int)CharacterScript.sts.HIT] != 0)
-                text[2].text += " + " + cScript.stats[(int)CharacterScript.sts.HIT];
+            m_text[2].text = "HIT: " + currStat[1];
+            if (m_cScript.m_stats[(int)CharacterScript.sts.HIT] != 0)
+                m_text[2].text += " + " + m_cScript.m_stats[(int)CharacterScript.sts.HIT];
 
             currStat = actStats[4].Split(':');
-            text[3].text = "DMG: " + currStat[1];
-            if (cScript.stats[(int)CharacterScript.sts.DMG] != 0)
-                text[3].text += " + " + cScript.stats[(int)CharacterScript.sts.DMG];
+            m_text[3].text = "DMG: " + currStat[1];
+            if (m_cScript.m_stats[(int)CharacterScript.sts.DMG] != 0)
+                m_text[3].text += " + " + m_cScript.m_stats[(int)CharacterScript.sts.DMG];
 
             currStat = actStats[5].Split(':');
-            text[4].text = "RNG: " + currStat[1];
-            if (cScript.stats[(int)CharacterScript.sts.RNG] != 0)
-                text[4].text += "+" + cScript.stats[(int)CharacterScript.sts.RNG];
+            m_text[4].text = "RNG: " + currStat[1];
+            if (m_cScript.m_stats[(int)CharacterScript.sts.RNG] != 0)
+                m_text[4].text += "+" + m_cScript.m_stats[(int)CharacterScript.sts.RNG];
 
             currStat = actStats[6].Split(':');
-            text[5].text = "CRT: " + currStat[1];
-            if (cScript.stats[(int)CharacterScript.sts.CRT] != 0)
-                text[5].text += " + " + cScript.stats[(int)CharacterScript.sts.CRT];
+            m_text[5].text = "CRT: " + currStat[1];
+            if (m_cScript.m_stats[(int)CharacterScript.sts.CRT] != 0)
+                m_text[5].text += " + " + m_cScript.m_stats[(int)CharacterScript.sts.CRT];
 
             currStat = actStats[7].Split(':');
-            text[6].text = currStat[1];
+            m_text[6].text = currStat[1];
         }
 
         else if (name == "HUD Panel LEFT" || name == "HUD Panel RIGHT")
         {
-            text[0].text = cScript.name;
-            text[1].text = "HP: " + cScript.tempStats[(int)CharacterScript.sts.HP] + "/" + cScript.stats[(int)CharacterScript.sts.HP];
+            m_text[0].text = m_cScript.name;
+            m_text[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
             
             //Image[] colorsUsed = panels[1].GetComponentsInChildren<Image>();
 
@@ -257,50 +257,50 @@ public class PanelScript : MonoBehaviour {
     {
         RectTransform recTrans = GetComponent<RectTransform>();
 
-        if (parent)
+        if (m_parent)
         {
-            PanelScript parentScript = parent.GetComponent<PanelScript>();
-            character = parentScript.character;
+            PanelScript parentScript = m_parent.GetComponent<PanelScript>();
+            m_character = parentScript.m_character;
         }
 
-        if (direction == dir.UP)
+        if (m_direction == dir.UP)
         {
-            if (inView)
+            if (m_inView)
             {
-                if (recTrans.offsetMax.y >  boundryDis)
+                if (recTrans.offsetMax.y >  m_boundryDis)
                     transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y - 25.0f, transform.position.z), transform.rotation);
             }
             else
                 if (recTrans.offsetMax.y < 750)
                     transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y + 25.0f, transform.position.z), transform.rotation);
         }
-        else if (direction == dir.RIGHT)
+        else if (m_direction == dir.RIGHT)
         {
-            if (inView)
+            if (m_inView)
             {
-                if (recTrans.offsetMax.x > boundryDis)
+                if (recTrans.offsetMax.x > m_boundryDis)
                     transform.SetPositionAndRotation(new Vector3(transform.position.x - 25.0f, transform.position.y, transform.position.z), transform.rotation);
             }
             else
                 if (recTrans.offsetMax.x < 877)
                     transform.SetPositionAndRotation(new Vector3(transform.position.x + 25.0f, transform.position.y, transform.position.z), transform.rotation);
         }
-        else if (direction == dir.LEFT)
+        else if (m_direction == dir.LEFT)
         {
-            if (inView)
+            if (m_inView)
             {
-                if (recTrans.offsetMax.x > boundryDis)
+                if (recTrans.offsetMax.x > m_boundryDis)
                     transform.SetPositionAndRotation(new Vector3(transform.position.x - 25.0f, transform.position.y, transform.position.z), transform.rotation);
             }
             else
                 if (recTrans.offsetMax.x < -877)
                     transform.SetPositionAndRotation(new Vector3(transform.position.x + 25.0f, transform.position.y, transform.position.z), transform.rotation);
         }
-        else if (direction == dir.DOWN)
+        else if (m_direction == dir.DOWN)
         {
-            if (inView)
+            if (m_inView)
             {
-                if (recTrans.offsetMax.y < boundryDis)
+                if (recTrans.offsetMax.y < m_boundryDis)
                     transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y + 25.0f, transform.position.z), transform.rotation);
             }
             else
@@ -312,17 +312,17 @@ public class PanelScript : MonoBehaviour {
     // Turn Panel
     private void TurnSlide()
     {
-        BoardScript bScript = main.GetComponent<BoardScript>();
+        BoardScript bScript = m_main.GetComponent<BoardScript>();
         GameObject pan = null;
         int count = 0; // Count is used to determine how much to lower each panel
 
         // Set current panel and count actives
-        for (int i = 0; i < panels.Length; i++)
+        for (int i = 0; i < m_panels.Length; i++)
         {
-            if (panels[i].activeSelf)
+            if (m_panels[i].activeSelf)
             {
                 if (pan == null)
-                    pan = panels[i];
+                    pan = m_panels[i];
                 count++;
             }
         }
@@ -330,31 +330,31 @@ public class PanelScript : MonoBehaviour {
         // If there are no actives, reset panels
         if (!pan)
         {
-            count = bScript.currRound.Count;
+            count = bScript.m_currRound.Count;
 
             for (int i = 0; i < count; i++)
             {
-                panels[i].SetActive(true);
-                panels[i].transform.SetPositionAndRotation(new Vector3(panels[i].transform.position.x, 166 + 61.2f * i, panels[i].transform.position.z), panels[i].transform.rotation);
-                CharacterScript charScript = bScript.currRound[i].GetComponent<CharacterScript>();
-                charScript.turnPanel = panels[i];
-                Text t = panels[i].GetComponentInChildren<Text>();
-                t.text = bScript.currRound[i].name;
+                m_panels[i].SetActive(true);
+                m_panels[i].transform.SetPositionAndRotation(new Vector3(m_panels[i].transform.position.x, 166 + 61.2f * i, m_panels[i].transform.position.z), m_panels[i].transform.rotation);
+                CharacterScript charScript = bScript.m_currRound[i].GetComponent<CharacterScript>();
+                charScript.m_turnPanel = m_panels[i];
+                Text t = m_panels[i].GetComponentInChildren<Text>();
+                t.text = bScript.m_currRound[i].name;
 
-                if (panels[i].GetComponentInChildren<Button>())
+                if (m_panels[i].GetComponentInChildren<Button>())
                 {
-                    Button button = panels[i].GetComponentInChildren<Button>();
+                    Button button = m_panels[i].GetComponentInChildren<Button>();
                     ButtonScript buttScript = button.GetComponent<ButtonScript>();
-                    buttScript.SetTotalEnergy(charScript.color);
-                    buttScript.character = bScript.currRound[i];
+                    buttScript.SetTotalEnergy(charScript.m_color);
+                    buttScript.m_character = bScript.m_currRound[i];
                 }
             }
-            pan = panels[0];
+            pan = m_panels[0];
         }
 
         RectTransform panRect = pan.GetComponent<RectTransform>();
 
-        if (count != bScript.currRound.Count) // if one of the panels is removed, move it every frame unitl it slides off to the left
+        if (count != bScript.m_currRound.Count) // if one of the panels is removed, move it every frame unitl it slides off to the left
         {
             if (panRect.offsetMax.x > -200)
                 pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x - 10.0f, pan.transform.position.y, pan.transform.position.z), pan.transform.rotation);
@@ -364,13 +364,13 @@ public class PanelScript : MonoBehaviour {
         else
         {
             // if was removed, check all of the panels that are still left to see if they are in their new position. If not, slide them down each frame until they are
-            for (int i = 0; i < panels.Length; i++)
+            for (int i = 0; i < m_panels.Length; i++)
             {
-                pan = panels[i];
+                pan = m_panels[i];
                 panRect = pan.GetComponent<RectTransform>();
                 float height = 61.2f; // The differnce in y each panel is
 
-                if (pan.activeSelf && panRect.offsetMax.y > 180 + height * i - height * (bScript.characters.Count - bScript.currRound.Count))
+                if (pan.activeSelf && panRect.offsetMax.y > 180 + height * i - height * (bScript.m_characters.Count - bScript.m_currRound.Count))
                     pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x, pan.transform.position.y - 10.0f, pan.transform.position.z), pan.transform.rotation);
 
                 if (pan.activeSelf && panRect.offsetMax.x < 45)

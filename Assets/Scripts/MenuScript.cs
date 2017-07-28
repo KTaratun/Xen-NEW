@@ -6,18 +6,18 @@ using UnityEngine.EventSystems;
 
 public class MenuScript : MonoBehaviour {
 
-    public Button currButton;
-    public GameObject currCharacter;
-    public GameObject character;
-    public GameObject characterPanel;
-    public GameObject characterViewer;
-    public GameObject presetSelect;
+    public Button m_currButton;
+    public GameObject m_currCharacter;
+    public GameObject m_character;
+    public GameObject m_characterPanel;
+    public GameObject m_characterViewer;
+    public GameObject m_presetSelect;
 
 	// Use this for initialization
 	void Start ()
     {
-        GameObject newChar = Instantiate(character);
-        currCharacter = newChar;
+        GameObject newChar = Instantiate(m_character);
+        m_currCharacter = newChar;
 
         PlayerPrefs.DeleteAll();
 	}
@@ -29,16 +29,16 @@ public class MenuScript : MonoBehaviour {
 
     public void CharacterAssignment()
     {
-        PanelScript charScript = characterPanel.GetComponent<PanelScript>();
-        PanelScript viewScript = characterViewer.GetComponent<PanelScript>();
-        PanelScript presetScript = presetSelect.GetComponent<PanelScript>();
+        PanelScript charScript = m_characterPanel.GetComponent<PanelScript>();
+        PanelScript viewScript = m_characterViewer.GetComponent<PanelScript>();
+        PanelScript presetScript = m_presetSelect.GetComponent<PanelScript>();
 
-        if (charScript.inView == true || viewScript.inView == true || presetScript.inView == true)
+        if (charScript.m_inView == true || viewScript.m_inView == true || presetScript.m_inView == true)
             return;
 
-        charScript.inView = true;
+        charScript.m_inView = true;
         charScript.SetButtons();
-        currButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+        m_currButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
     }
 
     public void NewCharacter()
@@ -53,24 +53,24 @@ public class MenuScript : MonoBehaviour {
 
     public void PresetCharacter()
     {
-        PanelScript charPanel = characterPanel.GetComponent<PanelScript>();
-        charPanel.inView = false;
+        PanelScript charPanel = m_characterPanel.GetComponent<PanelScript>();
+        charPanel.m_inView = false;
 
-        PanelScript presetSelectScript = presetSelect.GetComponent<PanelScript>();
-        presetSelectScript.inView = true;
+        PanelScript presetSelectScript = m_presetSelect.GetComponent<PanelScript>();
+        presetSelectScript.m_inView = true;
 
         DatabaseScript dbScript = gameObject.GetComponent<DatabaseScript>();
 
-        for (int i = 0; i < presetSelectScript.buttons.Length; i++)
+        for (int i = 0; i < presetSelectScript.m_buttons.Length; i++)
         {
-            Button butt = presetSelectScript.buttons[i];
+            Button butt = presetSelectScript.m_buttons[i];
             Text t = butt.GetComponentInChildren<Text>();
-            t.text = dbScript.GetDataValue(dbScript.presets[i], "Name:");
+            t.text = dbScript.GetDataValue(dbScript.m_presets[i], "Name:");
             butt.name = i.ToString();
             butt.onClick.RemoveAllListeners();
             butt.onClick.AddListener(() => PopulateCharacterViewer());
             ButtonScript buttScript = butt.GetComponent<ButtonScript>();
-            buttScript.SetTotalEnergy(dbScript.GetDataValue(dbScript.presets[i], "Colors:"));
+            buttScript.SetTotalEnergy(dbScript.GetDataValue(dbScript.m_presets[i], "Colors:"));
         }
     }
 
@@ -82,43 +82,43 @@ public class MenuScript : MonoBehaviour {
     public void PopulateCharacterViewer()
     {
         // If another panel is open, don't open character viewer for already loaded character
-        PanelScript presetSelectScript = presetSelect.GetComponent<PanelScript>();
-        PanelScript charViewScript = characterViewer.GetComponent<PanelScript>();
-        PanelScript charScript = characterPanel.GetComponent<PanelScript>();
+        PanelScript presetSelectScript = m_presetSelect.GetComponent<PanelScript>();
+        PanelScript charViewScript = m_characterViewer.GetComponent<PanelScript>();
+        PanelScript charScript = m_characterPanel.GetComponent<PanelScript>();
 
         Button currB = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
         int res = 0;
 
-        if (charScript.inView == true || charViewScript.inView == true || presetSelectScript.inView == true && !int.TryParse(currB.name, out res))
+        if (charScript.m_inView == true || charViewScript.m_inView == true || presetSelectScript.m_inView == true && !int.TryParse(currB.name, out res))
             return;
 
-        presetSelectScript.inView = false;
-        charViewScript.inView = true;
+        presetSelectScript.m_inView = false;
+        charViewScript.m_inView = true;
 
         Button[] buttons = charViewScript.GetComponentsInChildren<Button>();
-        PanelScript actionScript = charViewScript.panels[0].GetComponent<PanelScript>();
-        PanelScript statPan = charViewScript.panels[1].GetComponent<PanelScript>();
+        PanelScript actionScript = charViewScript.m_panels[0].GetComponent<PanelScript>();
+        PanelScript statPan = charViewScript.m_panels[1].GetComponent<PanelScript>();
 
         Text[] name = charViewScript.GetComponentsInChildren<Text>();
 
-        CharacterScript currCharScript = currCharacter.GetComponent<CharacterScript>();
-        actionScript.character = currCharacter;
-        actionScript.cScript = currCharScript;
+        CharacterScript currCharScript = m_currCharacter.GetComponent<CharacterScript>();
+        actionScript.m_character = m_currCharacter;
+        actionScript.m_cScript = currCharScript;
 
         res = 0;
         if (int.TryParse(currB.name, out res)) // If last pressed button is an int, it's a preset character panel button. Character slot buttons names are in the x,x format
         {
-            charViewScript.parent = presetSelect;
+            charViewScript.m_parent = m_presetSelect;
             DatabaseScript dbScript = gameObject.GetComponent<DatabaseScript>();
 
-            string[] presetDataSeparated = dbScript.presets[int.Parse(currB.name)].Split('|');
+            string[] presetDataSeparated = dbScript.m_presets[int.Parse(currB.name)].Split('|');
 
             // Fill out energy
             string[] presetColor = presetDataSeparated[2].Split(':');
             ButtonScript buttScript = buttons[0].GetComponent<ButtonScript>(); // button[0] == energy
             buttons[0].name = presetColor[1];
             buttScript.SetTotalEnergy(presetColor[1]);
-            currCharScript.color = presetColor[1];
+            currCharScript.m_color = presetColor[1];
 
             // Fill out name
             string[] presetName = presetDataSeparated[1].Split(':');
@@ -126,15 +126,15 @@ public class MenuScript : MonoBehaviour {
             
             // Fill out current character data
             currCharScript.name = presetName[1];
-            currCharScript.actions = dbScript.GetActions(dbScript.presets[int.Parse(currB.name)]);
+            currCharScript.m_actions = dbScript.GetActions(dbScript.m_presets[int.Parse(currB.name)]);
 
             // Fill out status
-            statPan.character = currCharacter;
-            statPan.cScript = currCharScript;
+            statPan.m_character = m_currCharacter;
+            statPan.m_cScript = currCharScript;
             statPan.PopulateText();
 
             // Fill out actions
-            actionScript.PopulateActionButtons(currCharScript.actions);
+            actionScript.PopulateActionButtons(currCharScript.m_actions);
 
             // Determine if select or remove will be visible
             for (int i = 0; i < buttons.Length; i++)
@@ -147,14 +147,14 @@ public class MenuScript : MonoBehaviour {
         }
         else
         {
-            charViewScript.parent = null;
+            charViewScript.m_parent = null;
             ButtonScript buttScript = buttons[0].GetComponent<ButtonScript>(); // button[0] == energy
 
             // Fill out name
             name[1].text = PlayerPrefs.GetString(currB.name + ",name");
             
             // Fill out energy
-            buttScript.SetTotalEnergy(PlayerPrefs.GetString(currButton.name + ",stats"));
+            buttScript.SetTotalEnergy(PlayerPrefs.GetString(m_currButton.name + ",stats"));
 
             // Fill out actions
             string str = PlayerPrefs.GetString(currB.name + ",actions");
@@ -174,70 +174,70 @@ public class MenuScript : MonoBehaviour {
 
     public void Select()
     {
-        PanelScript charViewScript = characterViewer.GetComponent<PanelScript>();
-        charViewScript.inView = false;
+        PanelScript charViewScript = m_characterViewer.GetComponent<PanelScript>();
+        charViewScript.m_inView = false;
 
-        CharacterScript cScript = currCharacter.GetComponent<CharacterScript>();
+        CharacterScript cScript = m_currCharacter.GetComponent<CharacterScript>();
 
         // Save out pertinent character data
-        string key = currButton.name + ",actions";
-        string combo = string.Join(";", cScript.actions);
+        string key = m_currButton.name + ",actions";
+        string combo = string.Join(";", cScript.m_actions);
         PlayerPrefs.SetString(key, combo);
-        key = currButton.name + ",name";
+        key = m_currButton.name + ",name";
         PlayerPrefs.SetString(key, cScript.name);
-        key = currButton.name + ",color";
-        PlayerPrefs.SetString(key, cScript.color);
+        key = m_currButton.name + ",color";
+        PlayerPrefs.SetString(key, cScript.m_color);
 
         // Change text to reflect the new character
-        Text t = currButton.GetComponentInChildren<Text>();
+        Text t = m_currButton.GetComponentInChildren<Text>();
         t.text = cScript.name;
 
         // Set energy for button
         Button[] buttons = charViewScript.GetComponentsInChildren<Button>();
-        ButtonScript buttScript = currButton.GetComponent<ButtonScript>();
-        key = currButton.name + ",stats";
+        ButtonScript buttScript = m_currButton.GetComponent<ButtonScript>();
+        key = m_currButton.name + ",stats";
         string stats = buttons[0].name;
-        for (int i = 0; i < cScript.stats.Length; i++)
-            stats += "," + cScript.stats[i];
+        for (int i = 0; i < cScript.m_stats.Length; i++)
+            stats += "," + cScript.m_stats[i];
         PlayerPrefs.SetString(key, stats);
         buttScript.SetTotalEnergy(buttons[0].name);
 
         // Change color of the button
-        currButton.GetComponent<Image>().color = new Color(.85f, .85f, .85f, 1);
+        m_currButton.GetComponent<Image>().color = new Color(.85f, .85f, .85f, 1);
 
         // Set up button to show current character rather than setting up a new one
-        currButton.onClick = new Button.ButtonClickedEvent();
-        currButton.onClick.AddListener(() => PopulateCharacterViewer());
+        m_currButton.onClick = new Button.ButtonClickedEvent();
+        m_currButton.onClick.AddListener(() => PopulateCharacterViewer());
     }
 
     public void Remove()
     {
         // Change color of button back
-        currButton.GetComponent<Image>().color = new Color(.6f, .6f, .6f, 1);
+        m_currButton.GetComponent<Image>().color = new Color(.6f, .6f, .6f, 1);
 
         // Reset energy
-        ButtonScript buttScript = currButton.GetComponent<ButtonScript>();
-        for (int k = 0; k < buttScript.energyPanel.Length; k++)
-            buttScript.energyPanel[k].SetActive(false);
+        ButtonScript buttScript = m_currButton.GetComponent<ButtonScript>();
+        for (int k = 0; k < buttScript.m_energyPanel.Length; k++)
+            buttScript.m_energyPanel[k].SetActive(false);
 
         // Close panel
-        PanelScript charViewPan = characterViewer.GetComponent<PanelScript>();
-        charViewPan.inView = false;
+        PanelScript charViewPan = m_characterViewer.GetComponent<PanelScript>();
+        charViewPan.m_inView = false;
 
         // Change text back
-        Text t = currButton.GetComponentInChildren<Text>();
+        Text t = m_currButton.GetComponentInChildren<Text>();
         t.text = "EMPTY";
 
         // Remove character from playerprefs
-        string key = currButton.name + ",actions";
+        string key = m_currButton.name + ",actions";
         PlayerPrefs.DeleteKey(key);
-        key = currButton.name + ",name";
+        key = m_currButton.name + ",name";
         PlayerPrefs.DeleteKey(key);
-        key = currButton.name + ",stats";
+        key = m_currButton.name + ",stats";
         PlayerPrefs.DeleteKey(key);
 
-        currButton.onClick = new Button.ButtonClickedEvent();
-        currButton.onClick.AddListener(() => CharacterAssignment());
+        m_currButton.onClick = new Button.ButtonClickedEvent();
+        m_currButton.onClick.AddListener(() => CharacterAssignment());
     }
 
     public void StartGame()
