@@ -127,10 +127,11 @@ public class PanelScript : MonoBehaviour {
 
         for (int i = 0; i < buttons.Length; i++)
         {
-            if (buttons[i].IsInteractable())
+            Text text = buttons[i].GetComponentInChildren<Text>();
+
+            if (text.text != "EMPTY")
                 continue;
 
-            buttons[i].interactable = true;
             buttons[i].name = action;
             ButtonScript buttScript = buttons[i].GetComponent<ButtonScript>();
             buttScript.action = action;
@@ -139,11 +140,17 @@ public class PanelScript : MonoBehaviour {
             string[] actsSeparated = action.Split('|');
             string[] name = actsSeparated[1].Split(':');
             string[] eng = actsSeparated[2].Split(':');
-            if (cScript)
-                buttons[i].onClick.AddListener(() => cScript.ActionTargeting());
-            
+
             t.text = name[1];
             buttScript.SetTotalEnergy(eng[1]);
+
+            PlayerScript playScript = cScript.player.GetComponent<PlayerScript>();
+            if (playScript.CheckEnergy(eng[1]))
+            {
+                if (cScript)
+                    buttons[i].onClick.AddListener(() => cScript.ActionTargeting());
+                buttons[i].interactable = true;
+            }
 
             return;
         }
@@ -229,10 +236,11 @@ public class PanelScript : MonoBehaviour {
             text[6].text = currStat[1];
         }
 
-        else if (name == "HUD Panel LEFT")
+        else if (name == "HUD Panel LEFT" || name == "HUD Panel RIGHT")
         {
             text[0].text = cScript.name;
             text[1].text = "HP: " + cScript.tempStats[(int)CharacterScript.sts.HP] + "/" + cScript.stats[(int)CharacterScript.sts.HP];
+            
             //Image[] colorsUsed = panels[1].GetComponentsInChildren<Image>();
 
             //for (int i = 0; i < 4; i++)

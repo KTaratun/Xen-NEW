@@ -21,6 +21,7 @@ public class BoardScript : MonoBehaviour {
     public GameObject currTile; // The tile of the player who's turn is currently up
     public GameObject currPlayer; // A pointer to the player that's turn is currently up
     public List<GameObject> characters; // A list of all players within the game
+    public GameObject[] players;
     public List<GameObject> currRound; // A list of the players who have taken a turn in the current round
 
 	// Use this for initialization
@@ -173,6 +174,11 @@ public class BoardScript : MonoBehaviour {
                     cScript.boardScript = GetComponent<BoardScript>();
 
                     characters.Add(newChar);
+
+                    // Link to player
+                    cScript.player = players[i];
+                    PlayerScript playScript = players[i].GetComponent<PlayerScript>();
+                    playScript.characters.Add(newChar);
                 }
             }
     }
@@ -222,8 +228,9 @@ public class BoardScript : MonoBehaviour {
                 }
                 // Reveal right HUD with highlighted character's data
                 highlightedCharacter = hit.collider.gameObject;
-                hudPanScript.text[0].text = colScript.name;
-                hudPanScript.text[1].text = "HP: " + colScript.tempStats[(int)CharacterScript.sts.HP] + "/" + colScript.stats[(int)CharacterScript.sts.HP];
+                hudPanScript.character = hit.collider.gameObject;
+                hudPanScript.cScript = colScript;
+                hudPanScript.PopulateText();
                 hudPanScript.inView = true;
             }
 
@@ -275,6 +282,9 @@ public class BoardScript : MonoBehaviour {
         HUDLeftScript.character = currPlayer;
         HUDLeftScript.cScript = currPlayer.GetComponent<CharacterScript>();
         HUDLeftScript.PopulateText();
+        PlayerScript playScript = charScript.player.GetComponent<PlayerScript>();
+        if (playScript)
+            playScript.SetEnergyPanel();
  
         currRound.Remove(currPlayer);
 

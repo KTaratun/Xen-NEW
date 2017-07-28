@@ -13,6 +13,7 @@ public class CharacterScript : MonoBehaviour {
     public BoardScript boardScript;
     public GameObject turnPanel;
     public GameObject popupText;
+    public GameObject player;
     public string[] actions;
     public string currAction;
     public int[] stats;
@@ -135,6 +136,8 @@ public class CharacterScript : MonoBehaviour {
         mainPanelScript.buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
 
         string[] actsSeparated = currAction.Split('|');
+        string[] engPreSplit = actsSeparated[2].Split(':');
+        string eng = engPreSplit[1];
         string[] hit = actsSeparated[3].Split(':');
         string[] dmg = actsSeparated[4].Split(':');
         string[] crt = actsSeparated[6].Split(':');
@@ -147,25 +150,54 @@ public class CharacterScript : MonoBehaviour {
 
             int roll = Random.Range(0, 20);
 
-            if (roll >= int.Parse(crt[1]))
+            if (roll >= int.Parse(crt[1]) + tempStats[(int)sts.CRT])
             {
                 targetScript.tempStats[(int)sts.HP] -= int.Parse(dmg[1]) * 2;
                 textMesh.text = (int.Parse(dmg[1]) * 2).ToString();
                 textMesh.color = Color.red;
+                EnergyConversion(eng);
 
                 return;
             }
 
             textMesh.color = Color.white;
 
-            if (roll < int.Parse(hit[1]))
+            if (roll < int.Parse(hit[1]) - tempStats[(int)sts.HIT] + targetScript.tempStats[(int)sts.EVA])
                 textMesh.text = "MISS";
             else
             {
                 targetScript.tempStats[(int)sts.HP] -= int.Parse(dmg[1]);
                 textMesh.text = dmg[1];
+                EnergyConversion(eng);
             }
         }
+    }
+
+    private void EnergyConversion(string energy)
+    {
+        PlayerScript playScript = player.GetComponent<PlayerScript>();
+        // Assign energy symbols
+        for (int i = 0; i < energy.Length; i++)
+        {
+            if (energy[i] == 'g')
+                playScript.energy[0] += 1;
+            else if (energy[i] == 'r')
+                playScript.energy[1] += 1;
+            else if (energy[i] == 'w')
+                playScript.energy[2] += 1;
+            else if (energy[i] == 'b')
+                playScript.energy[3] += 1;
+            else if (energy[i] == 'G')
+                playScript.energy[0] -= 1;
+            else if (energy[i] == 'R')
+                playScript.energy[1] -= 1;
+            else if (energy[i] == 'W')
+                playScript.energy[2] -= 1;
+            else if (energy[i] == 'B')
+                playScript.energy[3] -= 1;
+        }
+
+        playScript.SetEnergyPanel();
     }
 
     private void FetchTilesWithinRange(int range, Color color, bool isMove)
