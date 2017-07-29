@@ -72,12 +72,21 @@ public class CharacterScript : MonoBehaviour {
 
         if (m_healthBar.activeSelf)
         {
+            Transform outline = m_healthBar.transform.parent;
+
+            outline.LookAt(2 * outline.position - m_boardScript.m_camera.transform.position);
             m_healthBar.transform.LookAt(2 * m_healthBar.transform.position - m_boardScript.m_camera.transform.position);
             float ratio = ((float)m_stats[(int)sts.HP] - (float)m_tempStats[(int)sts.HP]) / (float)m_stats[(int)sts.HP];
 
             Renderer hpRend = m_healthBar.GetComponent<Renderer>();
-            hpRend.material.color = new Color(ratio + 0.2f, 1 - ratio + 0.2f, 0, 1);
-            m_healthBar.transform.localScale = new Vector3(1 - ratio, 0.2f, 1);
+            hpRend.material.color = new Color(ratio + 0.2f, 1 - ratio + 0.2f, 0.2f, 1);
+            m_healthBar.transform.localScale = new Vector3(0.95f - ratio, m_healthBar.transform.localScale.y, m_healthBar.transform.localScale.z);
+        }
+
+        for (int i = 0; i < m_colorDisplay.Length; i++)
+        {
+            if (m_colorDisplay[i].activeSelf)
+                m_colorDisplay[i].transform.LookAt(2 * m_colorDisplay[i].transform.position - m_boardScript.m_camera.transform.position);
         }
 
         if (m_popupText.activeSelf)
@@ -298,34 +307,51 @@ public class CharacterScript : MonoBehaviour {
         sPScript.PopulateText();
     }
 
-    //public void SetCharColor()
-    //{
-    //    GameObject colors = colorDisplay[0];
-    //    if ()
-    //
-    //    int numEle = 0;
-    //    List<char> used = new List<char>();
-    //
-    //    Image[] orbs = panel.GetComponentsInChildren<Game>();
-    //
-    //    for (int i = 0; i < num; i++)
-    //    {
-    //        if (energy[i] == 'g')
-    //            orbs[i + 1].color = new Color(.5f, 1, .5f, 1);
-    //        else if (energy[i] == 'r')
-    //            orbs[i + 1].color = new Color(1, .5f, .5f, 1);
-    //        else if (energy[i] == 'w')
-    //            orbs[i + 1].color = new Color(1, 1, 1, 1);
-    //        else if (energy[i] == 'b')
-    //            orbs[i + 1].color = new Color(.5f, .5f, 1, 1);
-    //        else if (energy[i] == 'G')
-    //            orbs[i + 1].color = new Color(.1f, .9f, .1f, 1);
-    //        else if (energy[i] == 'R')
-    //            orbs[i + 1].color = new Color(.9f, .1f, .1f, 1);
-    //        else if (energy[i] == 'W')
-    //            orbs[i + 1].color = new Color(.9f, .9f, .9f, 1);
-    //        else if (energy[i] == 'B')
-    //            orbs[i + 1].color = new Color(.1f, .1f, .9f, 1);
-    //    }
-    //}
+    public void SetCharColor()
+    {
+        GameObject colors = m_colorDisplay[0];
+
+        if (m_color.Length == 1)
+        {
+            colors = m_colorDisplay[0];
+            colors.SetActive(true);
+        }
+        else if (m_color.Length == 2)
+        {
+            colors = m_colorDisplay[1];
+            colors.SetActive(true);
+        }
+        else if (m_color.Length == 3)
+        {
+            colors = m_colorDisplay[2];
+            colors.SetActive(true);
+        }
+        else if (m_color.Length == 4)
+        {
+            colors = m_colorDisplay[3];
+            colors.SetActive(true);
+        }
+    
+        SphereCollider[] orbs = colors.GetComponentsInChildren<SphereCollider>();
+        int j = 0;
+
+        for (int i = 0; i < orbs.Length; i++)
+        {
+            if (orbs[i].name == "Sphere Outline")
+                continue;
+
+            Renderer orbRend = orbs[i].GetComponent<Renderer>();
+
+            if (m_color[j] == 'G')
+                orbRend.material.color = new Color(.45f, .7f, .4f, 1);
+            else if (m_color[j] == 'R')
+                orbRend.material.color = new Color(.8f, .1f, .15f, 1);
+            else if (m_color[j] == 'W')
+                orbRend.material.color = new Color(.8f, .8f, .8f, 1);
+            else if (m_color[j] == 'B')
+                orbRend.material.color = new Color(.45f, .4f, 1, 1);
+
+            j++;
+        }
+    }
 }

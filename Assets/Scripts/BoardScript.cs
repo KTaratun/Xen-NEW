@@ -150,7 +150,7 @@ public class BoardScript : MonoBehaviour {
                     key = i.ToString() + ',' + j.ToString() + ",color";
                     string color = PlayerPrefs.GetString(key);
                     cScript.m_color = color;
-                    //cScript.SetCharColor();
+                    cScript.SetCharColor();
                     
                     key = i.ToString() + ',' + j.ToString() + ",actions";
                     string[] acts = PlayerPrefs.GetString(key).Split(';');
