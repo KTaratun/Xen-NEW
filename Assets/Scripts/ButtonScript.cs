@@ -43,7 +43,7 @@ public class ButtonScript : MonoBehaviour {
 
         Text text = GetComponent<Button>().GetComponentInChildren<Text>();
 
-        if (text.text == "EMPTY" || !m_actionViewer)
+        if (text.text == "EMPTY" || !m_actionViewer || !m_actionPanel)
             return;
 
         PanelScript actViewScript = m_actionViewer.GetComponent<PanelScript>();

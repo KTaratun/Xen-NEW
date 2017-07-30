@@ -10,14 +10,17 @@ public class TileScript : MonoBehaviour {
     public GameObject m_holding;
     public GameObject[] m_neighbors;
     public List<GameObject> m_radius;
+    public List<GameObject> m_targetRadius;
     public int m_x;
     public int m_z;
     public BoardScript m_boardScript;
+    private Color m_oldColor;
 
 	// Use this for initialization
 	void Start ()
     {
         m_radius = new List<GameObject>();
+        m_oldColor = Color.black;
     }
 	
 	// Update is called once per frame
@@ -52,12 +55,15 @@ public class TileScript : MonoBehaviour {
             GameObject[] targets = new GameObject[1];
             targets[0] = m_holding;
             currPlayerScript.Action(targets);
-            ClearRadius(currTileScript);
+            TileScript tScript = currPlayerScript.m_tile.GetComponent<TileScript>();
+
+            if (!currPlayerScript.m_isForcedMove)
+                ClearRadius(currTileScript);
 
             return;
         }
 
-        if (m_holding && m_holding.tag == "Player")
+        if (m_holding && m_holding.tag == "Player" && !currPlayerScript.m_isForcedMove)
         {
             Renderer holdingR = m_holding.GetComponent<Renderer>();
             if (holdingR.material.color == Color.green)
@@ -83,17 +89,105 @@ public class TileScript : MonoBehaviour {
         }
     }
 
-    // Reset all tiles to their original color
-    private void ClearRadius(TileScript _tS)
+    public void FetchTilesWithinRange(int _range, Color _color, bool _isOnlyHorVert)
     {
-        if (_tS.m_radius.Count > 0)
+        // REFACTOR: Maybe less lists?
+        List<TileScript> workingList = new List<TileScript>();
+        List<TileScript> storingList = new List<TileScript>();
+        List<TileScript> oddGen = new List<TileScript>();
+        List<TileScript> evenGen = new List<TileScript>();
+
+        // Start with current tile in oddGen
+        oddGen.Add(this);
+
+        if (_color == Color.yellow)
         {
-            for (int i = 0; i < _tS.m_radius.Count; i++)
-            {
-                Renderer sRend = _tS.m_radius[i].GetComponent<Renderer>();
-                sRend.material.color = new Color(1, 1, 1, 0f);
-            }
-            _tS.m_radius.Clear();
+            Renderer myRend = GetComponent<Renderer>();
+            m_oldColor = myRend.material.color;
+            myRend.material.color = _color;
+            m_targetRadius.Add(gameObject);
         }
+
+        for (int i = 0; i < _range; i++)
+        {
+            // Alternate between gens. Unload current gen and load up the gen and then swap next iteration
+            if (oddGen.Count > 0)
+            {
+                workingList = oddGen;
+                storingList = evenGen;
+            }
+            else if (evenGen.Count > 0)
+            {
+                workingList = evenGen;
+                storingList = oddGen;
+            }
+
+            while (workingList.Count > 0)
+            {
+                for (int k = 0; k < 4; k++)
+                {
+                    if (!workingList[0].m_neighbors[k])
+                        continue;
+
+                    TileScript tScript = workingList[0].m_neighbors[k].GetComponent<TileScript>();
+
+                    // if color is movement color
+                    CharacterScript charScript = m_boardScript.m_currPlayer.GetComponent<CharacterScript>();
+                    if (_color == new Color(0, 0, 1, 0.5f) && tScript.m_holding || _color == new Color(1, 0, 0, 0.5f) && workingList[0].m_neighbors[k] == m_boardScript.m_selected && charScript.m_currRadius == 0)
+                        continue;
+
+                    if (_isOnlyHorVert && tScript.m_x != m_x && tScript.m_z != m_z)
+                        continue;
+
+                    if (workingList[0].m_neighbors[k])
+                    {
+                        Renderer tR = workingList[0].m_neighbors[k].GetComponent<Renderer>();
+                        if (tR.material.color != _color)
+                        {
+                            if (_color == Color.yellow)
+                                tScript.m_oldColor = tR.material.color;
+
+                            tR.material.color = _color;
+                            storingList.Add(tScript);
+
+                            if (_color == Color.yellow)
+                                m_targetRadius.Add(workingList[0].m_neighbors[k]);
+                            else
+                                m_radius.Add(workingList[0].m_neighbors[k]);
+                        }
+                    }
+                }
+                workingList.RemoveAt(0);
+            }
+        }
+
+        for (int i = 0; i < m_radius.Count; i++)
+        {
+            TileScript tScript = m_radius[i].GetComponent<TileScript>();
+            int e = 3;
+        }
+    }
+
+    // Reset all tiles to their original color
+    public void ClearRadius(TileScript _tS)
+    {
+        List<GameObject> radTiles = m_radius;
+
+        if (_tS.m_targetRadius.Count > 0)
+            radTiles = m_targetRadius;
+
+        for (int i = 0; i < radTiles.Count; i++)
+        {
+            TileScript radTileScript = radTiles[i].GetComponent<TileScript>();
+            Renderer sRend = radTileScript.GetComponent<Renderer>();
+            if (radTileScript.m_oldColor == Color.black)
+                sRend.material.color = new Color(1, 1, 1, 0f);
+            else
+            {
+                sRend.material.color = radTileScript.m_oldColor;
+                radTileScript.m_oldColor = Color.black;
+            }
+        }
+        radTiles.Clear();
     }
 }

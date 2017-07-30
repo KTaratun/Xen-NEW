@@ -17,7 +17,7 @@ public class BoardScript : MonoBehaviour {
     public int m_height; // Height of the board
     public GameObject m_selected; // Currently selected m_tile/character
     private GameObject m_highlightedCharacter;
-    private GameObject m_oldTile; // A pointer to the previously hovered over m_tile
+    public GameObject m_oldTile; // A pointer to the previously hovered over m_tile
     public GameObject m_currTile; // The m_tile of the player who's turn is currently up
     public GameObject m_currPlayer; // A pointer to the player that's turn is currently up
     public List<GameObject> m_characters; // A list of all players within the game
@@ -186,6 +186,23 @@ public class BoardScript : MonoBehaviour {
 
     public void Hover()
     {
+        PanelScript mainPanScript = m_panels[(int)pnls.MAIN_PANEL].GetComponent<PanelScript>();
+        PanelScript actPanScript = m_panels[(int)pnls.ACTION_PANEL].GetComponent<PanelScript>();
+        PanelScript statPanScript = m_panels[(int)pnls.STATUS_PANEL].GetComponent<PanelScript>();
+        PanelScript auxPanScript = m_panels[(int)pnls.AUXILIARY_PANEL].GetComponent<PanelScript>();
+
+        if (!m_currPlayer || actPanScript.m_inView || mainPanScript.m_inView || statPanScript.m_inView || auxPanScript.m_inView)
+        {
+            if (m_oldTile)
+            {
+                Renderer oTR = m_oldTile.GetComponent<Renderer>();
+                if (oTR.material.color.a != 0)
+                    oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a - 0.5f);
+                m_oldTile = null;
+            }
+            return;
+        }
+
         Ray ray;
         RaycastHit hit;
 
@@ -194,24 +211,11 @@ public class BoardScript : MonoBehaviour {
         if (!Physics.Raycast(ray, out hit))
             return;
 
-        if (hit.collider.gameObject.tag == "Tile" || hit.collider.gameObject.tag == "Player" && hit.collider.gameObject != m_currPlayer)
+        if (hit.collider.gameObject.tag == "Tile")
         {
             if (hit.collider.gameObject != m_oldTile) // REFACTOR ALL THE CODE IN THIS IF STATEMENT
-            {
-                if (m_oldTile)
-                {
-                    Renderer oTR = m_oldTile.GetComponent<Renderer>();
-                    if (oTR.material.color.a != 0)
-                        oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a - 0.5f);
+                HandleOldTile(hit.collider.gameObject);
 
-                    // Hacky fix for when you spawn colored m_tiles for range and your cursor starts on one of the m_tiles
-                    if (oTR.material.color.r == 0 && oTR.material.color.b == 1 && oTR.material.color.a == 0f)
-                        oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a + 0.5f);
-                }
-
-                Renderer hR = hit.collider.GetComponent<Renderer>();
-                hR.material.color = new Color(hR.material.color.r, hR.material.color.g, hR.material.color.b, hR.material.color.a + 0.5f);
-            }
             m_oldTile = hit.collider.gameObject;
         }
         
@@ -227,29 +231,16 @@ public class BoardScript : MonoBehaviour {
                     Image turnPanImage = colScript.m_turnPanel.GetComponent<Image>();
                     turnPanImage.color = Color.cyan;
                 }
+
                 // Reveal right HUD with highlighted character's data
                 m_highlightedCharacter = hit.collider.gameObject;
                 hudPanScript.m_character = hit.collider.gameObject;
                 hudPanScript.m_cScript = colScript;
-                hudPanScript.PopulateText();
+                hudPanScript.PopulateHUD();
                 hudPanScript.m_inView = true;
             }
 
-            if (m_oldTile)
-            {
-                Renderer oTR = m_oldTile.GetComponent<Renderer>();
-                if (oTR.material.color.a != 0)
-                    oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a - 0.5f);
-
-                // Hacky fix for when you spawn colored m_tiles for range and your cursor starts on one of the m_tiles
-                if (oTR.material.color.r == 0 && oTR.material.color.b == 1 && oTR.material.color.a == 0f)
-                    oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a + 0.5f);
-            }
-
-            Renderer hR = colScript.m_tile.GetComponent<Renderer>();
-            hR.material.color = new Color(hR.material.color.r, hR.material.color.g, hR.material.color.b, hR.material.color.a + 0.5f);
-
-            m_oldTile = colScript.m_tile;
+            HandleOldTile(hit.collider.gameObject);
         }
         else if (m_highlightedCharacter)
         {
@@ -261,6 +252,47 @@ public class BoardScript : MonoBehaviour {
             }
             hudPanScript.m_inView = false;
         }
+    }
+
+    private void HandleOldTile(GameObject _target)
+    {
+        if (m_oldTile)
+        {
+            Renderer oTR = m_oldTile.GetComponent<Renderer>();
+            if (oTR.material.color == Color.yellow)
+            {
+                TileScript oldTileScript = m_oldTile.GetComponent<TileScript>();
+                oldTileScript.ClearRadius(oldTileScript);
+            }
+            else if (oTR.material.color.a != 0)
+                oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a - 0.5f);
+
+            // Hacky fix for when you spawn colored m_tiles for range and your cursor starts on one of the m_tiles
+            if (oTR.material.color.r == 0 && oTR.material.color.b == 1 && oTR.material.color.a == 0f)
+                oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a + 0.5f);
+        }
+
+        CharacterScript currCharScript = m_currPlayer.GetComponent<CharacterScript>();
+        Renderer tarRend = _target.GetComponent<Renderer>();
+
+        // If target is a player, get that player's tile and make it the target
+        CharacterScript colScript = new CharacterScript();
+        if (_target.GetComponent<CharacterScript>())
+        {
+            colScript = _target.GetComponent<CharacterScript>();
+            tarRend = colScript.m_tile.GetComponent<Renderer>();
+            _target = colScript.m_tile;
+        }
+        
+        if (currCharScript.m_currRadius > 0 && tarRend.material.color == new Color(1, 0, 0, 0.5f))
+        {
+            TileScript selTileScript = _target.GetComponent<TileScript>();
+            selTileScript.FetchTilesWithinRange(currCharScript.m_currRadius, Color.yellow, false);
+        }
+        else
+            tarRend.material.color = new Color(tarRend.material.color.r, tarRend.material.color.g, tarRend.material.color.b, tarRend.material.color.a + 0.5f);
+        
+        m_oldTile = colScript.m_tile;
     }
 
     public void NewTurn()
@@ -282,7 +314,8 @@ public class BoardScript : MonoBehaviour {
         PanelScript HUDLeftScript = m_panels[(int)pnls.HUD_LEFT_PANEL].GetComponent<PanelScript>();
         HUDLeftScript.m_character = m_currPlayer;
         HUDLeftScript.m_cScript = m_currPlayer.GetComponent<CharacterScript>();
-        HUDLeftScript.PopulateText();
+        HUDLeftScript.PopulateHUD();
+
         PlayerScript playScript = charScript.m_player.GetComponent<PlayerScript>();
         if (playScript)
             playScript.SetEnergyPanel();

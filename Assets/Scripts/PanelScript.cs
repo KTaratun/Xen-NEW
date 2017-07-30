@@ -30,7 +30,7 @@ public class PanelScript : MonoBehaviour {
             if (m_direction == dir.UP)
                 m_boundryDis = 180;
             else if (m_direction == dir.RIGHT)
-                m_boundryDis = 470;
+                m_boundryDis = 480;
             else if (m_direction == dir.LEFT)
                 m_boundryDis = -571;
             else if (m_direction == dir.DOWN)
@@ -83,7 +83,7 @@ public class PanelScript : MonoBehaviour {
 
         if (name == "Main Panel")
         {
-            m_buttons[(int)butts.MOV_BUTT].onClick.AddListener(() => m_cScript.MovementSelection());
+            m_buttons[(int)butts.MOV_BUTT].onClick.AddListener(() => m_cScript.MovementSelection(0));
             m_buttons[(int)butts.ACT_BUTT].onClick.AddListener(() => m_cScript.ActionSelection());
             m_buttons[(int)butts.PASS_BUTT].onClick.AddListener(() => m_cScript.Pass());
             m_buttons[(int)butts.STATUS_BUTT].onClick.AddListener(() => m_cScript.Status());
@@ -144,13 +144,18 @@ public class PanelScript : MonoBehaviour {
             t.text = name[1];
             buttScript.SetTotalEnergy(eng[1]);
 
-            PlayerScript playScript = m_cScript.m_player.GetComponent<PlayerScript>();
-            if (playScript.CheckEnergy(eng[1]))
+            if (m_main && m_main.name == "Board")
             {
-                if (m_cScript)
-                    buttons[i].onClick.AddListener(() => m_cScript.ActionTargeting());
-                buttons[i].interactable = true;
+                PlayerScript playScript = m_cScript.m_player.GetComponent<PlayerScript>();
+                if (playScript.CheckEnergy(eng[1]))
+                {
+                    if (m_cScript)
+                        buttons[i].onClick.AddListener(() => m_cScript.ActionTargeting());
+                    buttons[i].interactable = true;
+                }
             }
+            else
+                buttons[i].interactable = true;
 
             return;
         }
@@ -227,13 +232,16 @@ public class PanelScript : MonoBehaviour {
             if (m_cScript.m_stats[(int)CharacterScript.sts.RNG] != 0)
                 m_text[4].text += "+" + m_cScript.m_stats[(int)CharacterScript.sts.RNG];
 
-            currStat = actStats[6].Split(':');
+            currStat = actStats[7].Split(':');
             m_text[5].text = "CRT: " + currStat[1];
             if (m_cScript.m_stats[(int)CharacterScript.sts.CRT] != 0)
                 m_text[5].text += " + " + m_cScript.m_stats[(int)CharacterScript.sts.CRT];
 
-            currStat = actStats[7].Split(':');
+            currStat = actStats[8].Split(':');
             m_text[6].text = currStat[1];
+
+            currStat = actStats[6].Split(':');
+            m_text[7].text = "RAD: " + currStat[1];
         }
 
         else if (name == "HUD Panel LEFT" || name == "HUD Panel RIGHT")
@@ -376,6 +384,19 @@ public class PanelScript : MonoBehaviour {
                 if (pan.activeSelf && panRect.offsetMax.x < 45)
                     pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x + 10.0f, pan.transform.position.y, pan.transform.position.z), pan.transform.rotation);
             }
+        }
+    }
+
+    public void PopulateHUD()
+    {
+        PopulateText();
+
+        if (GetComponentInChildren<Button>())
+        {
+            Button button = GetComponentInChildren<Button>();
+            ButtonScript buttScript = button.GetComponent<ButtonScript>();
+            buttScript.SetTotalEnergy(m_cScript.m_color);
+            buttScript.m_character = m_character;
         }
     }
 }

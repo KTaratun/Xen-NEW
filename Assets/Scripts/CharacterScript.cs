@@ -22,6 +22,8 @@ public class CharacterScript : MonoBehaviour {
     public int[] m_tempStats;
     public string[] m_accessories;
     public string m_color;
+    public bool m_isForcedMove;
+    public int m_currRadius;
 
 	// Use this for initialization
 	void Start ()
@@ -35,6 +37,8 @@ public class CharacterScript : MonoBehaviour {
         m_stats[(int)sts.SPD] = 10;
         m_stats[(int)sts.MOV] = 5;
         m_tempStats = new int[(int)sts.TOT];
+        m_isForcedMove = false;
+        m_currRadius = 0;
 
         for (int i = 0; i < m_tempStats.Length; i++)
             m_tempStats[i] = m_stats[i];
@@ -62,44 +66,45 @@ public class CharacterScript : MonoBehaviour {
         {
             PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
             if (m_boardScript.m_currPlayer == gameObject && mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable == false
-                && mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable == false)
+                && mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable == false
+                && !m_isForcedMove)
             {
                 m_boardScript.NewTurn();
                 mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = true;
                 mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = true;
             }
-        }
 
-        if (m_healthBar.activeSelf)
-        {
-            Transform outline = m_healthBar.transform.parent;
-
-            outline.LookAt(2 * outline.position - m_boardScript.m_camera.transform.position);
-            m_healthBar.transform.LookAt(2 * m_healthBar.transform.position - m_boardScript.m_camera.transform.position);
-            float ratio = ((float)m_stats[(int)sts.HP] - (float)m_tempStats[(int)sts.HP]) / (float)m_stats[(int)sts.HP];
-
-            Renderer hpRend = m_healthBar.GetComponent<Renderer>();
-            hpRend.material.color = new Color(ratio + 0.2f, 1 - ratio + 0.2f, 0.2f, 1);
-            m_healthBar.transform.localScale = new Vector3(0.95f - ratio, m_healthBar.transform.localScale.y, m_healthBar.transform.localScale.z);
-        }
-
-        for (int i = 0; i < m_colorDisplay.Length; i++)
-        {
-            if (m_colorDisplay[i].activeSelf)
-                m_colorDisplay[i].transform.LookAt(2 * m_colorDisplay[i].transform.position - m_boardScript.m_camera.transform.position);
-        }
-
-        if (m_popupText.activeSelf)
-        {
-            float fadeSpeed = .01f;
-            m_popupText.transform.LookAt(2 * m_popupText.transform.position - m_boardScript.m_camera.transform.position);
-            TextMesh textMesh = m_popupText.GetComponent<TextMesh>();
-            textMesh.color = new Color(textMesh.color.r, textMesh.color.g, textMesh.color.b, textMesh.color.a - fadeSpeed);
-            
-            if (textMesh.color.a <= 0)
+            if (m_healthBar.activeSelf)
             {
-                textMesh.color = Color.white;
-                m_popupText.SetActive(false);
+                Transform outline = m_healthBar.transform.parent;
+
+                outline.LookAt(2 * outline.position - m_boardScript.m_camera.transform.position);
+                m_healthBar.transform.LookAt(2 * m_healthBar.transform.position - m_boardScript.m_camera.transform.position);
+                float ratio = ((float)m_stats[(int)sts.HP] - (float)m_tempStats[(int)sts.HP]) / (float)m_stats[(int)sts.HP];
+
+                Renderer hpRend = m_healthBar.GetComponent<Renderer>();
+                hpRend.material.color = new Color(ratio + 0.2f, 1 - ratio + 0.2f, 0.2f, 1);
+                m_healthBar.transform.localScale = new Vector3(0.95f - ratio, m_healthBar.transform.localScale.y, m_healthBar.transform.localScale.z);
+            }
+
+            for (int i = 0; i < m_colorDisplay.Length; i++)
+            {
+                if (m_colorDisplay[i].activeSelf)
+                    m_colorDisplay[i].transform.LookAt(2 * m_colorDisplay[i].transform.position - m_boardScript.m_camera.transform.position);
+            }
+
+            if (m_popupText.activeSelf)
+            {
+                float fadeSpeed = .01f;
+                m_popupText.transform.LookAt(2 * m_popupText.transform.position - m_boardScript.m_camera.transform.position);
+                TextMesh textMesh = m_popupText.GetComponent<TextMesh>();
+                textMesh.color = new Color(textMesh.color.r, textMesh.color.g, textMesh.color.b, textMesh.color.a - fadeSpeed);
+
+                if (textMesh.color.a <= 0)
+                {
+                    textMesh.color = Color.white;
+                    m_popupText.SetActive(false);
+                }
             }
         }
     }
@@ -110,9 +115,20 @@ public class CharacterScript : MonoBehaviour {
         tileScript.OnMouseDown();
     }
 
-    public void MovementSelection()
+    public void MovementSelection(int _forceMove)
     {
-        FetchTilesWithinRange(m_stats[(int)sts.MOV], new Color (0, 0, 1, 0.5f), true);
+        int move = 0;
+
+        if (_forceMove > 0)
+        {
+            move = _forceMove;
+            m_isForcedMove = true;
+        }
+        else
+            move = m_tempStats[(int)sts.MOV];
+
+        TileScript tileScript = m_tile.GetComponent<TileScript>();
+        tileScript.FetchTilesWithinRange(move, new Color (0, 0, 1, 0.5f), false);
         PanelScript mainPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
         mainPanScript.m_inView = false;
     }
@@ -124,8 +140,13 @@ public class CharacterScript : MonoBehaviour {
         m_tile = newScript.gameObject;
         m_boardScript.m_currTile = m_tile;
         transform.LookAt(m_tile.transform);
-        PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
-        mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
+
+        if (!m_isForcedMove)
+        {
+            PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
+            mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
+        }
+        m_isForcedMove = false;
     }
 
     public void ActionSelection()
@@ -141,31 +162,33 @@ public class CharacterScript : MonoBehaviour {
     }
 
     public void ActionTargeting()
-    {;
+    {
         string[] actsSeparated = m_currAction.Split('|');
         string[] rng = actsSeparated[5].Split(':');
+        string[] rad = actsSeparated[6].Split(':');
 
-        FetchTilesWithinRange(int.Parse(rng[1]), new Color(1, 0, 0, 0.5f), false);
+        m_currRadius = int.Parse(rad[1]);
+
+        TileScript tileScript = m_tile.GetComponent<TileScript>();
+        tileScript.FetchTilesWithinRange(int.Parse(rng[1]), new Color(1, 0, 0, 0.5f), false);
 
         PanelScript actionPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
         actionPanScript.m_inView = false;
     }
 
-    public void Action(GameObject[] targets)
+    public void Action(GameObject[] _targets)
     {
-        PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
-        mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
-
         string[] actsSeparated = m_currAction.Split('|');
+        string[] id = actsSeparated[0].Split(':');
         string[] engPreSplit = actsSeparated[2].Split(':');
         string eng = engPreSplit[1];
         string[] hit = actsSeparated[3].Split(':');
         string[] dmg = actsSeparated[4].Split(':');
-        string[] crt = actsSeparated[6].Split(':');
+        string[] crt = actsSeparated[7].Split(':');
 
-        for (int i = 0; i < targets.Length; i++)
+        for (int i = 0; i < _targets.Length; i++)
         {
-            CharacterScript targetScript = targets[i].GetComponent<CharacterScript>();
+            CharacterScript targetScript = _targets[i].GetComponent<CharacterScript>();
             targetScript.m_popupText.SetActive(true);
             TextMesh textMesh = targetScript.m_popupText.GetComponent<TextMesh>();
 
@@ -177,6 +200,7 @@ public class CharacterScript : MonoBehaviour {
                 textMesh.text = (int.Parse(dmg[1]) * 2).ToString();
                 textMesh.color = Color.red;
                 EnergyConversion(eng);
+                Ability(_targets, id[1]);
 
                 return;
             }
@@ -190,8 +214,58 @@ public class CharacterScript : MonoBehaviour {
                 targetScript.m_tempStats[(int)sts.HP] -= int.Parse(dmg[1]);
                 textMesh.text = dmg[1];
                 EnergyConversion(eng);
+                Ability(_targets, id[1]);
             }
         }
+
+        m_currRadius = 0;
+        PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
+        mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
+    }
+
+    public void Ability(GameObject[] _targets, string _id)
+    {
+        for (int i = 0; i < _targets.Length; i++)
+        {
+            CharacterScript targetScript = _targets[i].GetComponent<CharacterScript>();
+            TileScript tileScript = m_tile.GetComponent<TileScript>();
+
+            switch (int.Parse(_id))
+            {
+                case 1: // Dash ATK
+                    tileScript.ClearRadius(tileScript);
+            
+                    // lock controls until move is selected
+                    MovementSelection(3);
+                    break;
+                case 4: // Pull ATK
+                    // lock controls until move is selected
+
+                    TileScript targetTileScript = targetScript.m_tile.GetComponent<TileScript>();
+                    tileScript = m_tile.GetComponent<TileScript>();
+
+                    GameObject adjacentTile = tileScript.m_neighbors[(int)TileScript.nbors.left];
+
+                    if (targetTileScript.m_x < tileScript.m_x)
+                        adjacentTile = tileScript.m_neighbors[(int)TileScript.nbors.left];
+                    if (targetTileScript.m_x > tileScript.m_x)
+                        adjacentTile = tileScript.m_neighbors[(int)TileScript.nbors.right];
+                    if (targetTileScript.m_z < tileScript.m_z)
+                        adjacentTile = tileScript.m_neighbors[(int)TileScript.nbors.bottom];
+                    if (targetTileScript.m_z > tileScript.m_z)
+                        adjacentTile = tileScript.m_neighbors[(int)TileScript.nbors.top];
+
+                    TileScript adjTileScript = adjacentTile.GetComponent<TileScript>();
+                    targetScript.Movement(targetTileScript, adjTileScript);
+                    break;
+                case 5: // Magnet ATK
+                    m_currRadius = 2;
+                    break;
+                default:
+                    break;
+            }
+        }
+
     }
 
     private void EnergyConversion(string energy)
@@ -219,61 +293,6 @@ public class CharacterScript : MonoBehaviour {
         }
 
         playScript.SetEnergyPanel();
-    }
-
-    private void FetchTilesWithinRange(int range, Color color, bool isMove)
-    {
-        TileScript parentScript = m_tile.GetComponent<TileScript>();
-
-        // REFACTOR: Maybe less lists?
-        List<TileScript> workingList = new List<TileScript>();
-        List<TileScript> storingList = new List<TileScript>();
-        List<TileScript> oddGen = new List<TileScript>();
-        List<TileScript> evenGen = new List<TileScript>();
-
-        // Start with current tile in oddGen
-        oddGen.Add(m_tile.GetComponent<TileScript>());
-
-        for (int i = 0; i < range; i++)
-        {
-            // Alternate between gens. Unload current gen and load up the gen and then swap next iteration
-            if (oddGen.Count > 0)
-            {
-                workingList = oddGen;
-                storingList = evenGen;
-            }
-            else if (evenGen.Count > 0)
-            {
-                workingList = evenGen;
-                storingList = oddGen;
-            }
-
-            while (workingList.Count > 0)
-            {
-                for (int k = 0; k < 4; k++)
-                {
-                    if (!workingList[0].m_neighbors[k])
-                        continue;
-
-                    TileScript tScript = workingList[0].m_neighbors[k].GetComponent<TileScript>();
-
-                    if (isMove && tScript.m_holding || !isMove && workingList[0].m_neighbors[k] == m_boardScript.m_selected)
-                        continue;
-
-                    if (workingList[0].m_neighbors[k])
-                    {
-                        Renderer tR = workingList[0].m_neighbors[k].GetComponent<Renderer>();
-                        if (tR.material.color != color)
-                        {
-                            tR.material.color = color;
-                            storingList.Add(workingList[0].m_neighbors[k].GetComponent<TileScript>());
-                            parentScript.m_radius.Add(workingList[0].m_neighbors[k]);
-                        }
-                    }
-                }
-                workingList.RemoveAt(0);
-            }
-        }
     }
 
     public void Pass()
