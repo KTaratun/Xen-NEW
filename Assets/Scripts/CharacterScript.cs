@@ -176,7 +176,7 @@ public class CharacterScript : MonoBehaviour {
         actionPanScript.m_inView = false;
     }
 
-    public void Action(GameObject[] _targets)
+    public void Action(List<GameObject> _targets)
     {
         string[] actsSeparated = m_currAction.Split('|');
         string[] id = actsSeparated[0].Split(':');
@@ -186,7 +186,7 @@ public class CharacterScript : MonoBehaviour {
         string[] dmg = actsSeparated[4].Split(':');
         string[] crt = actsSeparated[7].Split(':');
 
-        for (int i = 0; i < _targets.Length; i++)
+        for (int i = 0; i < _targets.Count; i++)
         {
             CharacterScript targetScript = _targets[i].GetComponent<CharacterScript>();
             targetScript.m_popupText.SetActive(true);
@@ -223,9 +223,9 @@ public class CharacterScript : MonoBehaviour {
         mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
     }
 
-    public void Ability(GameObject[] _targets, string _id)
+    public void Ability(List<GameObject> _targets, string _id)
     {
-        for (int i = 0; i < _targets.Length; i++)
+        for (int i = 0; i < _targets.Count; i++)
         {
             CharacterScript targetScript = _targets[i].GetComponent<CharacterScript>();
             TileScript tileScript = m_tile.GetComponent<TileScript>();

@@ -52,13 +52,36 @@ public class TileScript : MonoBehaviour {
         }
         else if (renderer.material.color == new Color(1, 0, 0, 1) && m_holding) // Otherwise if color is red, perform action code
         {
-            GameObject[] targets = new GameObject[1];
-            targets[0] = m_holding;
+            List<GameObject> targets = new List<GameObject>();
+            targets.Add(m_holding);
             currPlayerScript.Action(targets);
             TileScript tScript = currPlayerScript.m_tile.GetComponent<TileScript>();
 
             if (!currPlayerScript.m_isForcedMove)
                 ClearRadius(currTileScript);
+
+            return;
+        }
+        else if (renderer.material.color == Color.yellow)
+        {
+            List<GameObject> targets = new List<GameObject>();
+            for (int i = 0; i < m_targetRadius.Count; i++)
+            {
+                TileScript tarTile = m_targetRadius[i].GetComponent<TileScript>();
+                if (tarTile.m_holding)
+                    targets.Add(tarTile.m_holding);
+            }
+
+            if (targets.Count > 0)
+            {
+                currPlayerScript.Action(targets);
+                TileScript tScript = currPlayerScript.m_tile.GetComponent<TileScript>();
+
+                ClearRadius(this);
+
+                if (!currPlayerScript.m_isForcedMove)
+                    ClearRadius(currTileScript);
+            }
 
             return;
         }
@@ -171,10 +194,10 @@ public class TileScript : MonoBehaviour {
     // Reset all tiles to their original color
     public void ClearRadius(TileScript _tS)
     {
-        List<GameObject> radTiles = m_radius;
+        List<GameObject> radTiles = _tS.m_radius;
 
         if (_tS.m_targetRadius.Count > 0)
-            radTiles = m_targetRadius;
+            radTiles = _tS.m_targetRadius;
 
         for (int i = 0; i < radTiles.Count; i++)
         {
