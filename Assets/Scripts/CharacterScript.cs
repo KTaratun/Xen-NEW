@@ -128,7 +128,7 @@ public class CharacterScript : MonoBehaviour {
             move = m_tempStats[(int)sts.MOV];
 
         TileScript tileScript = m_tile.GetComponent<TileScript>();
-        tileScript.FetchTilesWithinRange(move, new Color (0, 0, 1, 0.5f), false);
+        tileScript.FetchTilesWithinRange(move, new Color (0, 0, 1, 0.5f), false, false);
         PanelScript mainPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
         mainPanScript.m_inView = false;
     }
@@ -164,13 +164,23 @@ public class CharacterScript : MonoBehaviour {
     public void ActionTargeting()
     {
         string[] actsSeparated = m_currAction.Split('|');
+        string[] id = actsSeparated[0].Split(':');
         string[] rng = actsSeparated[5].Split(':');
         string[] rad = actsSeparated[6].Split(':');
 
-        m_currRadius = int.Parse(rad[1]);
 
         TileScript tileScript = m_tile.GetComponent<TileScript>();
-        tileScript.FetchTilesWithinRange(int.Parse(rng[1]), new Color(1, 0, 0, 0.5f), false);
+
+        bool isOnlyHorVert = false;
+        if (int.Parse(id[1]) == 4)
+            isOnlyHorVert = true;
+
+        m_currRadius = int.Parse(rad[1]);
+        bool targetSelf = false;
+        if (m_currRadius > 0)
+            targetSelf = true;
+
+        tileScript.FetchTilesWithinRange(int.Parse(rng[1]), new Color(1, 0, 0, 0.5f), targetSelf, isOnlyHorVert);
 
         PanelScript actionPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
         actionPanScript.m_inView = false;
@@ -178,6 +188,8 @@ public class CharacterScript : MonoBehaviour {
 
     public void Action(List<GameObject> _targets)
     {
+        transform.LookAt(m_boardScript.m_selected.transform);
+
         string[] actsSeparated = m_currAction.Split('|');
         string[] id = actsSeparated[0].Split(':');
         string[] engPreSplit = actsSeparated[2].Split(':');
@@ -185,6 +197,7 @@ public class CharacterScript : MonoBehaviour {
         string[] hit = actsSeparated[3].Split(':');
         string[] dmg = actsSeparated[4].Split(':');
         string[] crt = actsSeparated[7].Split(':');
+        bool miss = false;
 
         for (int i = 0; i < _targets.Count; i++)
         {
@@ -194,28 +207,28 @@ public class CharacterScript : MonoBehaviour {
 
             int roll = Random.Range(0, 20);
 
+            textMesh.color = Color.white;
             if (roll >= int.Parse(crt[1]) + m_tempStats[(int)sts.CRT])
             {
                 targetScript.m_tempStats[(int)sts.HP] -= int.Parse(dmg[1]) * 2;
                 textMesh.text = (int.Parse(dmg[1]) * 2).ToString();
                 textMesh.color = Color.red;
                 EnergyConversion(eng);
-                Ability(_targets, id[1]);
-
-                return;
             }
-
-            textMesh.color = Color.white;
-
-            if (roll < int.Parse(hit[1]) - m_tempStats[(int)sts.HIT] + targetScript.m_tempStats[(int)sts.EVA])
+            else if (roll < int.Parse(hit[1]) - m_tempStats[(int)sts.HIT] + targetScript.m_tempStats[(int)sts.EVA])
+            {
                 textMesh.text = "MISS";
+                miss = true;
+            }
             else
             {
                 targetScript.m_tempStats[(int)sts.HP] -= int.Parse(dmg[1]);
                 textMesh.text = dmg[1];
                 EnergyConversion(eng);
-                Ability(_targets, id[1]);
             }
+
+            if (!miss)
+                Ability(_targets[i], id[1]);
         }
 
         m_currRadius = 0;
@@ -223,49 +236,50 @@ public class CharacterScript : MonoBehaviour {
         mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
     }
 
-    public void Ability(List<GameObject> _targets, string _id)
+    public void Ability(GameObject _currTarget, string _id)
     {
-        for (int i = 0; i < _targets.Count; i++)
+        CharacterScript targetScript = _currTarget.GetComponent<CharacterScript>();
+        TileScript tileScript = m_tile.GetComponent<TileScript>();
+
+        switch (int.Parse(_id))
         {
-            CharacterScript targetScript = _targets[i].GetComponent<CharacterScript>();
-            TileScript tileScript = m_tile.GetComponent<TileScript>();
-
-            switch (int.Parse(_id))
-            {
-                case 1: // Dash ATK
-                    tileScript.ClearRadius(tileScript);
-            
-                    // lock controls until move is selected
-                    MovementSelection(3);
-                    break;
-                case 4: // Pull ATK
-                    // lock controls until move is selected
-
-                    TileScript targetTileScript = targetScript.m_tile.GetComponent<TileScript>();
-                    tileScript = m_tile.GetComponent<TileScript>();
-
-                    GameObject adjacentTile = tileScript.m_neighbors[(int)TileScript.nbors.left];
-
-                    if (targetTileScript.m_x < tileScript.m_x)
-                        adjacentTile = tileScript.m_neighbors[(int)TileScript.nbors.left];
-                    if (targetTileScript.m_x > tileScript.m_x)
-                        adjacentTile = tileScript.m_neighbors[(int)TileScript.nbors.right];
-                    if (targetTileScript.m_z < tileScript.m_z)
-                        adjacentTile = tileScript.m_neighbors[(int)TileScript.nbors.bottom];
-                    if (targetTileScript.m_z > tileScript.m_z)
-                        adjacentTile = tileScript.m_neighbors[(int)TileScript.nbors.top];
-
-                    TileScript adjTileScript = adjacentTile.GetComponent<TileScript>();
-                    targetScript.Movement(targetTileScript, adjTileScript);
-                    break;
-                case 5: // Magnet ATK
-                    m_currRadius = 2;
-                    break;
-                default:
-                    break;
-            }
+            case 1: // Dash ATK
+                tileScript.ClearRadius(tileScript);
+                MovementSelection(3);
+                break;
+            case 4: // Pull ATK
+                PullTowards(targetScript, tileScript);
+                break;
+            case 5: // Magnet ATK
+                PullTowards(targetScript, m_boardScript.m_selected.GetComponent<TileScript>());
+                break;
+            case 6:
+                tileScript.ClearRadius(tileScript);
+                targetScript.MovementSelection(4);
+                break;
+            default:
+                break;
         }
+    }
 
+    private void PullTowards(CharacterScript _targetScript, TileScript _towards)
+    {
+        TileScript targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
+        GameObject adjacentTile = _towards.gameObject;
+
+        //if (!_towards.m_holding)
+
+        if (targetTileScript.m_x < _towards.m_x)
+            adjacentTile = _towards.m_neighbors[(int)TileScript.nbors.left];
+        if (targetTileScript.m_x > _towards.m_x)
+            adjacentTile = _towards.m_neighbors[(int)TileScript.nbors.right];
+        if (targetTileScript.m_z < _towards.m_z)
+            adjacentTile = _towards.m_neighbors[(int)TileScript.nbors.bottom];
+        if (targetTileScript.m_z > _towards.m_z)
+            adjacentTile = _towards.m_neighbors[(int)TileScript.nbors.top];
+
+        TileScript adjTileScript = adjacentTile.GetComponent<TileScript>();
+        _targetScript.Movement(targetTileScript, adjTileScript);
     }
 
     private void EnergyConversion(string energy)

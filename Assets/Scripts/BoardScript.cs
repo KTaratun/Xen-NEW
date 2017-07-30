@@ -10,13 +10,13 @@ public class BoardScript : MonoBehaviour {
     public Camera m_camera; // Why it do that squiggle?
     public int m_roundCount;
     public GameObject[] m_panels; // All movable GUI on screen
-    private GameObject[] m_tiles; // All m_tiles on the board
+    public GameObject[] m_tiles; // All m_tiles on the board
     public GameObject m_tile; // A reference to the m_tile prefab
     public GameObject m_character; // A reference to the character prefab
     public int m_width; // Width of the board
     public int m_height; // Height of the board
-    public GameObject m_selected; // Currently selected m_tile/character
-    private GameObject m_highlightedCharacter;
+    public GameObject m_selected; // Currently selected m_tile
+    private GameObject m_highlightedTile;
     public GameObject m_oldTile; // A pointer to the previously hovered over m_tile
     public GameObject m_currTile; // The m_tile of the player who's turn is currently up
     public GameObject m_currPlayer; // A pointer to the player that's turn is currently up
@@ -76,12 +76,8 @@ public class BoardScript : MonoBehaviour {
             panScript.m_inView = true;
         }
 
-        for (int i = 0; i < currPScript.m_radius.Count; i++)
-        {
-            sRend = currPScript.m_radius[i].GetComponent<Renderer>();
-            sRend.material.color = new Color(1, 1, 1, 0f);
-        }
-        currPScript.m_radius.Clear();
+        currPScript.ClearRadius(currPScript);
+        currPScript.ClearRadius(currPScript);
     }
 
     public void InitBoardTiles()
@@ -209,17 +205,18 @@ public class BoardScript : MonoBehaviour {
         ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
         if (!Physics.Raycast(ray, out hit))
+        {
+            m_highlightedTile = null;
             return;
+        }
 
+        PanelScript hudPanScript = m_panels[(int)pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
         if (hit.collider.gameObject.tag == "Tile")
         {
             if (hit.collider.gameObject != m_oldTile) // REFACTOR ALL THE CODE IN THIS IF STATEMENT
                 HandleOldTile(hit.collider.gameObject);
-
-            m_oldTile = hit.collider.gameObject;
         }
-        
-        PanelScript hudPanScript = m_panels[(int)pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
+
         if (hit.collider.gameObject.tag == "Player")
         {
             CharacterScript colScript = hit.collider.gameObject.GetComponent<CharacterScript>();
@@ -233,25 +230,36 @@ public class BoardScript : MonoBehaviour {
                 }
 
                 // Reveal right HUD with highlighted character's data
-                m_highlightedCharacter = hit.collider.gameObject;
                 hudPanScript.m_character = hit.collider.gameObject;
                 hudPanScript.m_cScript = colScript;
                 hudPanScript.PopulateHUD();
                 hudPanScript.m_inView = true;
-            }
 
-            HandleOldTile(hit.collider.gameObject);
-        }
-        else if (m_highlightedCharacter)
-        {
-            CharacterScript colScript = m_highlightedCharacter.GetComponent<CharacterScript>();
-            if (colScript.m_turnPanel)
-            {
-                Image turnPanImage = colScript.m_turnPanel.GetComponent<Image>();
-                turnPanImage.color = Color.white;
+                HandleOldTile(hit.collider.gameObject);
             }
-            hudPanScript.m_inView = false;
         }
+        else if (m_highlightedTile)
+        {
+            TileScript m_highlightedTileScript = m_highlightedTile.GetComponent<TileScript>();
+            if (m_highlightedTileScript.m_holding && m_highlightedTileScript.m_holding.tag == "Player")
+            {
+                CharacterScript colScript = m_highlightedTileScript.m_holding.GetComponent<CharacterScript>();
+                if (colScript.m_turnPanel)
+                {
+                    Image turnPanImage = colScript.m_turnPanel.GetComponent<Image>();
+                    turnPanImage.color = Color.white;
+                }
+                hudPanScript.m_inView = false;
+            }
+        }
+
+        if (hit.collider.gameObject.tag == "Player")
+        {
+            CharacterScript charScript = hit.collider.gameObject.GetComponent<CharacterScript>();
+            m_highlightedTile = charScript.m_tile;
+        }
+        else if (hit.collider.gameObject.tag == "Tile")
+            m_highlightedTile = hit.collider.gameObject;
     }
 
     private void HandleOldTile(GameObject _target)
@@ -276,7 +284,7 @@ public class BoardScript : MonoBehaviour {
         Renderer tarRend = _target.GetComponent<Renderer>();
 
         // If target is a player, get that player's tile and make it the target
-        CharacterScript colScript = new CharacterScript();
+        CharacterScript colScript;
         if (_target.GetComponent<CharacterScript>())
         {
             colScript = _target.GetComponent<CharacterScript>();
@@ -287,12 +295,12 @@ public class BoardScript : MonoBehaviour {
         if (currCharScript.m_currRadius > 0 && tarRend.material.color == new Color(1, 0, 0, 0.5f))
         {
             TileScript selTileScript = _target.GetComponent<TileScript>();
-            selTileScript.FetchTilesWithinRange(currCharScript.m_currRadius, Color.yellow, false);
+            selTileScript.FetchTilesWithinRange(currCharScript.m_currRadius, Color.yellow, true, false);
         }
         else
             tarRend.material.color = new Color(tarRend.material.color.r, tarRend.material.color.g, tarRend.material.color.b, tarRend.material.color.a + 0.5f);
         
-        m_oldTile = colScript.m_tile;
+        m_oldTile = _target;
     }
 
     public void NewTurn()

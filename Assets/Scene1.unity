@@ -11423,7 +11423,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 460.5, y: -292}
+  m_AnchoredPosition: {x: 853, y: -292}
   m_SizeDelta: {x: 5, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1194865054
@@ -14134,12 +14134,14 @@ MonoBehaviour:
   - {fileID: 1194865052}
   - {fileID: 1801275577}
   - {fileID: 1602674031}
+  m_tiles: []
   m_tile: {fileID: 1782535043158714, guid: 5c85ab1a0780ebb429c0c6953bad95d9, type: 2}
   m_character: {fileID: 1933196064922436, guid: ff37a7e1795bd7a4298e2edcadf77a50,
     type: 2}
   m_width: 0
   m_height: 0
   m_selected: {fileID: 0}
+  m_oldTile: {fileID: 0}
   m_currTile: {fileID: 0}
   m_currPlayer: {fileID: 0}
   m_characters: []

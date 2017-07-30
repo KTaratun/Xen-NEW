@@ -15,12 +15,15 @@ public class TileScript : MonoBehaviour {
     public int m_z;
     public BoardScript m_boardScript;
     private Color m_oldColor;
+    private LineRenderer m_line;
 
 	// Use this for initialization
 	void Start ()
     {
         m_radius = new List<GameObject>();
         m_oldColor = Color.black;
+
+        m_line = gameObject.AddComponent<LineRenderer>();
     }
 	
 	// Update is called once per frame
@@ -31,6 +34,7 @@ public class TileScript : MonoBehaviour {
     public void OnMouseDown()
     {
         // REFACTOR: Disallow the clicking of tiles if any menu is up
+        // If a menu is up, don't let the board be selected
         PanelScript mainPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
         PanelScript ActionPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
         PanelScript StsPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.STATUS_PANEL].GetComponent<PanelScript>();
@@ -38,11 +42,16 @@ public class TileScript : MonoBehaviour {
         if (mainPanScript.m_inView == true || ActionPanScript.m_inView == true || StsPanScript.m_inView == true || AuxPanScript.m_inView == true)
             return;
 
-        m_boardScript.m_selected = gameObject;
-
-        Renderer renderer = GetComponent<Renderer>();
         CharacterScript currPlayerScript = m_boardScript.m_currPlayer.GetComponent<CharacterScript>();
         TileScript currTileScript = m_boardScript.m_currTile.GetComponent<TileScript>();
+        Renderer renderer = GetComponent<Renderer>();
+
+        // Prevent players from being clicked on bringing up menus during move or attack
+        if (m_holding && currTileScript.m_radius.Count > 0 && renderer.material.color == new Color(1, 1, 1, 0.5f))
+            return;
+
+        m_boardScript.m_selected = gameObject;
+
         if (renderer.material.color == Color.blue) // If tile is blue when clicked, perform movement code
         {
             currPlayerScript.Movement(currTileScript, GetComponent<TileScript>());
@@ -55,7 +64,6 @@ public class TileScript : MonoBehaviour {
             List<GameObject> targets = new List<GameObject>();
             targets.Add(m_holding);
             currPlayerScript.Action(targets);
-            TileScript tScript = currPlayerScript.m_tile.GetComponent<TileScript>();
 
             if (!currPlayerScript.m_isForcedMove)
                 ClearRadius(currTileScript);
@@ -75,8 +83,6 @@ public class TileScript : MonoBehaviour {
             if (targets.Count > 0)
             {
                 currPlayerScript.Action(targets);
-                TileScript tScript = currPlayerScript.m_tile.GetComponent<TileScript>();
-
                 ClearRadius(this);
 
                 if (!currPlayerScript.m_isForcedMove)
@@ -112,7 +118,7 @@ public class TileScript : MonoBehaviour {
         }
     }
 
-    public void FetchTilesWithinRange(int _range, Color _color, bool _isOnlyHorVert)
+    public void FetchTilesWithinRange(int _range, Color _color, bool _targetSelf, bool _isOnlyHorVert)
     {
         // REFACTOR: Maybe less lists?
         List<TileScript> workingList = new List<TileScript>();
@@ -122,14 +128,6 @@ public class TileScript : MonoBehaviour {
 
         // Start with current tile in oddGen
         oddGen.Add(this);
-
-        if (_color == Color.yellow)
-        {
-            Renderer myRend = GetComponent<Renderer>();
-            m_oldColor = myRend.material.color;
-            myRend.material.color = _color;
-            m_targetRadius.Add(gameObject);
-        }
 
         for (int i = 0; i < _range; i++)
         {
@@ -154,41 +152,67 @@ public class TileScript : MonoBehaviour {
 
                     TileScript tScript = workingList[0].m_neighbors[k].GetComponent<TileScript>();
 
-                    // if color is movement color
-                    CharacterScript charScript = m_boardScript.m_currPlayer.GetComponent<CharacterScript>();
-                    if (_color == new Color(0, 0, 1, 0.5f) && tScript.m_holding || _color == new Color(1, 0, 0, 0.5f) && workingList[0].m_neighbors[k] == m_boardScript.m_selected && charScript.m_currRadius == 0)
+                    // if color is movement color and the current tile is holding someone
+                    if (_color == new Color(0, 0, 1, 0.5f) && tScript.m_holding || !_targetSelf && workingList[0].m_neighbors[k] == gameObject)
                         continue;
 
                     if (_isOnlyHorVert && tScript.m_x != m_x && tScript.m_z != m_z)
                         continue;
 
-                    if (workingList[0].m_neighbors[k])
+                    if (_color == new Color(1, 0, 0, 0.5f) && CheckIfBlocked(workingList[0].m_neighbors[k]))
+                        continue;
+
+                    Renderer tR = workingList[0].m_neighbors[k].GetComponent<Renderer>();
+                    if (tR.material.color != _color)
                     {
-                        Renderer tR = workingList[0].m_neighbors[k].GetComponent<Renderer>();
-                        if (tR.material.color != _color)
-                        {
-                            if (_color == Color.yellow)
-                                tScript.m_oldColor = tR.material.color;
+                        if (_color == Color.yellow)
+                            tScript.m_oldColor = tR.material.color;
 
-                            tR.material.color = _color;
-                            storingList.Add(tScript);
+                        tR.material.color = _color;
+                        storingList.Add(tScript);
 
-                            if (_color == Color.yellow)
-                                m_targetRadius.Add(workingList[0].m_neighbors[k]);
-                            else
-                                m_radius.Add(workingList[0].m_neighbors[k]);
-                        }
+                        if (_color == Color.yellow)
+                            m_targetRadius.Add(workingList[0].m_neighbors[k]);
+                        else
+                            m_radius.Add(workingList[0].m_neighbors[k]);
                     }
                 }
                 workingList.RemoveAt(0);
             }
         }
+    }
 
-        for (int i = 0; i < m_radius.Count; i++)
+    public bool CheckIfBlocked(GameObject _target)
+    {
+        float laserWidth = 0.1f;
+        float laserMaxLength = Vector3.Distance(transform.position, _target.transform.position);
+
+        Vector3[] initLaserPositions = new Vector3[2] { Vector3.zero, Vector3.zero };
+        m_line.SetPositions(initLaserPositions);
+        m_line.SetWidth(laserWidth, laserWidth);
+
+        transform.LookAt(_target.transform);
+
+        Ray ray = new Ray(transform.position, transform.forward);
+
+        RaycastHit raycastHit;
+        Vector3 endPosition = _target.transform.position;
+
+        if (Physics.Raycast(ray, out raycastHit, laserMaxLength))
         {
-            TileScript tScript = m_radius[i].GetComponent<TileScript>();
-            int e = 3;
+            //endPosition = raycastHit.point;
+            TileScript tarTileScript = _target.GetComponent<TileScript>();
+            if (tarTileScript.m_holding && raycastHit.collider.gameObject == tarTileScript.m_holding)
+                return false;
+            else
+                return true;
         }
+
+        return false;
+
+        //m_line.SetPosition(0, transform.position);
+        //m_line.SetPosition(1, endPosition);
+
     }
 
     // Reset all tiles to their original color
@@ -203,6 +227,7 @@ public class TileScript : MonoBehaviour {
         {
             TileScript radTileScript = radTiles[i].GetComponent<TileScript>();
             Renderer sRend = radTileScript.GetComponent<Renderer>();
+
             if (radTileScript.m_oldColor == Color.black)
                 sRend.material.color = new Color(1, 1, 1, 0f);
             else
