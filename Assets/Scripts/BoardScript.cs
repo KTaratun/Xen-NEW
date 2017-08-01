@@ -318,7 +318,7 @@ public class BoardScript : MonoBehaviour {
             }
             else if (int.Parse(id[1]) == 12 && tarRend.material.color == new Color(1, 0, 0, 0.5f))
             {
-                selTileScript.FetchTilesWithinRange(int.Parse(rng[1]) + currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, false, TileScript.targetRestriction.DIAGNAL, false, true);
+                selTileScript.FetchTilesWithinRange(int.Parse(rng[1]) + currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, false, TileScript.targetRestriction.DIAGONAL, false, true);
                 m_oldTile = _target;
                 return;
             }

@@ -5,7 +5,7 @@ using UnityEngine;
 public class TileScript : MonoBehaviour {
 
     public enum nbors { left, right, top, bottom };
-    public enum targetRestriction { NONE, HORVERT, DIAGNAL};
+    public enum targetRestriction { NONE, HORVERT, DIAGONAL};
 
     //public GameObject camera;
     public GameObject m_holding;
@@ -185,9 +185,9 @@ public class TileScript : MonoBehaviour {
 
                     TileScript tScript = currNeighbor.GetComponent<TileScript>();
 
-                    if (_targetingRestriction == targetRestriction.DIAGNAL)
+                    if (_targetingRestriction == targetRestriction.DIAGONAL)
                     {
-                        currNeighbor = Diagnal(currNeighbor, originalTileScript, k);
+                        currNeighbor = Diagonal(currNeighbor, originalTileScript, k);
                         if (!currNeighbor)
                             continue;
 
@@ -287,7 +287,7 @@ public class TileScript : MonoBehaviour {
 
     }
 
-    public GameObject Diagnal(GameObject _neighbor, TileScript _originalTile, int _neiInd)
+    public GameObject Diagonal(GameObject _neighbor, TileScript _originalTile, int _neiInd)
     {
         TileScript currNeighbor = _neighbor.GetComponent<TileScript>();
         // nbors { left, right, top, bottom };

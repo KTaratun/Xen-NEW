@@ -174,7 +174,7 @@ public class CharacterScript : MonoBehaviour {
         if (int.Parse(id[1]) == 4 || int.Parse(id[1]) == 11)
             targetingRestriction = TileScript.targetRestriction.HORVERT;
         else if (int.Parse(id[1]) == 12)
-            targetingRestriction = TileScript.targetRestriction.DIAGNAL;
+            targetingRestriction = TileScript.targetRestriction.DIAGONAL;
 
         bool isBlockable = true;
         if (int.Parse(id[1]) == 11 || int.Parse(id[1]) == 12)
@@ -347,7 +347,7 @@ public class CharacterScript : MonoBehaviour {
     private void Knockback(CharacterScript _targetScript, TileScript _away, int _force)
     {
         TileScript targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
-        TileScript nei;
+        TileScript nei = _targetScript.m_tile.GetComponent<TileScript>();
     
         while (_force > 0)
         {
@@ -394,6 +394,20 @@ public class CharacterScript : MonoBehaviour {
                     _force--;
                     continue;
                 }
+            }
+
+            int extraDMG = Mathf.CeilToInt(_force / 2.0f);
+            _targetScript.m_tempStats[(int)sts.HP] -= extraDMG;
+            TextMesh textMesh = _targetScript.m_popupText.GetComponent<TextMesh>();
+            textMesh.text = ((int.Parse(textMesh.text) + Mathf.CeilToInt(_force / 2.0f)).ToString());
+
+            if (nei.m_holding && nei.m_holding.tag == "Player")
+            {
+                CharacterScript neiCharScript = nei.m_holding.GetComponent<CharacterScript>();
+                neiCharScript.m_tempStats[(int)sts.HP] -= extraDMG;
+                neiCharScript.m_popupText.SetActive(true);
+                textMesh = neiCharScript.m_popupText.GetComponent<TextMesh>();
+                textMesh.text = Mathf.CeilToInt(_force / 2.0f).ToString();
             }
             break;
         }
