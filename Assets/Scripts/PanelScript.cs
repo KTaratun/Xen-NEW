@@ -397,6 +397,7 @@ public class PanelScript : MonoBehaviour {
             {
                 m_images[i].enabled = true;
                 m_images[i].sprite = statScripts[i].m_sprite;
+                m_images[i].color = statScripts[i].m_color;
             }
         }
     }

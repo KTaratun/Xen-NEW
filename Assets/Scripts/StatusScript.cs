@@ -8,6 +8,7 @@ public class StatusScript : MonoBehaviour {
     public int m_mode; // mode 0: lifeSpan depletes on end of turn; mode 1: lifeSpan depletes on end of round
     public int m_lifeSpan;
     public Sprite m_sprite;
+    public Color m_color;
 
 	// Use this for initialization
 	void Start () {
@@ -40,12 +41,14 @@ public class StatusScript : MonoBehaviour {
                 m_mode = 0;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Range Symbol");
+                m_color = Color.cyan;
                 break;
             case 10: // Passage
                 m_statMod[(int)CharacterScript.sts.MOV] = 3;
                 m_mode = 0;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
+                m_color = Color.cyan;
                 break;
             default:
                 break;

@@ -172,7 +172,7 @@ public class CharacterScript : MonoBehaviour {
         TileScript tileScript = m_tile.GetComponent<TileScript>();
 
         bool isOnlyHorVert = false;
-        if (int.Parse(id[1]) == 4)
+        if (int.Parse(id[1]) == 4 || int.Parse(id[1]) == 11)
             isOnlyHorVert = true;
 
         m_currRadius = int.Parse(rad[1]);
@@ -281,6 +281,8 @@ public class CharacterScript : MonoBehaviour {
                 break;
             case 10: // Passage
                 StatusScript.NewStatus(_currTarget, int.Parse(_id));
+                break;
+            case 11:
                 break;
             default:
                 break;
