@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TileScript : MonoBehaviour {
 
-    public enum nbors {left, right, top, bottom};
+    public enum nbors { left, right, top, bottom };
 
     //public GameObject camera;
     public GameObject m_holding;
@@ -17,19 +17,19 @@ public class TileScript : MonoBehaviour {
     private Color m_oldColor;
     private LineRenderer m_line;
 
-	// Use this for initialization
-	void Start ()
+    // Use this for initialization
+    void Start()
     {
         m_radius = new List<GameObject>();
         m_oldColor = Color.black;
 
         m_line = gameObject.AddComponent<LineRenderer>();
     }
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+
+    // Update is called once per frame
+    void Update() {
+
+    }
 
     public void OnMouseDown()
     {
@@ -54,23 +54,30 @@ public class TileScript : MonoBehaviour {
 
         if (renderer.material.color == Color.blue) // If tile is blue when clicked, perform movement code
         {
-            currPlayerScript.Movement(currTileScript, GetComponent<TileScript>());
-            ClearRadius(currTileScript);
+            CharacterScript mover = currPlayerScript;
+            TileScript moverTile = currTileScript;
+            if (m_boardScript.m_isForcedMove)
+            {
+                mover = m_boardScript.m_isForcedMove.GetComponent<CharacterScript>();
+                moverTile = mover.m_tile.GetComponent<TileScript>();
+            }
+            mover.Movement(moverTile, GetComponent<TileScript>(), false);
 
             return;
         }
-        else if (renderer.material.color == new Color(1, 0, 0, 1) && m_holding) // Otherwise if color is red, perform action code
+
+        if (renderer.material.color == new Color(1, 0, 0, 1) && m_holding || renderer.material.color == new Color(0, 1, 0, 1) && m_holding) // Otherwise if color is red, perform action code
         {
             List<GameObject> targets = new List<GameObject>();
             targets.Add(m_holding);
             currPlayerScript.Action(targets);
 
-            if (!currPlayerScript.m_isForcedMove)
+            if (!m_boardScript.m_isForcedMove)
                 ClearRadius(currTileScript);
 
             return;
         }
-        else if (renderer.material.color == Color.yellow)
+        if (renderer.material.color == Color.yellow)
         {
             List<GameObject> targets = new List<GameObject>();
             for (int i = 0; i < m_targetRadius.Count; i++)
@@ -85,14 +92,13 @@ public class TileScript : MonoBehaviour {
                 currPlayerScript.Action(targets);
                 ClearRadius(this);
 
-                if (!currPlayerScript.m_isForcedMove)
+                if (!m_boardScript.m_isForcedMove)
                     ClearRadius(currTileScript);
             }
-
             return;
         }
 
-        if (m_holding && m_holding.tag == "Player" && !currPlayerScript.m_isForcedMove)
+        if (m_holding && m_holding.tag == "Player" && !m_boardScript.m_isForcedMove)
         {
             Renderer holdingR = m_holding.GetComponent<Renderer>();
             if (holdingR.material.color == Color.green)
@@ -128,6 +134,19 @@ public class TileScript : MonoBehaviour {
 
         // Start with current tile in oddGen
         oddGen.Add(this);
+
+        if (_targetSelf)
+        {
+            Renderer myRend = GetComponent<Renderer>();
+            m_oldColor = myRend.material.color;
+
+            myRend.material.color = _color;
+
+            if (_color == Color.yellow)
+                m_targetRadius.Add(gameObject);
+            else
+                m_radius.Add(gameObject);
+        }
 
         for (int i = 0; i < _range; i++)
         {
@@ -184,16 +203,21 @@ public class TileScript : MonoBehaviour {
 
     public bool CheckIfBlocked(GameObject _target)
     {
-        float laserWidth = 0.1f;
+        //float laserWidth = 0.1f;
         float laserMaxLength = Vector3.Distance(transform.position, _target.transform.position);
+        //
+        //Vector3[] initLaserPositions = new Vector3[2] { Vector3.zero, Vector3.zero };
+        //m_line.SetPositions(initLaserPositions);
+        //m_line.SetWidth(laserWidth, laserWidth);
 
-        Vector3[] initLaserPositions = new Vector3[2] { Vector3.zero, Vector3.zero };
-        m_line.SetPositions(initLaserPositions);
-        m_line.SetWidth(laserWidth, laserWidth);
-
+        // REFACTOR: Don't instantiate during run time as much as possible
+        Vector3 pos = transform.position;
+        Quaternion rot = transform.rotation;
         transform.LookAt(_target.transform);
 
         Ray ray = new Ray(transform.position, transform.forward);
+
+        transform.SetPositionAndRotation(pos, rot);
 
         RaycastHit raycastHit;
         Vector3 endPosition = _target.transform.position;

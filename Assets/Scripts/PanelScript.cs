@@ -18,6 +18,7 @@ public class PanelScript : MonoBehaviour {
     public Button[] m_buttons;
     public GameObject[] m_panels;
     public Text[] m_text;
+    public Image[] m_images;
 
     // Use this for initialization
     void Start ()
@@ -75,7 +76,6 @@ public class PanelScript : MonoBehaviour {
             TurnSlide();
     }
 
-    // MainPanel
     public void SetButtons()
     {
         for (int i = 0; i < m_buttons.Length; i++)
@@ -86,7 +86,7 @@ public class PanelScript : MonoBehaviour {
             m_buttons[(int)butts.MOV_BUTT].onClick.AddListener(() => m_cScript.MovementSelection(0));
             m_buttons[(int)butts.ACT_BUTT].onClick.AddListener(() => m_cScript.ActionSelection());
             m_buttons[(int)butts.PASS_BUTT].onClick.AddListener(() => m_cScript.Pass());
-            m_buttons[(int)butts.STATUS_BUTT].onClick.AddListener(() => m_cScript.Status());
+            m_buttons[(int)butts.STATUS_BUTT].onClick.AddListener(() => m_cScript.ViewStatus());
         }
         else if (name == "Character Panel")
         {
@@ -97,7 +97,7 @@ public class PanelScript : MonoBehaviour {
             m_buttons[2].onClick.AddListener(() => menuScript.RandomCharacter());
         }
         else if (name == "Auxiliary Panel")
-            m_buttons[0].onClick.AddListener(() => m_cScript.Status());
+            m_buttons[0].onClick.AddListener(() => m_cScript.ViewStatus());
     }
 
     // Action Panel
@@ -108,7 +108,7 @@ public class PanelScript : MonoBehaviour {
         for (int i = 0; i < actions.Length; i++)
         {
             string[] actsSeparated = actions[i].Split('|');
-            string[] eng = actsSeparated[2].Split(':');
+            string[] eng = actsSeparated[(int)DatabaseScript.actions.ENERGY].Split(':');
 
             if (eng[1][0] == 'g' || eng[1][0] == 'r' || eng[1][0] == 'w' || eng[1][0] == 'b')
                 FirstActionAvailable(m_panels[0], actions[i]);
@@ -138,8 +138,8 @@ public class PanelScript : MonoBehaviour {
 
             Text t = buttons[i].GetComponentInChildren<Text>();
             string[] actsSeparated = action.Split('|');
-            string[] name = actsSeparated[1].Split(':');
-            string[] eng = actsSeparated[2].Split(':');
+            string[] name = actsSeparated[(int)DatabaseScript.actions.NAME].Split(':');
+            string[] eng = actsSeparated[(int)DatabaseScript.actions.ENERGY].Split(':');
 
             t.text = name[1];
             buttScript.SetTotalEnergy(eng[1]);
@@ -248,16 +248,6 @@ public class PanelScript : MonoBehaviour {
         {
             m_text[0].text = m_cScript.name;
             m_text[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
-            
-            //Image[] colorsUsed = panels[1].GetComponentsInChildren<Image>();
-
-            //for (int i = 0; i < 4; i++)
-            //    colorsUsed[i].gameObject.SetActive(cScript.colorsUsed[i]);
-            //
-            //Image[] colorsGained = panels[2].GetComponentsInChildren<Image>();
-            //
-            //for (int i = 0; i < 4; i++)
-            //    colorsGained[i].gameObject.SetActive(cScript.colorsGained[i]);
         }
     }
 
@@ -397,6 +387,17 @@ public class PanelScript : MonoBehaviour {
             ButtonScript buttScript = button.GetComponent<ButtonScript>();
             buttScript.SetTotalEnergy(m_cScript.m_color);
             buttScript.m_character = m_character;
+
+            StatusScript[] statScripts = m_cScript.GetComponents<StatusScript>();
+
+            for (int i = 0; i < m_images.Length; i++)
+                m_images[i].enabled = false;
+
+            for (int i = 0; i < statScripts.Length; i++)
+            {
+                m_images[i].enabled = true;
+                m_images[i].sprite = statScripts[i].m_sprite;
+            }
         }
     }
 }

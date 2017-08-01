@@ -114,14 +114,14 @@ public class MenuScript : MonoBehaviour {
             string[] presetDataSeparated = dbScript.m_presets[int.Parse(currB.name)].Split('|');
 
             // Fill out energy
-            string[] presetColor = presetDataSeparated[2].Split(':');
+            string[] presetColor = presetDataSeparated[(int)DatabaseScript.presets.COLORS].Split(':');
             ButtonScript buttScript = buttons[0].GetComponent<ButtonScript>(); // button[0] == energy
             buttons[0].name = presetColor[1];
             buttScript.SetTotalEnergy(presetColor[1]);
             currCharScript.m_color = presetColor[1];
 
             // Fill out name
-            string[] presetName = presetDataSeparated[1].Split(':');
+            string[] presetName = presetDataSeparated[(int)DatabaseScript.presets.NAME].Split(':');
             name[1].text = presetName[1];
             
             // Fill out current character data

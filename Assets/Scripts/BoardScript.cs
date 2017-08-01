@@ -23,11 +23,13 @@ public class BoardScript : MonoBehaviour {
     public List<GameObject> m_characters; // A list of all players within the game
     public GameObject[] m_players;
     public List<GameObject> m_currRound; // A list of the players who have taken a turn in the current round
+    public GameObject m_isForcedMove;
 
-	// Use this for initialization
-	void Start ()
+    // Use this for initialization
+    void Start ()
     {
         m_roundCount = 0;
+        m_isForcedMove = null;
         Renderer r = GetComponent<Renderer>();
         // If the user didn't assign a m_tile size in the editor, auto adjust the m_tiles to fit the board
         if (m_height == 0 && m_width == 0)
@@ -65,7 +67,7 @@ public class BoardScript : MonoBehaviour {
             return;
 
         Renderer sRend = currPScript.m_radius[0].GetComponent<Renderer>();
-        if (sRend.material.color == new Color(1, 0, 0, 0.5f))
+        if (sRend.material.color == new Color(1, 0, 0, 0.5f) || sRend.material.color == Color.yellow)
         {
             PanelScript actPan = m_panels[(int)pnls.ACTION_PANEL].GetComponent<PanelScript>();
             actPan.m_inView = true;
@@ -76,7 +78,11 @@ public class BoardScript : MonoBehaviour {
             panScript.m_inView = true;
         }
 
-        currPScript.ClearRadius(currPScript);
+        if (m_highlightedTile)
+        {
+            TileScript highScript = m_highlightedTile.GetComponent<TileScript>();
+            currPScript.ClearRadius(highScript);
+        }
         currPScript.ClearRadius(currPScript);
     }
 
@@ -235,8 +241,8 @@ public class BoardScript : MonoBehaviour {
                 hudPanScript.PopulateHUD();
                 hudPanScript.m_inView = true;
 
-                HandleOldTile(hit.collider.gameObject);
             }
+            HandleOldTile(hit.collider.gameObject);
         }
         else if (m_highlightedTile)
         {
@@ -350,13 +356,13 @@ public class BoardScript : MonoBehaviour {
                 numPool += charScript.m_tempStats[(int)CharacterScript.sts.SPD];
             }
 
-            int randNum = Random.Range(0, numPool);
+            int randNum = Random.Range(0, numPool + 1);
             int currNum = 0;
 
             for (int i = 0; i < m_characters.Count; i++)
             {
                 CharacterScript charScript = m_characters[i].GetComponent<CharacterScript>();
-                if (charScript.m_tempStats[(int)CharacterScript.sts.SPD] <= 0 || charScript.m_stats[(int)CharacterScript.sts.HP] <= 0)
+                if (charScript.m_tempStats[(int)CharacterScript.sts.SPD] <= 0 || charScript.m_tempStats[(int)CharacterScript.sts.HP] <= 0) // ADD BETTER DEATH CHECK
                     continue;
 
                 currNum += charScript.m_tempStats[(int)CharacterScript.sts.SPD];

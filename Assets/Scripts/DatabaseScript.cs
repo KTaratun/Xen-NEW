@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class DatabaseScript : MonoBehaviour {
 
+    public enum actions { ID, NAME, ENERGY, HIT, DMG, RNG, RAD, CRT, EFFECT, TOT };
+    public enum presets { ID, NAME, COLORS, ACTIONS, EQUIPMENT, TOT }
+
     public string[] m_actions;
     public string[] m_presets;
     // Character Keys: index in 2D array (2,1) and one of the following:
