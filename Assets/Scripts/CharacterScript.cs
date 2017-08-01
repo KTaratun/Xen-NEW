@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CharacterScript : MonoBehaviour {
 
-    public enum sts { HP, SPD, HIT, EVA, CRT, DMG, DEF, MOV, RNG, TOT };
+    public enum sts { HP, SPD, HIT, EVA, CRT, DMG, DEF, MOV, RNG, RAD, TOT };
     enum trn { MOV, ACT };
     
     public GameObject m_tile;
@@ -15,7 +15,6 @@ public class CharacterScript : MonoBehaviour {
     public GameObject[] m_colorDisplay;
     public GameObject m_player;
     public string[] m_actions;
-    public string m_currAction;
     public int[] m_stats;
     public int[] m_tempStats;
     public string[] m_accessories;
@@ -123,7 +122,7 @@ public class CharacterScript : MonoBehaviour {
             move = m_tempStats[(int)sts.MOV]; // ADD EQUIPMENT
 
         TileScript tileScript = m_tile.GetComponent<TileScript>();
-        tileScript.FetchTilesWithinRange(move, new Color (0, 0, 1, 0.5f), false, false);
+        tileScript.FetchTilesWithinRange(move, new Color (0, 0, 1, 0.5f), false, TileScript.targetRestriction.NONE, false, false);
         PanelScript mainPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
         mainPanScript.m_inView = false;
     }
@@ -162,7 +161,7 @@ public class CharacterScript : MonoBehaviour {
 
     public void ActionTargeting()
     {
-        string[] actsSeparated = m_currAction.Split('|');
+        string[] actsSeparated = m_boardScript.m_currAction.Split('|');
         string[] id = actsSeparated[(int)DatabaseScript.actions.ID].Split(':');
         string[] name = actsSeparated[(int)DatabaseScript.actions.NAME].Split(':');
         string[] rng = actsSeparated[(int)DatabaseScript.actions.RNG].Split(':');
@@ -171,20 +170,25 @@ public class CharacterScript : MonoBehaviour {
 
         TileScript tileScript = m_tile.GetComponent<TileScript>();
 
-        bool isOnlyHorVert = false;
+        TileScript.targetRestriction targetingRestriction = TileScript.targetRestriction.NONE;
         if (int.Parse(id[1]) == 4 || int.Parse(id[1]) == 11)
-            isOnlyHorVert = true;
+            targetingRestriction = TileScript.targetRestriction.HORVERT;
+        else if (int.Parse(id[1]) == 12)
+            targetingRestriction = TileScript.targetRestriction.DIAGNAL;
+
+        bool isBlockable = true;
+        if (int.Parse(id[1]) == 11 || int.Parse(id[1]) == 12)
+            isBlockable = false;
 
         m_currRadius = int.Parse(rad[1]);
         bool targetSelf = false;
         if (m_currRadius > 0)
             targetSelf = true;
 
-
         if (name[1][name[1].Length - 3] == 'A' && name[1][name[1].Length - 2] == 'T' && name[1][name[1].Length - 1] == 'K') // See if it's an attack
-            tileScript.FetchTilesWithinRange(int.Parse(rng[1]) + m_tempStats[(int)sts.RNG], new Color(1, 0, 0, 0.5f), targetSelf, isOnlyHorVert);
+            tileScript.FetchTilesWithinRange(int.Parse(rng[1]) + m_tempStats[(int)sts.RNG], new Color(1, 0, 0, 0.5f), targetSelf, targetingRestriction, isBlockable, false);
         else
-            tileScript.FetchTilesWithinRange(int.Parse(rng[1]) + m_tempStats[(int)sts.RNG], new Color(0, 1, 0, 0.5f), true, isOnlyHorVert);
+            tileScript.FetchTilesWithinRange(int.Parse(rng[1]) + m_tempStats[(int)sts.RNG], new Color(0, 1, 0, 0.5f), true, targetingRestriction, isBlockable, false);
 
         PanelScript actionPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
         actionPanScript.m_inView = false;
@@ -194,7 +198,7 @@ public class CharacterScript : MonoBehaviour {
     {
         transform.LookAt(m_boardScript.m_selected.transform);
 
-        string[] actsSeparated = m_currAction.Split('|');
+        string[] actsSeparated = m_boardScript.m_currAction.Split('|');
         string[] id = actsSeparated[(int)DatabaseScript.actions.ID].Split(':');
         string[] name = actsSeparated[(int)DatabaseScript.actions.NAME].Split(':');
         string[] eng = actsSeparated[(int)DatabaseScript.actions.ENERGY].Split(':');
@@ -282,7 +286,7 @@ public class CharacterScript : MonoBehaviour {
             case 10: // Passage
                 StatusScript.NewStatus(_currTarget, int.Parse(_id));
                 break;
-            case 11:
+            case 13: // Explosive
                 break;
             default:
                 break;

@@ -53,7 +53,7 @@ public class ButtonScript : MonoBehaviour {
         actViewScript.m_character = actPanScript.m_character;
         actViewScript.m_cScript = actPanScript.m_cScript;
         if (actPanScript.m_inView)
-            actViewScript.m_cScript.m_currAction = name;
+            actViewScript.m_cScript.m_boardScript.m_currAction = name;
         actViewScript.PopulateText();
     }
 

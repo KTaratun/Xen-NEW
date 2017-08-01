@@ -20,6 +20,7 @@ public class BoardScript : MonoBehaviour {
     public GameObject m_oldTile; // A pointer to the previously hovered over m_tile
     public GameObject m_currTile; // The m_tile of the player who's turn is currently up
     public GameObject m_currPlayer; // A pointer to the player that's turn is currently up
+    public string m_currAction;
     public List<GameObject> m_characters; // A list of all players within the game
     public GameObject[] m_players;
     public List<GameObject> m_currRound; // A list of the players who have taken a turn in the current round
@@ -297,13 +298,33 @@ public class BoardScript : MonoBehaviour {
             tarRend = colScript.m_tile.GetComponent<Renderer>();
             _target = colScript.m_tile;
         }
-        
-        if (currCharScript.m_currRadius > 0 && tarRend.material.color == new Color(1, 0, 0, 0.5f))
+
+        // TARGET RED TILE
+
+        TileScript selTileScript = _target.GetComponent<TileScript>();
+        if (currCharScript.m_currRadius + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0 && tarRend.material.color == new Color(1, 0, 0, 0.5f))
+            selTileScript.FetchTilesWithinRange(currCharScript.m_currRadius + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD], Color.yellow, true, TileScript.targetRestriction.NONE, true, false);
+        else if (m_currAction.Length > 0) // REFACTOR: All this code just for piercing attack...
         {
-            TileScript selTileScript = _target.GetComponent<TileScript>();
-            selTileScript.FetchTilesWithinRange(currCharScript.m_currRadius, Color.yellow, true, false);
+            string[] actSepareted = m_currAction.Split('|');
+            string[] id = actSepareted[(int)DatabaseScript.actions.ID].Split(':');
+            string[] rng = actSepareted[(int)DatabaseScript.actions.RNG].Split(':');
+
+            if (int.Parse(id[1]) == 11 && tarRend.material.color == new Color(1, 0, 0, 0.5f))
+            {
+                selTileScript.FetchTilesWithinRange(int.Parse(rng[1]) + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD], Color.yellow, true, TileScript.targetRestriction.HORVERT, false, false);
+                m_oldTile = _target;
+                return;
+            }
+            else if (int.Parse(id[1]) == 12 && tarRend.material.color == new Color(1, 0, 0, 0.5f))
+            {
+                selTileScript.FetchTilesWithinRange(int.Parse(rng[1]) + currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, false, TileScript.targetRestriction.DIAGNAL, false, true);
+                m_oldTile = _target;
+                return;
+            }
         }
-        else
+        
+        if (currCharScript.m_currRadius + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] <= 0)
             tarRend.material.color = new Color(tarRend.material.color.r, tarRend.material.color.g, tarRend.material.color.b, tarRend.material.color.a + 0.5f);
         
         m_oldTile = _target;
