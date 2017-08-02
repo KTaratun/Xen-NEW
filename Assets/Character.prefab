@@ -538,7 +538,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1933251457436188}
   m_LocalRotation: {x: -0, y: 0.98797965, z: -0, w: 0.15458423}
-  m_LocalPosition: {x: 0.001, y: 1.93, z: 0}
+  m_LocalPosition: {x: 0.001, y: 2.17, z: 0}
   m_LocalScale: {x: 0.09882662, y: 0.1, z: 0.09882662}
   m_Children: []
   m_Father: {fileID: 4270520559704738}
@@ -1828,14 +1828,14 @@ TextMesh:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1933251457436188}
-  m_Text: d
+  m_Text: 0
   m_OffsetZ: 0
   m_CharacterSize: 1
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
   m_TabSize: 4
-  m_FontSize: 80
+  m_FontSize: 130
   m_FontStyle: 0
   m_RichText: 1
   m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
@@ -1864,12 +1864,14 @@ MonoBehaviour:
   - {fileID: 1885874490562972}
   - {fileID: 1476873142885516}
   m_player: {fileID: 0}
-  m_actions: []
   m_currAction: 
+  m_actions: []
   m_stats: 
   m_tempStats: 
   m_accessories: []
   m_color: 
+  m_currRadius: 0
+  m_effects: 
 --- !u!135 &135047136950433516
 SphereCollider:
   m_ObjectHideFlags: 1

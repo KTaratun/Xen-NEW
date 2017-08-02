@@ -208,7 +208,7 @@ public class PanelScript : MonoBehaviour {
         }
         else if (name == "ActionViewer Panel")
         {
-            string[] actStats = m_cScript.m_boardScript.m_currAction.Split('|');
+            string[] actStats = m_cScript.m_currAction.Split('|');
             string[] currStat = actStats[1].Split(':');
             m_text[0].text = currStat[1];
 

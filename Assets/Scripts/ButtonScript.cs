@@ -52,8 +52,9 @@ public class ButtonScript : MonoBehaviour {
         PanelScript actPanScript = m_actionPanel.GetComponent<PanelScript>();
         actViewScript.m_character = actPanScript.m_character;
         actViewScript.m_cScript = actPanScript.m_cScript;
-        if (actPanScript.m_inView)
-            actViewScript.m_cScript.m_boardScript.m_currAction = name;
+        if (actPanScript.m_inView) // Need this check to avoid selecting another action while menu is moving
+            actViewScript.m_cScript.m_currAction = name;
+
         actViewScript.PopulateText();
     }
 
@@ -115,21 +116,21 @@ public class ButtonScript : MonoBehaviour {
         for (int i = 0; i < energy.Length; i++)
         {
             if (energy[i] == 'g')
-                orbs[i+1].color = new Color(.55f, .8f, .5f, 1);
+                orbs[i+1].color = new Color(.65f, .9f, .6f, 1);
             else if (energy[i] == 'r')
-                orbs[i+1].color = new Color(1, .3f, .35f, 1);
+                orbs[i+1].color = new Color(1, .4f, .45f, 1);
             else if (energy[i] == 'w')
                 orbs[i+1].color = new Color(1, 1, 1, 1);
             else if (energy[i] == 'b')
-                orbs[i+1].color = new Color(.55f, .5f, 1, 1);
+                orbs[i+1].color = new Color(.65f, .6f, 1, 1);
             else if (energy[i] == 'G')
-                orbs[i+1].color = new Color(.35f, .6f, .3f, 1);
+                orbs[i+1].color = new Color(.45f, .7f, .4f, 1);
             else if (energy[i] == 'R')
-                orbs[i+1].color = new Color(.8f, .1f, .15f, 1);
+                orbs[i+1].color = new Color(.9f, .2f, .25f, 1);
             else if (energy[i] == 'W')
                 orbs[i+1].color = new Color(.8f, .8f, .8f, 1);
             else if (energy[i] == 'B')
-                orbs[i+1].color = new Color(.35f, .3f, 1, 1);
+                orbs[i+1].color = new Color(.45f, .4f, 1, 1);
         }
     }
 

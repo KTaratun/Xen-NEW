@@ -7,7 +7,6 @@ public class TileScript : MonoBehaviour {
     public enum nbors { left, right, top, bottom };
     public enum targetRestriction { NONE, HORVERT, DIAGONAL};
 
-    //public GameObject camera;
     public GameObject m_holding;
     public GameObject[] m_neighbors;
     public List<GameObject> m_radius;
@@ -133,7 +132,9 @@ public class TileScript : MonoBehaviour {
         List<TileScript> oddGen = new List<TileScript>();
         List<TileScript> evenGen = new List<TileScript>();
 
-        string[] actSepareted = m_boardScript.m_currAction.Split('|');
+        CharacterScript currCharScript = m_boardScript.m_currPlayer.GetComponent<CharacterScript>();
+
+        string[] actSepareted = currCharScript.m_currAction.Split('|');
         string[] id = actSepareted[(int)DatabaseScript.actions.ID].Split(':');
 
         GameObject originalTile = gameObject;
@@ -207,10 +208,10 @@ public class TileScript : MonoBehaviour {
 
                     Renderer tR = currNeighbor.GetComponent<Renderer>();
                     // REFACTOR: All this code for just piercing attack
-                    if (m_boardScript.m_currAction.Length > 0 && int.Parse(id[1]) == 11 && _color == Color.yellow && tScript.m_holding && tScript.m_holding == m_boardScript.m_currPlayer
-                        || m_boardScript.m_currAction.Length > 0 && int.Parse(id[1]) == 11 && _color == Color.yellow && tR.material.color == new Color(1, 1, 1, 0))
+                    if (currCharScript.m_currAction.Length > 0 && int.Parse(id[1]) == 11 && _color == Color.yellow && tScript.m_holding && tScript.m_holding == m_boardScript.m_currPlayer
+                        || currCharScript.m_currAction.Length > 0 && int.Parse(id[1]) == 11 && _color == Color.yellow && tR.material.color == new Color(1, 1, 1, 0))
                         continue;
-                    if (m_boardScript.m_currAction.Length > 0 && int.Parse(id[1]) == 11 && _color == Color.yellow)
+                    if (currCharScript.m_currAction.Length > 0 && int.Parse(id[1]) == 11 && _color == Color.yellow)
                     {
                         bool redNeigbor = false;
                         for (int j = 0; j < tScript.m_neighbors.Length; j++)
@@ -218,7 +219,6 @@ public class TileScript : MonoBehaviour {
                             if (!tScript.m_neighbors[j])
                                 continue;
 
-                            TileScript neiScript = tScript.m_neighbors[j].GetComponent<TileScript>();
                             Renderer neiRend = tScript.m_neighbors[j].GetComponent<Renderer>();
                             if (neiRend.material.color == new Color(1, 0, 0, 0.5f) || tR.material.color == new Color(1, 0, 0, 0.5f))
                             {
@@ -325,6 +325,17 @@ public class TileScript : MonoBehaviour {
         }
 
         return null;
+    }
+
+    static public bool CheckForEmptyNeighbor(TileScript _tile)
+    {
+        for (int i = 0; i < _tile.m_neighbors.Length; i++)
+        {
+            TileScript nei = _tile.m_neighbors[i].GetComponent<TileScript>();
+            if (!nei.m_holding)
+                return true;
+        }
+        return false;
     }
 
     // Reset all tiles to their original color

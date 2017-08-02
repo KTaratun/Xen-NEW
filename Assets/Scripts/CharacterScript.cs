@@ -14,12 +14,14 @@ public class CharacterScript : MonoBehaviour {
     public GameObject m_popupText;
     public GameObject[] m_colorDisplay;
     public GameObject m_player;
+    public string m_currAction;
     public string[] m_actions;
     public int[] m_stats;
     public int[] m_tempStats;
     public string[] m_accessories;
     public string m_color;
     public int m_currRadius;
+    public bool[] m_effects;
 
 	// Use this for initialization
 	void Start ()
@@ -34,6 +36,7 @@ public class CharacterScript : MonoBehaviour {
         m_stats[(int)sts.SPD] = 10;
         m_stats[(int)sts.MOV] = 5;
         m_currRadius = 0;
+        m_effects = new bool[(int)StatusScript.effects.TOT];
 
         for (int i = 0; i < m_stats.Length; i++)
             m_tempStats[i] = m_stats[i];
@@ -67,7 +70,7 @@ public class CharacterScript : MonoBehaviour {
             {
                 mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = true;
                 mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = true;
-                StatusScript.UpdateStatus(gameObject, 0);
+                StatusScript.UpdateStatus(gameObject, StatusScript.mode.TURN_END);
                 m_boardScript.NewTurn();
             }
 
@@ -100,6 +103,7 @@ public class CharacterScript : MonoBehaviour {
                 if (textMesh.color.a <= 0)
                 {
                     textMesh.color = Color.white;
+                    textMesh.text = "0";
                     m_popupText.SetActive(false);
                 }
             }
@@ -161,7 +165,7 @@ public class CharacterScript : MonoBehaviour {
 
     public void ActionTargeting()
     {
-        string[] actsSeparated = m_boardScript.m_currAction.Split('|');
+        string[] actsSeparated = m_currAction.Split('|');
         string[] id = actsSeparated[(int)DatabaseScript.actions.ID].Split(':');
         string[] name = actsSeparated[(int)DatabaseScript.actions.NAME].Split(':');
         string[] rng = actsSeparated[(int)DatabaseScript.actions.RNG].Split(':');
@@ -198,7 +202,7 @@ public class CharacterScript : MonoBehaviour {
     {
         transform.LookAt(m_boardScript.m_selected.transform);
 
-        string[] actsSeparated = m_boardScript.m_currAction.Split('|');
+        string[] actsSeparated = m_currAction.Split('|');
         string[] id = actsSeparated[(int)DatabaseScript.actions.ID].Split(':');
         string[] name = actsSeparated[(int)DatabaseScript.actions.NAME].Split(':');
         string[] eng = actsSeparated[(int)DatabaseScript.actions.ENERGY].Split(':');
@@ -208,33 +212,51 @@ public class CharacterScript : MonoBehaviour {
 
         if (name[1][name[1].Length - 3] == 'A' && name[1][name[1].Length - 2] == 'T' && name[1][name[1].Length - 1] == 'K') // See if it's an attack
         {
-            int roll = Random.Range(0, 21); // Because Random.Range doesn't include the max number
+            int roll = Random.Range(1, 21); // Because Random.Range doesn't include the max number
+
 
             for (int i = 0; i < _targets.Count; i++)
             {
                 bool miss = false;
                 CharacterScript targetScript = _targets[i].GetComponent<CharacterScript>();
-                targetScript.m_popupText.SetActive(true);
-                TextMesh textMesh = targetScript.m_popupText.GetComponent<TextMesh>();
+                int DC = int.Parse(hit[1]) - m_tempStats[(int)sts.HIT] + targetScript.m_tempStats[(int)sts.EVA];
+                int totalCrit = int.Parse(crt[1]) + m_tempStats[(int)sts.CRT];
+                string finalDMG = "0";
 
+                print("Rolled " + roll + " against " + hit[1] + " - my HIT mod of " + m_tempStats[(int)sts.HIT] + " + my opponents EVA mod of " + targetScript.m_tempStats[(int)sts.EVA] +
+                    " for a total DC of " + DC + ". Crit: " + crt[1] + " + my CRT mod of " + m_tempStats[(int)sts.CRT] + " for a total of Crit: " + totalCrit + ".\n");
 
-                textMesh.color = Color.white;
+                if (int.Parse(id[1]) == 29)
+                {
+                    DC -= targetScript.m_tempStats[(int)sts.EVA];
+                    finalDMG = (0 + targetScript.m_tempStats[(int)sts.DEF]).ToString();
+                }
+
                 if (roll >= int.Parse(crt[1]) + m_tempStats[(int)sts.CRT]) // ADD EQUIPMENT
                 {
-                    targetScript.m_tempStats[(int)sts.HP] -= int.Parse(dmg[1]) * 2;
-                    textMesh.text = (int.Parse(dmg[1]) * 2).ToString();
-                    textMesh.color = Color.red;
+                    if ((int.Parse(dmg[1]) * 2) + m_tempStats[(int)sts.DMG] + targetScript.m_tempStats[(int)sts.DEF] >= 0)
+                        finalDMG = ((int.Parse(dmg[1]) * 2) + m_tempStats[(int)sts.DMG] - targetScript.m_tempStats[(int)sts.DEF]).ToString();
+
+                    print("Hit with a crit dealing " + dmg[1] + "x2 + my DMG mod of " + m_tempStats[(int)sts.DMG] + " - my opponent's DEF mod of " + targetScript.m_tempStats[(int)sts.DEF] + " for a total of " + finalDMG +".\n");
+                    targetScript.ReceiveDamage(finalDMG, Color.red);
                     EnergyConversion(eng[1]);
                 }
-                else if (roll < int.Parse(hit[1]) - m_tempStats[(int)sts.HIT] + targetScript.m_tempStats[(int)sts.EVA]) // ADD EQUIPMENT
+                else if (roll < DC) // ADD EQUIPMENT
                 {
-                    textMesh.text = "MISS";
+                    targetScript.ReceiveDamage("MISS", Color.white);
                     miss = true;
+
+                    print("Missed.\n");
+                    if (eng[1][0] == 'G' || eng[1][0] == 'R' || eng[1][0] == 'W' || eng[1][0] == 'B')
+                        EnergyConversion(eng[1]);
                 }
                 else
                 {
-                    targetScript.m_tempStats[(int)sts.HP] -= int.Parse(dmg[1]);
-                    textMesh.text = dmg[1];
+                    if (int.Parse(dmg[1]) + m_tempStats[(int)sts.DMG] + targetScript.m_tempStats[(int)sts.DEF] >= 0)
+                        finalDMG = (int.Parse(dmg[1]) + m_tempStats[(int)sts.DMG] - targetScript.m_tempStats[(int)sts.DEF]).ToString();
+
+                    print("Hit dealing " + dmg[1] + " + my DMG mod of " + m_tempStats[(int)sts.DMG] + " - my opponent's DEF mod of " + targetScript.m_tempStats[(int)sts.DEF] + " for a total of " + finalDMG + ".\n");
+                    targetScript.ReceiveDamage(finalDMG, Color.white);
                     EnergyConversion(eng[1]);
                 }
 
@@ -251,17 +273,37 @@ public class CharacterScript : MonoBehaviour {
         mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
     }
 
+    public void ReceiveDamage(string _dmg, Color _color)
+    {
+        TextMesh textMesh = m_popupText.GetComponent<TextMesh>();
+        m_popupText.SetActive(true);
+        textMesh.color = _color;
+
+        int parsedDMG;
+        if (int.TryParse(_dmg, out parsedDMG))
+        {
+            m_tempStats[(int)sts.HP] -= parsedDMG;
+            textMesh.text = _dmg;
+        }
+        else
+            textMesh.text = _dmg;
+    }
+
     public void Ability(GameObject _currTarget, string _id)
     {
         CharacterScript targetScript = _currTarget.GetComponent<CharacterScript>();
+        TileScript targetTile = targetScript.m_tile.GetComponent<TileScript>();
         TileScript tileScript = m_tile.GetComponent<TileScript>();
 
         switch (int.Parse(_id))
         {
             case 1: // Dash ATK
-                tileScript.ClearRadius(tileScript);
-                m_boardScript.m_isForcedMove = gameObject;
-                MovementSelection(3);
+                if (TileScript.CheckForEmptyNeighbor(tileScript))
+                {
+                    tileScript.ClearRadius(tileScript);
+                    m_boardScript.m_isForcedMove = gameObject;
+                    MovementSelection(3);
+                }
                 break;
             case 4: // Pull ATK
                 PullTowards(targetScript, tileScript);
@@ -270,9 +312,12 @@ public class CharacterScript : MonoBehaviour {
                 PullTowards(targetScript, m_boardScript.m_selected.GetComponent<TileScript>());
                 break;
             case 6: // Push ATK
-                tileScript.ClearRadius(tileScript);
-                m_boardScript.m_isForcedMove = _currTarget;
-                targetScript.MovementSelection(4);
+                if (TileScript.CheckForEmptyNeighbor(targetTile))
+                {
+                    tileScript.ClearRadius(tileScript);
+                    m_boardScript.m_isForcedMove = _currTarget;
+                    targetScript.MovementSelection(4);
+                }
                 break;
             case 7: // Smash ATK
                 Knockback(targetScript, tileScript, 3);
@@ -286,7 +331,38 @@ public class CharacterScript : MonoBehaviour {
             case 10: // Passage
                 StatusScript.NewStatus(_currTarget, int.Parse(_id));
                 break;
-            case 13: // Explosive
+            case 13: // Rush ATK
+                int dis = Mathf.Abs(tileScript.m_x - targetTile.m_x) + Mathf.Abs(tileScript.m_z - targetTile.m_z) - 1;
+                targetScript.ReceiveDamage(dis.ToString(), Color.white);
+                PullTowards(this, targetScript.m_tile.GetComponent<TileScript>());
+                break;
+            case 14: // Explosive
+                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+                break;
+            case 18: // Winding ATK
+                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+                break;
+            case 22: // Weakening ATK
+                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+                break;
+            case 24: // Scarring ATK
+                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+                break;
+            case 25: // Boost
+                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+                break;
+            case 26: // AIM
+                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+                break;
+            case 28: // Bleed ATK
+                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+                break;
+            case 30: // Critical
+                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+                break;
+            case 31: // Break ATK
+                targetScript.m_stats[(int)sts.DEF]--;
+                StatusScript.ApplyStatus(_currTarget);
                 break;
             default:
                 break;
@@ -397,17 +473,13 @@ public class CharacterScript : MonoBehaviour {
             }
 
             int extraDMG = Mathf.CeilToInt(_force / 2.0f);
-            _targetScript.m_tempStats[(int)sts.HP] -= extraDMG;
             TextMesh textMesh = _targetScript.m_popupText.GetComponent<TextMesh>();
-            textMesh.text = ((int.Parse(textMesh.text) + Mathf.CeilToInt(_force / 2.0f)).ToString());
+            _targetScript.ReceiveDamage(((int.Parse(textMesh.text) + Mathf.CeilToInt(_force / 2.0f)).ToString()), Color.white);
 
             if (nei.m_holding && nei.m_holding.tag == "Player")
             {
                 CharacterScript neiCharScript = nei.m_holding.GetComponent<CharacterScript>();
-                neiCharScript.m_tempStats[(int)sts.HP] -= extraDMG;
-                neiCharScript.m_popupText.SetActive(true);
-                textMesh = neiCharScript.m_popupText.GetComponent<TextMesh>();
-                textMesh.text = Mathf.CeilToInt(_force / 2.0f).ToString();
+                neiCharScript.ReceiveDamage(Mathf.CeilToInt(_force / 2.0f).ToString(), Color.white);
             }
             break;
         }
