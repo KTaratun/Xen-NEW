@@ -11,7 +11,6 @@ public class PanelScript : MonoBehaviour {
     public bool m_inView;
     public dir m_direction;
     public int m_boundryDis;
-    public GameObject m_character;
     public CharacterScript m_cScript;
     public GameObject m_main;
     public GameObject m_parent;
@@ -83,7 +82,17 @@ public class PanelScript : MonoBehaviour {
 
         if (name == "Main Panel")
         {
-            m_buttons[(int)butts.MOV_BUTT].onClick.AddListener(() => m_cScript.MovementSelection(0));
+            if (!m_cScript.m_effects[(int)StatusScript.effects.IMMOBILE])
+            {
+                m_buttons[(int)butts.MOV_BUTT].GetComponent<Image>().color = Color.white;
+                m_buttons[(int)butts.MOV_BUTT].interactable = true;
+                m_buttons[(int)butts.MOV_BUTT].onClick.AddListener(() => m_cScript.MovementSelection(0));
+            }
+            else
+            {
+                m_buttons[(int)butts.MOV_BUTT].GetComponent<Image>().color = new Color(1, .5f, .5f, 1);
+                m_buttons[(int)butts.MOV_BUTT].interactable = false;
+            }
             m_buttons[(int)butts.ACT_BUTT].onClick.AddListener(() => m_cScript.ActionSelection());
             m_buttons[(int)butts.PASS_BUTT].onClick.AddListener(() => m_cScript.Pass());
             m_buttons[(int)butts.STATUS_BUTT].onClick.AddListener(() => m_cScript.ViewStatus());
@@ -144,8 +153,12 @@ public class PanelScript : MonoBehaviour {
             t.text = name[1];
             buttScript.SetTotalEnergy(eng[1]);
 
-            if (m_main && m_main.name == "Board")
+
+            if (m_cScript.m_effects[(int)StatusScript.effects.WARD] && CharacterScript.CheckIfAttack(name[1]))
+                m_buttons[i].GetComponent<Image>().color = new Color(1, .5f, .5f, 1);
+            else if (m_main && m_main.name == "Board")
             {
+                m_buttons[i].GetComponent<Image>().color = new Color(1, 1, 1, 1);
                 PlayerScript playScript = m_cScript.m_player.GetComponent<PlayerScript>();
                 if (playScript.CheckEnergy(eng[1]))
                 {
@@ -182,7 +195,7 @@ public class PanelScript : MonoBehaviour {
     }
 
     // General Panel
-    public void PopulateText()
+    public void PopulatePanel()
     {
         if (name == "Round Panel")
         {
@@ -205,6 +218,8 @@ public class PanelScript : MonoBehaviour {
                 m_text[9].text = "ACC: " + m_cScript.m_accessories[0];
             if (m_cScript.m_accessories[1] != null)
                 m_text[10].text = "ACC: " + m_cScript.m_accessories[1];
+
+            StatusSymbolSetup();
         }
         else if (name == "ActionViewer Panel")
         {
@@ -249,17 +264,24 @@ public class PanelScript : MonoBehaviour {
             m_text[0].text = m_cScript.name;
             m_text[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
         }
+        else if (name == "StatusViewer Panel")
+        {
+            StatusScript[] statScripts = m_cScript.GetComponents<StatusScript>();
+            
+            m_images[0].sprite = statScripts[m_cScript.m_currStatus].m_sprite;
+            m_images[0].color = statScripts[m_cScript.m_currStatus].m_color;
+
+            m_text[0].text = "Duration: " + statScripts[m_cScript.m_currStatus].m_lifeSpan.ToString();
+            m_text[1].text = statScripts[m_cScript.m_currStatus].m_effect;
+
+        }
+        else if (name == "Status Selector")
+            StatusSymbolSetup();
     }
 
     private void Slide()
     {
         RectTransform recTrans = GetComponent<RectTransform>();
-
-        if (m_parent)
-        {
-            PanelScript parentScript = m_parent.GetComponent<PanelScript>();
-            m_character = parentScript.m_character;
-        }
 
         if (m_direction == dir.UP)
         {
@@ -379,26 +401,33 @@ public class PanelScript : MonoBehaviour {
 
     public void PopulateHUD()
     {
-        PopulateText();
+        PopulatePanel();
 
         if (GetComponentInChildren<Button>())
         {
             Button button = GetComponentInChildren<Button>();
             ButtonScript buttScript = button.GetComponent<ButtonScript>();
             buttScript.SetTotalEnergy(m_cScript.m_color);
-            buttScript.m_character = m_character;
 
-            StatusScript[] statScripts = m_cScript.GetComponents<StatusScript>();
+            StatusSymbolSetup();
+        }
+    }
 
-            for (int i = 0; i < m_images.Length; i++)
-                m_images[i].enabled = false;
+    private void StatusSymbolSetup()
+    {
+        StatusScript[] statScripts = m_cScript.GetComponents<StatusScript>();
 
-            for (int i = 0; i < statScripts.Length; i++)
-            {
-                m_images[i].enabled = true;
-                m_images[i].sprite = statScripts[i].m_sprite;
-                m_images[i].color = statScripts[i].m_color;
-            }
+        for (int i = 0; i < m_images.Length; i++)
+            m_images[i].enabled = false;
+
+        for (int i = 0; i < statScripts.Length; i++)
+        {
+            m_images[i].enabled = true;
+            ButtonScript buttScript = m_images[i].GetComponentInChildren<ButtonScript>();
+            buttScript.m_parent = this;
+            m_images[i].name = i.ToString();
+            m_images[i].sprite = statScripts[i].m_sprite;
+            m_images[i].color = statScripts[i].m_color;
         }
     }
 }

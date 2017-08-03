@@ -102,7 +102,6 @@ public class MenuScript : MonoBehaviour {
         Text[] name = charViewScript.GetComponentsInChildren<Text>();
 
         CharacterScript currCharScript = m_currCharacter.GetComponent<CharacterScript>();
-        actionScript.m_character = m_currCharacter;
         actionScript.m_cScript = currCharScript;
 
         res = 0;
@@ -129,9 +128,8 @@ public class MenuScript : MonoBehaviour {
             currCharScript.m_actions = dbScript.GetActions(dbScript.m_presets[int.Parse(currB.name)]);
 
             // Fill out status
-            statPan.m_character = m_currCharacter;
             statPan.m_cScript = currCharScript;
-            statPan.PopulateText();
+            statPan.PopulatePanel();
 
             // Fill out actions
             actionScript.PopulateActionButtons(currCharScript.m_actions);

@@ -7,8 +7,10 @@ using UnityEngine.EventSystems;
 public class ButtonScript : MonoBehaviour {
 
     public GameObject m_actionViewer;
+    public PanelScript m_main;
     public GameObject m_actionPanel;
     public GameObject m_character;
+    public PanelScript m_parent;
     public GameObject m_camera;
     public GameObject[] m_energyPanel;
     public string m_action;
@@ -25,12 +27,14 @@ public class ButtonScript : MonoBehaviour {
 
     public void HoverTrue(BaseEventData eventData)
     {
-        if (GetComponent<Button>().name == "Turn Panel Energy Button")
+        // REFACTOR: Make this more like how status images are handled
+        if (GetComponent<Button>() && GetComponent<Button>().name == "Turn Panel Energy Button")
         {
             CharacterScript charScript = m_character.GetComponent<CharacterScript>();
 
             //Image turnPanImage = charScript.turnPanel.GetComponent<Image>();
             //turnPanImage.color = Color.cyan;
+            
             Renderer charRenderer = m_character.GetComponent<Renderer>();
             charRenderer.material.color = Color.cyan;
             PanelScript hudPanScript = charScript.m_boardScript.m_panels[(int)BoardScript.pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
@@ -38,6 +42,15 @@ public class ButtonScript : MonoBehaviour {
             hudPanScript.m_text[1].text = "HP: " + charScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + charScript.m_stats[(int)CharacterScript.sts.HP];
             hudPanScript.m_inView = true;
 
+            return;
+        }
+        else if (gameObject.tag == "Status Image")
+        {
+            m_main.m_inView = true;
+
+            m_main.m_cScript = m_parent.m_cScript;
+            m_main.m_cScript.m_currStatus = int.Parse(name);
+            m_main.PopulatePanel();
             return;
         }
 
@@ -50,17 +63,16 @@ public class ButtonScript : MonoBehaviour {
         actViewScript.m_inView = true;
 
         PanelScript actPanScript = m_actionPanel.GetComponent<PanelScript>();
-        actViewScript.m_character = actPanScript.m_character;
         actViewScript.m_cScript = actPanScript.m_cScript;
         if (actPanScript.m_inView) // Need this check to avoid selecting another action while menu is moving
             actViewScript.m_cScript.m_currAction = name;
 
-        actViewScript.PopulateText();
+        actViewScript.PopulatePanel();
     }
 
     public void HoverFalse()
     {
-        if (GetComponent<Button>().name == "Turn Panel Energy Button")
+        if (GetComponent<Button>() && GetComponent<Button>().name == "Turn Panel Energy Button")
         {
             CharacterScript charScript = m_character.GetComponent<CharacterScript>();
 
@@ -73,6 +85,8 @@ public class ButtonScript : MonoBehaviour {
             
             return;
         }
+        else if (gameObject.tag == "Status Image")
+            m_main.m_inView = false;
 
         if (!m_actionViewer)
             return;
@@ -128,7 +142,7 @@ public class ButtonScript : MonoBehaviour {
             else if (energy[i] == 'R')
                 orbs[i+1].color = new Color(.9f, .2f, .25f, 1);
             else if (energy[i] == 'W')
-                orbs[i+1].color = new Color(.8f, .8f, .8f, 1);
+                orbs[i+1].color = new Color(.9f, .9f, .9f, 1);
             else if (energy[i] == 'B')
                 orbs[i+1].color = new Color(.45f, .4f, 1, 1);
         }
@@ -193,5 +207,28 @@ public class ButtonScript : MonoBehaviour {
     {
         CameraScript camScript = m_camera.GetComponent<CameraScript>();
         camScript.m_target = m_character;
+    }
+
+    public void RemoveStatus()
+    {
+        // Get rid of the status
+        StatusScript[] statScripts = m_main.m_cScript.GetComponents<StatusScript>();
+        statScripts[m_main.m_cScript.m_currStatus].DestroyStatus(m_main.m_cScript.transform.root.gameObject);
+
+        // Resume the game
+        ResumeGame();
+    }
+
+    public void ResumeGame()
+    {
+        m_parent.m_cScript.m_boardScript.m_isForcedMove = null;
+        m_parent.m_inView = false;
+
+        //if (m_main.m_cScript && m_main.m_cScript.m_tile)
+        //{
+        //    TileScript tScript = m_main.m_cScript.m_tile.GetComponent<TileScript>();
+        //    if (tScript.m_holding)
+        //        tScript.ClearRadius(tScript);
+        //}
     }
 }

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class BoardScript : MonoBehaviour {
 
-    public enum pnls { MAIN_PANEL, ACTION_PANEL, STATUS_PANEL, HUD_LEFT_PANEL, HUD_RIGHT_PANEL, ROUND_PANEL, AUXILIARY_PANEL, TOTAL_PANEL }
+    public enum pnls { MAIN_PANEL, ACTION_PANEL, STATUS_PANEL, HUD_LEFT_PANEL, HUD_RIGHT_PANEL, ROUND_PANEL, AUXILIARY_PANEL, STATUS_SELECTOR, TOTAL_PANEL }
 
     public Camera m_camera; // Why it do that squiggle?
     public int m_roundCount;
@@ -67,7 +67,7 @@ public class BoardScript : MonoBehaviour {
             return;
 
         Renderer sRend = currPScript.m_radius[0].GetComponent<Renderer>();
-        if (sRend.material.color == new Color(1, 0, 0, 0.5f) || sRend.material.color == Color.yellow)
+        if (sRend.material.color == new Color(1, 0, 0, 0.5f) || sRend.material.color == Color.yellow || sRend.material.color == new Color(0, 1, 0, 0.5f))
         {
             PanelScript actPan = m_panels[(int)pnls.ACTION_PANEL].GetComponent<PanelScript>();
             actPan.m_inView = true;
@@ -193,8 +193,9 @@ public class BoardScript : MonoBehaviour {
         PanelScript actPanScript = m_panels[(int)pnls.ACTION_PANEL].GetComponent<PanelScript>();
         PanelScript statPanScript = m_panels[(int)pnls.STATUS_PANEL].GetComponent<PanelScript>();
         PanelScript auxPanScript = m_panels[(int)pnls.AUXILIARY_PANEL].GetComponent<PanelScript>();
+        PanelScript statSelScript = m_panels[(int)pnls.STATUS_SELECTOR].GetComponent<PanelScript>();
 
-        if (!m_currPlayer || actPanScript.m_inView || mainPanScript.m_inView || statPanScript.m_inView || auxPanScript.m_inView)
+        if (!m_currPlayer || actPanScript.m_inView || mainPanScript.m_inView || statPanScript.m_inView || auxPanScript.m_inView || statSelScript.m_inView)
         {
             if (m_oldTile)
             {
@@ -253,7 +254,6 @@ public class BoardScript : MonoBehaviour {
             }
 
             // Reveal right HUD with highlighted character's data
-            hudPanScript.m_character = hit.collider.gameObject;
             hudPanScript.m_cScript = charScript;
             hudPanScript.PopulateHUD();
             hudPanScript.m_inView = true;
@@ -303,25 +303,25 @@ public class BoardScript : MonoBehaviour {
         if (currCharScript.m_currAction.Length > 0) // REFACTOR: All this code just for piercing attack...
         {
             string[] actSepareted = currCharScript.m_currAction.Split('|');
-            string[] id = actSepareted[(int)DatabaseScript.actions.ID].Split(':');
+            string[] name = actSepareted[(int)DatabaseScript.actions.NAME].Split(':');
             string[] rng = actSepareted[(int)DatabaseScript.actions.RNG].Split(':');
 
-            if (int.Parse(id[1]) == 11 && tarRend.material.color == new Color(1, 0, 0, 0.5f))
+            if (name[1] == "Piercing ATK" && tarRend.material.color == new Color(1, 0, 0, 0.5f))
             {
-                selTileScript.FetchTilesWithinRange(int.Parse(rng[1]) + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD], Color.yellow, true, TileScript.targetRestriction.HORVERT, false, false);
+                selTileScript.FetchTilesWithinRange(int.Parse(rng[1]) + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD], Color.yellow, true, TileScript.targetRestriction.HORVERT, false);
                 m_oldTile = _target;
                 return;
             }
-            else if (int.Parse(id[1]) == 12 && tarRend.material.color == new Color(1, 0, 0, 0.5f))
+            else if (name[1] == "Cross ATK" && tarRend.material.color == new Color(1, 0, 0, 0.5f))
             {
-                selTileScript.FetchTilesWithinRange(int.Parse(rng[1]) + currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, false, TileScript.targetRestriction.DIAGONAL, false, true);
+                selTileScript.FetchTilesWithinRange(int.Parse(rng[1]) + currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, false, TileScript.targetRestriction.DIAGONAL, false);
                 m_oldTile = _target;
                 return;
             }
         }
 
         if (currCharScript.m_currRadius + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0 && tarRend.material.color == new Color(1, 0, 0, 0.5f))
-            selTileScript.FetchTilesWithinRange(currCharScript.m_currRadius + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD], Color.yellow, true, TileScript.targetRestriction.NONE, true, false);
+            selTileScript.FetchTilesWithinRange(currCharScript.m_currRadius + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD], Color.yellow, true, TileScript.targetRestriction.NONE, true);
         else
             tarRend.material.color = new Color(tarRend.material.color.r, tarRend.material.color.g, tarRend.material.color.b, tarRend.material.color.a + 0.5f);
 
@@ -361,7 +361,6 @@ public class BoardScript : MonoBehaviour {
         charScript.m_turnPanel = null;
 
         PanelScript HUDLeftScript = m_panels[(int)pnls.HUD_LEFT_PANEL].GetComponent<PanelScript>();
-        HUDLeftScript.m_character = m_currPlayer;
         HUDLeftScript.m_cScript = m_currPlayer.GetComponent<CharacterScript>();
         HUDLeftScript.PopulateHUD();
 
@@ -425,6 +424,6 @@ public class BoardScript : MonoBehaviour {
 
         m_roundCount++;
         PanelScript roundPanScript = m_panels[(int)pnls.ROUND_PANEL].GetComponent<PanelScript>();
-        roundPanScript.PopulateText();
+        roundPanScript.PopulatePanel();
     }
 }

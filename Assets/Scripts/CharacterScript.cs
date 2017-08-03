@@ -15,6 +15,7 @@ public class CharacterScript : MonoBehaviour {
     public GameObject[] m_colorDisplay;
     public GameObject m_player;
     public string m_currAction;
+    public int m_currStatus;
     public string[] m_actions;
     public int[] m_stats;
     public int[] m_tempStats;
@@ -126,7 +127,7 @@ public class CharacterScript : MonoBehaviour {
             move = m_tempStats[(int)sts.MOV]; // ADD EQUIPMENT
 
         TileScript tileScript = m_tile.GetComponent<TileScript>();
-        tileScript.FetchTilesWithinRange(move, new Color (0, 0, 1, 0.5f), false, TileScript.targetRestriction.NONE, false, false);
+        tileScript.FetchTilesWithinRange(move, new Color (0, 0, 1, 0.5f), false, TileScript.targetRestriction.NONE, false);
         PanelScript mainPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
         mainPanScript.m_inView = false;
     }
@@ -158,7 +159,6 @@ public class CharacterScript : MonoBehaviour {
         mainPanScript.m_inView = false;
         aPScript.m_inView = true;
 
-        aPScript.m_character = gameObject;
         aPScript.m_cScript = this;
         aPScript.PopulateActionButtons(m_actions);
     }
@@ -166,7 +166,6 @@ public class CharacterScript : MonoBehaviour {
     public void ActionTargeting()
     {
         string[] actsSeparated = m_currAction.Split('|');
-        string[] id = actsSeparated[(int)DatabaseScript.actions.ID].Split(':');
         string[] name = actsSeparated[(int)DatabaseScript.actions.NAME].Split(':');
         string[] rng = actsSeparated[(int)DatabaseScript.actions.RNG].Split(':');
         string[] rad = actsSeparated[(int)DatabaseScript.actions.RAD].Split(':');
@@ -175,13 +174,13 @@ public class CharacterScript : MonoBehaviour {
         TileScript tileScript = m_tile.GetComponent<TileScript>();
 
         TileScript.targetRestriction targetingRestriction = TileScript.targetRestriction.NONE;
-        if (int.Parse(id[1]) == 4 || int.Parse(id[1]) == 11)
+        if (name[1] == "Pull ATK" || name[1] == "Piercing ATK")
             targetingRestriction = TileScript.targetRestriction.HORVERT;
-        else if (int.Parse(id[1]) == 12)
+        else if (name[1] == "Cross ATK")
             targetingRestriction = TileScript.targetRestriction.DIAGONAL;
 
         bool isBlockable = true;
-        if (int.Parse(id[1]) == 11 || int.Parse(id[1]) == 12)
+        if (name[1] == "Piercing ATK" || name[1] == "Cross ATK")
             isBlockable = false;
 
         m_currRadius = int.Parse(rad[1]);
@@ -189,10 +188,10 @@ public class CharacterScript : MonoBehaviour {
         if (m_currRadius > 0)
             targetSelf = true;
 
-        if (name[1][name[1].Length - 3] == 'A' && name[1][name[1].Length - 2] == 'T' && name[1][name[1].Length - 1] == 'K') // See if it's an attack
-            tileScript.FetchTilesWithinRange(int.Parse(rng[1]) + m_tempStats[(int)sts.RNG], new Color(1, 0, 0, 0.5f), targetSelf, targetingRestriction, isBlockable, false);
+        if (CheckIfAttack(name[1])) // See if it's an attack
+            tileScript.FetchTilesWithinRange(int.Parse(rng[1]) + m_tempStats[(int)sts.RNG], new Color(1, 0, 0, 0.5f), targetSelf, targetingRestriction, isBlockable);
         else
-            tileScript.FetchTilesWithinRange(int.Parse(rng[1]) + m_tempStats[(int)sts.RNG], new Color(0, 1, 0, 0.5f), true, targetingRestriction, isBlockable, false);
+            tileScript.FetchTilesWithinRange(int.Parse(rng[1]) + m_tempStats[(int)sts.RNG], new Color(0, 1, 0, 0.5f), true, targetingRestriction, isBlockable);
 
         PanelScript actionPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
         actionPanScript.m_inView = false;
@@ -203,14 +202,13 @@ public class CharacterScript : MonoBehaviour {
         transform.LookAt(m_boardScript.m_selected.transform);
 
         string[] actsSeparated = m_currAction.Split('|');
-        string[] id = actsSeparated[(int)DatabaseScript.actions.ID].Split(':');
         string[] name = actsSeparated[(int)DatabaseScript.actions.NAME].Split(':');
         string[] eng = actsSeparated[(int)DatabaseScript.actions.ENERGY].Split(':');
         string[] hit = actsSeparated[(int)DatabaseScript.actions.HIT].Split(':');
         string[] dmg = actsSeparated[(int)DatabaseScript.actions.DMG].Split(':');
         string[] crt = actsSeparated[(int)DatabaseScript.actions.CRT].Split(':');
 
-        if (name[1][name[1].Length - 3] == 'A' && name[1][name[1].Length - 2] == 'T' && name[1][name[1].Length - 1] == 'K') // See if it's an attack
+        if (CheckIfAttack(name[1])) // See if it's an attack
         {
             int roll = Random.Range(1, 21); // Because Random.Range doesn't include the max number
 
@@ -226,7 +224,7 @@ public class CharacterScript : MonoBehaviour {
                 print("Rolled " + roll + " against " + hit[1] + " - my HIT mod of " + m_tempStats[(int)sts.HIT] + " + my opponents EVA mod of " + targetScript.m_tempStats[(int)sts.EVA] +
                     " for a total DC of " + DC + ". Crit: " + crt[1] + " + my CRT mod of " + m_tempStats[(int)sts.CRT] + " for a total of Crit: " + totalCrit + ".\n");
 
-                if (int.Parse(id[1]) == 29)
+                if (name[1] == "Bypass ATK")
                 {
                     DC -= targetScript.m_tempStats[(int)sts.EVA];
                     finalDMG = (0 + targetScript.m_tempStats[(int)sts.DEF]).ToString();
@@ -237,7 +235,7 @@ public class CharacterScript : MonoBehaviour {
                     if ((int.Parse(dmg[1]) * 2) + m_tempStats[(int)sts.DMG] + targetScript.m_tempStats[(int)sts.DEF] >= 0)
                         finalDMG = ((int.Parse(dmg[1]) * 2) + m_tempStats[(int)sts.DMG] - targetScript.m_tempStats[(int)sts.DEF]).ToString();
 
-                    print("Hit with a crit dealing " + dmg[1] + "x2 + my DMG mod of " + m_tempStats[(int)sts.DMG] + " - my opponent's DEF mod of " + targetScript.m_tempStats[(int)sts.DEF] + " for a total of " + finalDMG +".\n");
+                    print("Hit with a crit dealing " + dmg[1] + "x2 + my DMG mod of " + m_tempStats[(int)sts.DMG] + " - my opponent's DEF mod of " + targetScript.m_tempStats[(int)sts.DEF] + " for a total of " + finalDMG + ".\n");
                     targetScript.ReceiveDamage(finalDMG, Color.red);
                     EnergyConversion(eng[1]);
                 }
@@ -260,17 +258,25 @@ public class CharacterScript : MonoBehaviour {
                     EnergyConversion(eng[1]);
                 }
 
-                if (!miss)
-                    Ability(_targets[i], id[1]);
+                if (!miss && !m_effects[(int)StatusScript.effects.HINDER])
+                    Ability(_targets[i], name[1]);
             }
         }
         else // If it's not an attack
             for (int i = 0; i < _targets.Count; i++)
-                Ability(_targets[i], id[1]);
+                Ability(_targets[i], name[1]);
 
         m_currRadius = 0;
         PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
         mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
+    }
+
+    static public bool CheckIfAttack(string _action)
+    {
+        if (_action[_action.Length - 3] == 'A' && _action[_action.Length - 2] == 'T' && _action[_action.Length - 1] == 'K')
+            return true;
+        else
+            return false;
     }
 
     public void ReceiveDamage(string _dmg, Color _color)
@@ -287,17 +293,49 @@ public class CharacterScript : MonoBehaviour {
         }
         else
             textMesh.text = _dmg;
+
+        if (gameObject == m_boardScript.m_currPlayer)
+        {
+            PanelScript actPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.HUD_LEFT_PANEL].GetComponent<PanelScript>();
+            actPanScript.PopulatePanel();
+        }
     }
 
-    public void Ability(GameObject _currTarget, string _id)
+    public void HealHealth(int _hp)
+    {
+        if (m_effects[(int)StatusScript.effects.SCARRING])
+            return;
+
+        TextMesh textMesh = m_popupText.GetComponent<TextMesh>();
+        m_popupText.SetActive(true);
+        textMesh.color = Color.green;
+
+        if (m_tempStats[(int)sts.HP] + _hp > m_stats[(int)sts.HP])
+        {
+            _hp = m_stats[(int)sts.HP] - m_tempStats[(int)sts.HP];
+            m_tempStats[(int)sts.HP] = m_stats[(int)sts.HP];
+        }
+        else
+            m_tempStats[(int)sts.HP] += _hp;
+
+        textMesh.text = _hp.ToString();
+
+        if (gameObject == m_boardScript.m_currPlayer)
+        {
+            PanelScript actPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.HUD_LEFT_PANEL].GetComponent<PanelScript>();
+            actPanScript.PopulatePanel();
+        }
+    }
+
+    public void Ability(GameObject _currTarget, string _name)
     {
         CharacterScript targetScript = _currTarget.GetComponent<CharacterScript>();
         TileScript targetTile = targetScript.m_tile.GetComponent<TileScript>();
         TileScript tileScript = m_tile.GetComponent<TileScript>();
 
-        switch (int.Parse(_id))
+        switch (_name)
         {
-            case 1: // Dash ATK
+            case "Dash ATK":
                 if (TileScript.CheckForEmptyNeighbor(tileScript))
                 {
                     tileScript.ClearRadius(tileScript);
@@ -305,13 +343,13 @@ public class CharacterScript : MonoBehaviour {
                     MovementSelection(3);
                 }
                 break;
-            case 4: // Pull ATK
+            case "Pull ATK":
                 PullTowards(targetScript, tileScript);
                 break;
-            case 5: // Magnet ATK
+            case "Magnet ATK":
                 PullTowards(targetScript, m_boardScript.m_selected.GetComponent<TileScript>());
                 break;
-            case 6: // Push ATK
+            case "Push ATK":
                 if (TileScript.CheckForEmptyNeighbor(targetTile))
                 {
                     tileScript.ClearRadius(tileScript);
@@ -319,50 +357,100 @@ public class CharacterScript : MonoBehaviour {
                     targetScript.MovementSelection(4);
                 }
                 break;
-            case 7: // Smash ATK
+            case "Smash ATK":
                 Knockback(targetScript, tileScript, 3);
                 break;
-            case 8: // Blast ATK
+            case "Blast ATK":
                 Knockback(targetScript, m_boardScript.m_selected.GetComponent<TileScript>(), 1);
                 break;
-            case 9: // Spot
-                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+            case "Spot":
+                StatusScript.NewStatus(_currTarget, m_currAction);
                 break;
-            case 10: // Passage
-                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+            case "Passage":
+                StatusScript.NewStatus(_currTarget, m_currAction);
                 break;
-            case 13: // Rush ATK
+            case "Rush ATK":
                 int dis = Mathf.Abs(tileScript.m_x - targetTile.m_x) + Mathf.Abs(tileScript.m_z - targetTile.m_z) - 1;
                 targetScript.ReceiveDamage(dis.ToString(), Color.white);
                 PullTowards(this, targetScript.m_tile.GetComponent<TileScript>());
                 break;
-            case 14: // Explosive
-                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+            case "Explosive":
+                StatusScript.NewStatus(_currTarget, m_currAction);
                 break;
-            case 18: // Winding ATK
-                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+            case "Winding ATK":
+                StatusScript.NewStatus(_currTarget, m_currAction);
                 break;
-            case 22: // Weakening ATK
-                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+            case "Weakening ATK":
+                StatusScript.NewStatus(_currTarget, m_currAction);
                 break;
-            case 24: // Scarring ATK
-                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+            case "Scarring ATK":
+                StatusScript.NewStatus(_currTarget, m_currAction);
                 break;
-            case 25: // Boost
-                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+            case "Boost":
+                StatusScript.NewStatus(_currTarget, m_currAction);
                 break;
-            case 26: // AIM
-                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+            case "AIM":
+                StatusScript.NewStatus(_currTarget, m_currAction);
                 break;
-            case 28: // Bleed ATK
-                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+            case "Bleed ATK":
+                StatusScript.NewStatus(_currTarget, m_currAction);
                 break;
-            case 30: // Critical
-                StatusScript.NewStatus(_currTarget, int.Parse(_id));
+            case "Critical":
+                StatusScript.NewStatus(_currTarget, m_currAction);
                 break;
-            case 31: // Break ATK
+            case "Break ATK":
                 targetScript.m_stats[(int)sts.DEF]--;
                 StatusScript.ApplyStatus(_currTarget);
+                break;
+            case "Hindering ATK":
+                StatusScript.NewStatus(_currTarget, m_currAction);
+                break;
+            case "Unnerving ATK":
+                StatusScript.NewStatus(_currTarget, m_currAction);
+                break;
+            case "Defensive ATK":
+                StatusScript.NewStatus(_currTarget, m_currAction);
+                break;
+            case "Healing ATK":
+                HealHealth(2);
+                break;
+            case "Disrupting ATK":
+                if (targetScript.GetComponents<StatusScript>().Length > 0)
+                {
+                    PanelScript statSel = m_boardScript.m_panels[(int)BoardScript.pnls.STATUS_SELECTOR].GetComponent<PanelScript>();
+                    statSel.m_inView = true;
+                    statSel.m_cScript = targetScript;
+                    statSel.PopulatePanel();
+                    tileScript.ClearRadius(tileScript);
+                    m_boardScript.m_isForcedMove = gameObject;
+                }
+                break;
+            case "Blinding ATK":
+                StatusScript.NewStatus(_currTarget, m_currAction);
+                break;
+            case "Fortifying ATK":
+                StatusScript.NewStatus(gameObject, m_currAction);
+                break;
+            case "Immobilizing ATK":
+                StatusScript.NewStatus(_currTarget, m_currAction);
+                break;
+            case "Heal":
+                targetScript.HealHealth(3);
+                break;
+            case "Purification":
+                StatusScript.DestroyAll(_currTarget);
+                break;
+            case "Ward ATK":
+                StatusScript.NewStatus(_currTarget, m_currAction);
+                break;
+            case "Bolstering ATK":
+                StatusScript.NewStatus(gameObject, m_currAction);
+                break;
+            case "Prepare":
+                StatusScript.NewStatus(_currTarget, m_currAction);
+                break;
+            case "Protect":
+                StatusScript.NewStatus(_currTarget, m_currAction);
                 break;
             default:
                 break;
@@ -538,9 +626,8 @@ public class CharacterScript : MonoBehaviour {
         }
 
         sPScript.m_inView = true;
-        sPScript.m_character = gameObject;
         sPScript.m_cScript = this;
-        sPScript.PopulateText();
+        sPScript.PopulatePanel();
     }
 
     public void UpdateStatusImages()

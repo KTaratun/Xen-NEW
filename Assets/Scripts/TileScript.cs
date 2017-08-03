@@ -106,7 +106,6 @@ public class TileScript : MonoBehaviour {
                 mainPanScript.m_inView = true;
 
                 // Assign character to panels
-                mainPanScript.m_character = m_holding;
                 CharacterScript cScript = m_holding.GetComponent<CharacterScript>();
                 mainPanScript.m_cScript = cScript;
                 mainPanScript.SetButtons();
@@ -116,7 +115,6 @@ public class TileScript : MonoBehaviour {
                 AuxPanScript.m_inView = true;
 
                 // Assign character to panels
-                AuxPanScript.m_character = m_holding;
                 CharacterScript cScript = m_holding.GetComponent<CharacterScript>();
                 AuxPanScript.m_cScript = cScript;
                 AuxPanScript.SetButtons();
@@ -124,7 +122,7 @@ public class TileScript : MonoBehaviour {
         }
     }
 
-    public void FetchTilesWithinRange(int _range, Color _color, bool _targetSelf, targetRestriction _targetingRestriction, bool isBlockable, bool originateFromCenter)
+    public void FetchTilesWithinRange(int _range, Color _color, bool _targetSelf, targetRestriction _targetingRestriction, bool _isBlockable)
     {
         // REFACTOR: Maybe less lists? Just a thought
         List<TileScript> workingList = new List<TileScript>();
@@ -134,15 +132,25 @@ public class TileScript : MonoBehaviour {
 
         CharacterScript currCharScript = m_boardScript.m_currPlayer.GetComponent<CharacterScript>();
 
-        string[] actSepareted = currCharScript.m_currAction.Split('|');
-        string[] id = actSepareted[(int)DatabaseScript.actions.ID].Split(':');
-
+        // Handle attacks with radius
         GameObject originalTile = gameObject;
         TileScript originalTileScript = this;
-        if (originateFromCenter)
+        if (currCharScript.m_currAction.Length > 0)
         {
-            originalTile = m_boardScript.m_currTile;
-            originalTileScript = m_boardScript.m_currTile.GetComponent<TileScript>();
+            string[] actSeparated = currCharScript.m_currAction.Split('|');
+            string[] range = actSeparated[(int)DatabaseScript.actions.RNG].Split(':');
+            string[] radius = actSeparated[(int)DatabaseScript.actions.RAD].Split(':');
+
+            if (int.Parse(range[1]) == 0)
+            {
+                originalTile = m_boardScript.m_currTile;
+                originalTileScript = m_boardScript.m_currTile.GetComponent<TileScript>();
+                _range = int.Parse(radius[1]);
+                _targetSelf = false;
+            }
+            
+            if (int.Parse(radius[1]) > 0)
+                _isBlockable = false;
         }
 
         // Start with current tile in oddGen
@@ -202,33 +210,40 @@ public class TileScript : MonoBehaviour {
                     if (_targetingRestriction == targetRestriction.HORVERT && tScript.m_x != m_x && tScript.m_z != m_z)
                         continue;
 
-
-                    if (isBlockable && CheckIfBlocked(currNeighbor))
+                    if (_isBlockable && CheckIfBlocked(currNeighbor))
                         continue;
+
 
                     Renderer tR = currNeighbor.GetComponent<Renderer>();
                     // REFACTOR: All this code for just piercing attack
-                    if (currCharScript.m_currAction.Length > 0 && int.Parse(id[1]) == 11 && _color == Color.yellow && tScript.m_holding && tScript.m_holding == m_boardScript.m_currPlayer
-                        || currCharScript.m_currAction.Length > 0 && int.Parse(id[1]) == 11 && _color == Color.yellow && tR.material.color == new Color(1, 1, 1, 0))
-                        continue;
-                    if (currCharScript.m_currAction.Length > 0 && int.Parse(id[1]) == 11 && _color == Color.yellow)
+                    if (currCharScript.m_currAction.Length > 0)
                     {
-                        bool redNeigbor = false;
-                        for (int j = 0; j < tScript.m_neighbors.Length; j++)
-                        {
-                            if (!tScript.m_neighbors[j])
-                                continue;
+                        string[] actSepareted = currCharScript.m_currAction.Split('|');
+                        string[] name = actSepareted[(int)DatabaseScript.actions.NAME].Split(':');
 
-                            Renderer neiRend = tScript.m_neighbors[j].GetComponent<Renderer>();
-                            if (neiRend.material.color == new Color(1, 0, 0, 0.5f) || tR.material.color == new Color(1, 0, 0, 0.5f))
-                            {
-                                redNeigbor = true;
-                                break;
-                            }
-                        }
-                        if (!redNeigbor)
+                        if (currCharScript.m_currAction.Length > 0 && name[1] == "Piercing ATK" && _color == Color.yellow && tScript.m_holding && tScript.m_holding == m_boardScript.m_currPlayer
+                            || currCharScript.m_currAction.Length > 0 && name[1] == "Piercing ATK" && _color == Color.yellow && tR.material.color == new Color(1, 1, 1, 0))
                             continue;
+                        if (currCharScript.m_currAction.Length > 0 && name[1] == "Piercing ATK" && _color == Color.yellow)
+                        {
+                            bool redNeigbor = false;
+                            for (int j = 0; j < tScript.m_neighbors.Length; j++)
+                            {
+                                if (!tScript.m_neighbors[j])
+                                    continue;
+
+                                Renderer neiRend = tScript.m_neighbors[j].GetComponent<Renderer>();
+                                if (neiRend.material.color == new Color(1, 0, 0, 0.5f) || tR.material.color == new Color(1, 0, 0, 0.5f))
+                                {
+                                    redNeigbor = true;
+                                    break;
+                                }
+                            }
+                            if (!redNeigbor)
+                                continue;
+                        }
                     }
+
 
                     if (tR.material.color != _color)
                     {
