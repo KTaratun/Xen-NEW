@@ -107,9 +107,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfd27771d6682bc42ab00892fc028fac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  holding: {fileID: 0}
-  neighbors: []
-  radius: []
-  x: 0
-  z: 0
-  boardScript: {fileID: 0}
+  m_holding: {fileID: 0}
+  m_neighbors: []
+  m_radius: []
+  m_targetRadius: []
+  m_x: 0
+  m_z: 0
+  m_boardScript: {fileID: 0}

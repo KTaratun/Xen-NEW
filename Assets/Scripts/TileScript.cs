@@ -292,7 +292,12 @@ public class TileScript : MonoBehaviour {
             if (tarTileScript.m_holding && raycastHit.collider.gameObject == tarTileScript.m_holding)
                 return false;
             else
-                return true;
+            {
+                if (tarTileScript.m_holding && tarTileScript.m_holding.tag == "Player" && !tarTileScript.m_holding.GetComponent<CharacterScript>().m_isAlive)
+                    return false;
+                else
+                    return true;
+            }
         }
 
         return false;

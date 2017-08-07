@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class PlayerScript : MonoBehaviour {
 
-    public enum eng { GRN, RED, WHT, BLU }
+    public enum eng { GRN, RED, WHT, BLU, TOT }
 
     public List<GameObject> m_characters;
     public GameObject m_energyPanel;
@@ -31,9 +31,17 @@ public class PlayerScript : MonoBehaviour {
             text[i].text = m_energy[i].ToString();
     }
 
+    static public bool CheckIfGains(string _energy)
+    {
+        if (_energy[0] == 'G' || _energy[0] == 'R' || _energy[0] == 'W' || _energy[0] == 'B')
+            return false;
+
+        return true;
+    }
+
     public bool CheckEnergy(string eng)
     {
-        if (eng[0] == 'g' || eng[0] == 'r' || eng[0] == 'w' || eng[0] == 'b')
+        if (CheckIfGains(eng))
             return true;
 
         int[] engCheck =  new int[4];
@@ -55,5 +63,19 @@ public class PlayerScript : MonoBehaviour {
                 return false;
 
         return true;
+    }
+
+    public void RemoveRandomEnergy()
+    {
+        List<int> energyOverZero = new List<int>();
+        for (int i = 0; i < m_energy.Length; i++)
+            if (m_energy[i] > 0)
+                energyOverZero.Add(m_energy[i]);
+
+        if (energyOverZero.Count > 0)
+        {
+            int randomEnergy = Random.Range(0, energyOverZero.Count);
+            m_energy[randomEnergy]--;
+        }
     }
 }

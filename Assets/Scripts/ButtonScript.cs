@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 
 public class ButtonScript : MonoBehaviour {
 
+    public BoardScript m_boardScript;
     public GameObject m_actionViewer;
     public PanelScript m_main;
     public GameObject m_actionPanel;
@@ -63,7 +64,7 @@ public class ButtonScript : MonoBehaviour {
         actViewScript.m_inView = true;
 
         PanelScript actPanScript = m_actionPanel.GetComponent<PanelScript>();
-        actViewScript.m_cScript = actPanScript.m_cScript;
+        actViewScript.m_cScript = actPanScript.m_cScript.GetComponent<CharacterScript>();
         if (actPanScript.m_inView) // Need this check to avoid selecting another action while menu is moving
             actViewScript.m_cScript.m_currAction = name;
 
@@ -79,7 +80,7 @@ public class ButtonScript : MonoBehaviour {
             //Image turnPanImage = charScript.turnPanel.GetComponent<Image>();
             //turnPanImage.color = Color.cyan;
             Renderer charRenderer = m_character.GetComponent<Renderer>();
-            charRenderer.material.color = Color.white;
+            charRenderer.material.color = charScript.m_teamColor;
             PanelScript hudPanScript = charScript.m_boardScript.m_panels[(int)BoardScript.pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
             hudPanScript.m_inView = false;
             
@@ -209,26 +210,117 @@ public class ButtonScript : MonoBehaviour {
         camScript.m_target = m_character;
     }
 
-    public void RemoveStatus()
+    public void SelectorButton()
     {
-        // Get rid of the status
-        StatusScript[] statScripts = m_main.m_cScript.GetComponents<StatusScript>();
-        statScripts[m_main.m_cScript.m_currStatus].DestroyStatus(m_main.m_cScript.transform.root.gameObject);
+        string actName = DatabaseScript.GetActionData(m_boardScript.m_currPlayer.GetComponent<CharacterScript>().m_currAction, DatabaseScript.actions.NAME);
 
-        // Resume the game
+        if (m_parent.name == "Status Selector")
+        {
+            StatusScript statScript = m_main.m_cScript.GetComponents<StatusScript>()[m_main.m_cScript.m_currStatus];
+            if (actName == "Hack ATK")
+                StatusScript.NewStatus(m_boardScript.m_currPlayer, statScript.m_action);
+            if (actName == "Hack ATK" || actName == "Disrupting ATK")
+                statScript.DestroyStatus(m_main.m_cScript.transform.root.gameObject);
+            else if (actName == "Extension")
+            {
+                statScript.m_lifeSpan++;
+
+                for (int i = 0; i < statScript.m_statMod.Length; i++)
+                {
+                    if (statScript.m_statMod[i] > 0)
+                        statScript.m_statMod[i]++;
+                    else if (statScript.m_statMod[i] < 0)
+                        statScript.m_statMod[i]--;
+                }
+            }
+            else if (actName == "Modification")
+                for (int i = 0; i < statScript.m_statMod.Length; i++)
+                    m_main.m_cScript.m_stats[i] += statScript.m_statMod[i];
+
+            ResumeGame();
+        }
+        else if (m_parent.name == "Energy Selector")
+        {
+            if (actName == "Prismatic ATK")
+                AddEnergy(2);
+            else if (actName == "Channel")
+                AddEnergy(1);
+            else if (actName == "Syphon ATK")
+                SubtractEnergy(1, m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy);
+            else if (actName == "Deplete ATK")
+                SubtractEnergy(3, m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy);
+        }
+    }
+
+    public void AddEnergy(int _max)
+    {
+        int total = 0;
+        for (int i = 0; i < m_parent.m_images.Length; i++)
+           total += int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+
+        if (total < _max)
+        {
+            Text text = m_parent.m_images[int.Parse(gameObject.name)].GetComponentInChildren<Text>();
+            text.text = (int.Parse(text.text) + 1).ToString();
+        }
+    }
+
+    public void SubtractEnergy(int _min, int[] _playerEnergy)
+    {
+        int currTotal = 0;
+        int origTotal = 0;
+
+        for (int i = 0; i < m_parent.m_images.Length; i++)
+        {
+            currTotal += int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+            origTotal += _playerEnergy[i];
+        }
+
+        if (_min > origTotal - currTotal && _playerEnergy[int.Parse(gameObject.name)] > 0)
+        {
+            Text text = m_parent.m_images[int.Parse(gameObject.name)].GetComponentInChildren<Text>();
+            text.text = (int.Parse(text.text) - 1).ToString();
+        }
+    }
+
+    public void ConfirmEnergySelection()
+    {
+        string actName = DatabaseScript.GetActionData(m_boardScript.m_currPlayer.GetComponent<CharacterScript>().m_currAction, DatabaseScript.actions.NAME);
+        CharacterScript charScript = m_boardScript.m_currPlayer.GetComponent<CharacterScript>();
+        PlayerScript playScript = charScript.m_player.GetComponent<PlayerScript>();
+
+        if (actName == "Syphon ATK" | actName == "Deplete ATK")
+        {
+            for (int i = 0; i < m_parent.m_images.Length; i++)
+            {
+                if (actName == "Syphon ATK")
+                    playScript.m_energy[i] += m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy[i] - int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+
+                m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy[i] = int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+            }
+        }
+        else
+            for (int i = 0; i < m_parent.m_images.Length; i++)
+                playScript.m_energy[i] += int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+
+        playScript.SetEnergyPanel();
         ResumeGame();
+    }
+
+    public void ResetEnergySelection()
+    {
+        string actName = DatabaseScript.GetActionData(m_boardScript.m_currPlayer.GetComponent<CharacterScript>().m_currAction, DatabaseScript.actions.NAME);
+        if (actName == "Syphon ATK")
+            for (int i = 0; i < m_parent.m_images.Length; i++)
+                m_parent.m_images[i].GetComponentInChildren<Text>().text = m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy[i].ToString();
+        else
+            for (int i = 0; i < m_parent.m_images.Length; i++)
+                m_parent.m_images[i].GetComponentInChildren<Text>().text = "0";
     }
 
     public void ResumeGame()
     {
         m_parent.m_cScript.m_boardScript.m_isForcedMove = null;
         m_parent.m_inView = false;
-
-        //if (m_main.m_cScript && m_main.m_cScript.m_tile)
-        //{
-        //    TileScript tScript = m_main.m_cScript.m_tile.GetComponent<TileScript>();
-        //    if (tScript.m_holding)
-        //        tScript.ClearRadius(tScript);
-        //}
     }
 }

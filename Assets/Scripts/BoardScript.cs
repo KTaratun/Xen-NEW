@@ -5,7 +5,8 @@ using UnityEngine.UI;
 
 public class BoardScript : MonoBehaviour {
 
-    public enum pnls { MAIN_PANEL, ACTION_PANEL, STATUS_PANEL, HUD_LEFT_PANEL, HUD_RIGHT_PANEL, ROUND_PANEL, AUXILIARY_PANEL, STATUS_SELECTOR, TOTAL_PANEL }
+    public enum pnls { MAIN_PANEL, ACTION_PANEL, STATUS_PANEL, HUD_LEFT_PANEL, HUD_RIGHT_PANEL, ROUND_PANEL,
+        AUXILIARY_PANEL, STATUS_SELECTOR, ENERGY_SELECTOR, ACTION_PREVIEW, TOTAL_PANEL }
 
     public Camera m_camera; // Why it do that squiggle?
     public int m_roundCount;
@@ -24,6 +25,7 @@ public class BoardScript : MonoBehaviour {
     public GameObject[] m_players;
     public List<GameObject> m_currRound; // A list of the players who have taken a turn in the current round
     public GameObject m_isForcedMove;
+    public int m_livingPlayersInRound;
 
     // Use this for initialization
     void Start ()
@@ -65,6 +67,9 @@ public class BoardScript : MonoBehaviour {
 
         if (currPScript.m_radius.Count == 0 || m_isForcedMove)
             return;
+
+        PanelScript actPreviewScript = m_panels[(int)pnls.ACTION_PREVIEW].GetComponent<PanelScript>();
+        actPreviewScript.m_inView = false;
 
         Renderer sRend = currPScript.m_radius[0].GetComponent<Renderer>();
         if (sRend.material.color == new Color(1, 0, 0, 0.5f) || sRend.material.color == Color.yellow || sRend.material.color == new Color(0, 1, 0, 0.5f))
@@ -149,6 +154,17 @@ public class BoardScript : MonoBehaviour {
                     GameObject newChar = Instantiate(m_character);
                     CharacterScript cScript = newChar.GetComponent<CharacterScript>();
 
+                    if (i == 0)
+                        cScript.m_teamColor = new Color(1, .5f, 0, 1);
+                    else if (i == 1)
+                        cScript.m_teamColor = new Color(.5f, 0, 1, 1);
+                    else if (i == 2)
+                        cScript.m_teamColor = new Color(.8f, 1, 0, 1);
+                    else if (i == 3)
+                        cScript.m_teamColor = Color.white;
+
+                    newChar.GetComponent<Renderer>().material.color = cScript.m_teamColor;
+
                     cScript.name = name;
                     key = i.ToString() + ',' + j.ToString() + ",color";
                     string color = PlayerPrefs.GetString(key);
@@ -157,6 +173,16 @@ public class BoardScript : MonoBehaviour {
                     
                     key = i.ToString() + ',' + j.ToString() + ",actions";
                     string[] acts = PlayerPrefs.GetString(key).Split(';');
+
+                    // ATTEMPT AT UPDATING DATA FROM PHPADMIN BUT FAILED BECAUSE OF RACE CONDITION
+                    //DatabaseScript db = GetComponent<DatabaseScript>();
+                    //for (int k = 0; k < acts.Length; k++)
+                    //{
+                    //    string[] actSeparated = acts[k].Split('|');
+                    //    string[] id = actSeparated[0].Split(':');
+                    //    acts[k] = db.m_actions[int.Parse(id[1])];
+                    //}
+
                     cScript.m_actions = acts;
 
                     // Set up position
@@ -211,7 +237,6 @@ public class BoardScript : MonoBehaviour {
         RaycastHit hit;
 
         ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        PanelScript hudPanScript = m_panels[(int)pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
 
         if (!Physics.Raycast(ray, out hit))
         {
@@ -224,9 +249,10 @@ public class BoardScript : MonoBehaviour {
             return;
         }
 
-        GameObject tile =  null;
+        GameObject tile = null;
         GameObject character = null;
         CharacterScript charScript = null;
+
         if (hit.collider.gameObject.tag == "Tile")
         {
             tile = hit.collider.gameObject;
@@ -244,23 +270,20 @@ public class BoardScript : MonoBehaviour {
             tile = charScript.m_tile;
         }
 
-        if (character && character != m_currPlayer)
-        {
-            // Change color of turn panel to indicate where the character is in the turn order
-            if (charScript.m_turnPanel)
-            {
-                Image turnPanImage = charScript.m_turnPanel.GetComponent<Image>();
-                turnPanImage.color = Color.cyan;
-            }
-
-            // Reveal right HUD with highlighted character's data
-            hudPanScript.m_cScript = charScript;
-            hudPanScript.PopulateHUD();
-            hudPanScript.m_inView = true;
-        }
+        if (character)
+            HighlightCharacter(character, hit.collider.gameObject);
 
         if (tile)
-            HandleOldTile(tile);
+            HandleTile(tile);
+
+        if (character && tile.GetComponent<Renderer>().material.color == new Color(1, 0, 0, 1) ||
+            character && tile.GetComponent<Renderer>().material.color == Color.yellow)
+        {
+            PanelScript actPreviewScript = m_panels[(int)pnls.ACTION_PREVIEW].GetComponent<PanelScript>();
+            actPreviewScript.m_cScript = charScript;
+            actPreviewScript.PopulatePanel();
+            actPreviewScript.m_inView = true;
+        }
 
         if (m_highlightedTile && hit.collider.gameObject != m_highlightedTile)
         {
@@ -273,10 +296,9 @@ public class BoardScript : MonoBehaviour {
             m_highlightedTile = charScript.m_tile;
         else if (hit.collider.gameObject.tag == "Tile")
             m_highlightedTile = hit.collider.gameObject;
-
     }
 
-    private void HandleOldTile(GameObject _target)
+    private void HandleTile(GameObject _target)
     {
         if (m_oldTile)
         {
@@ -302,19 +324,18 @@ public class BoardScript : MonoBehaviour {
         TileScript selTileScript = _target.GetComponent<TileScript>();
         if (currCharScript.m_currAction.Length > 0) // REFACTOR: All this code just for piercing attack...
         {
-            string[] actSepareted = currCharScript.m_currAction.Split('|');
-            string[] name = actSepareted[(int)DatabaseScript.actions.NAME].Split(':');
-            string[] rng = actSepareted[(int)DatabaseScript.actions.RNG].Split(':');
+            string actName = DatabaseScript.GetActionData(currCharScript.m_currAction, DatabaseScript.actions.NAME);
+            string actRng = DatabaseScript.GetActionData(currCharScript.m_currAction, DatabaseScript.actions.RNG);
 
-            if (name[1] == "Piercing ATK" && tarRend.material.color == new Color(1, 0, 0, 0.5f))
+            if (actName == "Piercing ATK" && tarRend.material.color == new Color(1, 0, 0, 0.5f))
             {
-                selTileScript.FetchTilesWithinRange(int.Parse(rng[1]) + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD], Color.yellow, true, TileScript.targetRestriction.HORVERT, false);
+                selTileScript.FetchTilesWithinRange(int.Parse(actRng) + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD], Color.yellow, true, TileScript.targetRestriction.HORVERT, false);
                 m_oldTile = _target;
                 return;
             }
-            else if (name[1] == "Cross ATK" && tarRend.material.color == new Color(1, 0, 0, 0.5f))
+            else if (actName == "Cross ATK" && tarRend.material.color == new Color(1, 0, 0, 0.5f))
             {
-                selTileScript.FetchTilesWithinRange(int.Parse(rng[1]) + currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, false, TileScript.targetRestriction.DIAGONAL, false);
+                selTileScript.FetchTilesWithinRange(int.Parse(actRng) + currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, false, TileScript.targetRestriction.DIAGONAL, false);
                 m_oldTile = _target;
                 return;
             }
@@ -328,18 +349,52 @@ public class BoardScript : MonoBehaviour {
         m_oldTile = _target;
     }
 
+    public void HighlightCharacter(GameObject character, GameObject _hit)
+    {
+        CharacterScript charScript = character.GetComponent<CharacterScript>();
+        if (character && character != m_currPlayer)
+        {
+            // Change color of turn panel to indicate where the character is in the turn order
+            if (charScript.m_turnPanel)
+            {
+                Image turnPanImage = charScript.m_turnPanel.GetComponent<Image>();
+                turnPanImage.color = Color.cyan;
+            }
+
+            // Reveal right HUD with highlighted character's data
+            PanelScript hudPanScript = m_panels[(int)pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
+            hudPanScript.m_cScript = charScript;
+            hudPanScript.PopulateHUD();
+            hudPanScript.m_inView = true;
+
+            Image[] hudEnergy = GameObject.Find("HUD RIGHT Energy").GetComponentsInChildren<Image>();
+            int[] charEnergy = charScript.m_player.GetComponent<PlayerScript>().m_energy;
+            for (int i = 0; i < charEnergy.Length; i++)
+            {
+                Text t = hudEnergy[i + 1].GetComponentInChildren<Text>();
+                t.text = charEnergy[i].ToString();
+            }
+        }
+    }
+
     private void DeselectHighlightedTile()
     {
         PanelScript hudPanScript = m_panels[(int)pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
+        PanelScript actPreviewScript = m_panels[(int)pnls.ACTION_PREVIEW].GetComponent<PanelScript>();
+
         TileScript m_highlightedTileScript = m_highlightedTile.GetComponent<TileScript>();
         CharacterScript colScript = m_highlightedTileScript.m_holding.GetComponent<CharacterScript>();
         if (colScript.m_turnPanel)
         {
             Image turnPanImage = colScript.m_turnPanel.GetComponent<Image>();
-            turnPanImage.color = Color.white;
+            if (colScript.m_effects[(int)StatusScript.effects.STUN] || !colScript.m_isAlive)
+                turnPanImage.color = new Color(1, .5f, .5f, 1);
+            else
+                turnPanImage.color = Color.white;
         }
         hudPanScript.m_inView = false;
         m_highlightedTile = null;
+        actPreviewScript.m_inView = false;
     }
 
     public void NewTurn()
@@ -351,11 +406,25 @@ public class BoardScript : MonoBehaviour {
         if (m_currPlayer)
         {
             Renderer oldRenderer = m_currPlayer.GetComponent<Renderer>();
-            oldRenderer.material.color = Color.white;
+            oldRenderer.material.color = m_currPlayer.GetComponent<CharacterScript>().m_teamColor;
         }
 
         m_currPlayer = m_currRound[0];
         CharacterScript charScript = m_currPlayer.GetComponent<CharacterScript>();
+
+        if (charScript.m_effects[(int)StatusScript.effects.STUN] || !charScript.m_isAlive)
+        {
+            charScript.m_turnPanel = null;
+            StatusScript.UpdateStatus(m_currPlayer, StatusScript.mode.TURN_END);
+            m_currRound.Remove(m_currPlayer);
+
+            if (m_currRound.Count == 0)
+                NewRound();
+
+            m_currPlayer = m_currRound[0];
+            charScript = m_currPlayer.GetComponent<CharacterScript>();
+        }
+
         m_currTile = charScript.m_tile;
 
         charScript.m_turnPanel = null;
@@ -379,24 +448,37 @@ public class BoardScript : MonoBehaviour {
 
     public void NewRound()
     {
+        List<GameObject> tempChars = new List<GameObject>();
+
+        m_livingPlayersInRound = 0;
+        for (int i = 0; i < m_characters.Count; i++)
+            if (m_characters[i].GetComponent<CharacterScript>().m_isAlive)
+            {
+                tempChars.Add(m_characters[i]);
+                m_livingPlayersInRound++;
+            }
+
         int numPool;
         do
         {
             numPool = 0;
             // Gather all characters speed to pull from
-            for (int i = 0; i < m_characters.Count; i++)
+            for (int i = 0; i < tempChars.Count; i++)
             {
-                CharacterScript charScript = m_characters[i].GetComponent<CharacterScript>();
-                numPool += charScript.m_tempStats[(int)CharacterScript.sts.SPD];
+                CharacterScript charScript = tempChars[i].GetComponent<CharacterScript>();
+                if (charScript.m_tempStats[(int)CharacterScript.sts.SPD] < 0 || charScript.m_effects[(int)StatusScript.effects.STUN] && i == 0)
+                    continue;
+                else
+                    numPool += charScript.m_tempStats[(int)CharacterScript.sts.SPD];
             }
 
             int randNum = Random.Range(0, numPool + 1);
             int currNum = 0;
 
-            for (int i = 0; i < m_characters.Count; i++)
+            for (int i = 0; i < tempChars.Count; i++)
             {
-                CharacterScript charScript = m_characters[i].GetComponent<CharacterScript>();
-                if (charScript.m_tempStats[(int)CharacterScript.sts.SPD] <= 0 || charScript.m_tempStats[(int)CharacterScript.sts.HP] <= 0) // ADD BETTER DEATH CHECK
+                CharacterScript charScript = tempChars[i].GetComponent<CharacterScript>();
+                if (charScript.m_tempStats[(int)CharacterScript.sts.SPD] <= 0 || charScript.m_effects[(int)StatusScript.effects.STUN] && i == 0)
                     continue;
 
                 currNum += charScript.m_tempStats[(int)CharacterScript.sts.SPD];
@@ -409,19 +491,23 @@ public class BoardScript : MonoBehaviour {
                         numPool -= charScript.m_tempStats[(int)CharacterScript.sts.SPD];
 
                     charScript.m_tempStats[(int)CharacterScript.sts.SPD] -= 10;
-                    m_currRound.Add(m_characters[i]);
+                    m_currRound.Add(tempChars[i]);
+                    tempChars.RemoveAt(i);
+                    break;
                 }
             }
-        } while (m_currRound.Count < m_characters.Count && numPool > 0);
+        } while (m_currRound.Count < m_livingPlayersInRound && numPool > 0);
 
         for (int i = 0; i < m_characters.Count; i++)
         {
             CharacterScript charScript = m_characters[i].GetComponent<CharacterScript>();
-            charScript.m_tempStats[(int)CharacterScript.sts.SPD] += 10;
+            if (!charScript.m_effects[(int)StatusScript.effects.STUN] && charScript.m_isAlive)
+                charScript.m_tempStats[(int)CharacterScript.sts.SPD] += 10;
 
             StatusScript.UpdateStatus(m_characters[i], StatusScript.mode.ROUND_END);
         }
 
+        m_livingPlayersInRound = m_currRound.Count;
         m_roundCount++;
         PanelScript roundPanScript = m_panels[(int)pnls.ROUND_PANEL].GetComponent<PanelScript>();
         roundPanScript.PopulatePanel();

@@ -1,13 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class StatusScript : MonoBehaviour {
 
     public enum mode { TURN_END, ROUND_END }
-    public enum effects { SCARRING, BLEED, BYPASS, HINDER, IMMOBILE, WARD, TOT }
+    public enum effects { SCARRING, BLEED, BYPASS, HINDER, IMMOBILE, WARD, STUN, DELAY, TOT }
 
     public string m_name;
+    public string m_action;
     public CharacterScript m_charScript;
     public int[] m_statMod;
     public mode m_mode;
@@ -40,19 +42,19 @@ public class StatusScript : MonoBehaviour {
 
     public void StatusInit(CharacterScript _charScript, string _action)
     {
-        string[] actSeparated = _action.Split('|');
-        string[] name = actSeparated[1].Split(':');
-        string[] effect = actSeparated[8].Split(':');
+        string actName = DatabaseScript.GetActionData(_action, DatabaseScript.actions.NAME);
+        string actEffect = DatabaseScript.GetActionData(_action, DatabaseScript.actions.EFFECT);
 
         Color buffColor = Color.cyan;
         Color debuffColor = new Color(1, .7f, 0, 1);
         Color statusColor = Color.magenta;
 
-        m_name = name[1];
+        m_name = actName;
+        m_action = _action;
         m_charScript = _charScript;
-        m_effect = effect[1];
+        m_effect = actEffect;
 
-        switch (name[1])
+        switch (actName)
         {
             case "Spot":
                 m_statMod[(int)CharacterScript.sts.RNG] = 3;
@@ -195,6 +197,20 @@ public class StatusScript : MonoBehaviour {
                 m_sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
                 m_color = buffColor;
                 break;
+            case "Stun ATK":
+                m_charScript.m_effects[(int)effects.STUN] = true;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 1;
+                m_sprite = Resources.Load<Sprite>("Symbols/Action Symbol");
+                m_color = statusColor;
+                break;
+            case "Delay ATK":
+                m_charScript.m_effects[(int)effects.DELAY] = true;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 1;
+                m_sprite = Resources.Load<Sprite>("Symbols/Energy Symbol");
+                m_color = statusColor;
+                break;
             default:
                 break;
         }
@@ -266,6 +282,12 @@ public class StatusScript : MonoBehaviour {
                 break;
             case "Ward ATK":
                 m_charScript.m_effects[(int)effects.WARD] = false;
+                break;
+            case "Stun ATK":
+                m_charScript.m_effects[(int)effects.STUN] = false;
+                break;
+            case "Delay ATK":
+                m_charScript.m_effects[(int)effects.DELAY] = false;
                 break;
             default:
                 break;

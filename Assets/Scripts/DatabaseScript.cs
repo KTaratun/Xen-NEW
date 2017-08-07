@@ -54,4 +54,11 @@ public class DatabaseScript : MonoBehaviour {
 
         return acts;
     }
+
+    static public string GetActionData(string _action, actions _data)
+    {
+        string[] actSeparated = _action.Split('|');
+        string[] data = actSeparated[(int)_data].Split(':');
+        return data[1];
+    }
 }
