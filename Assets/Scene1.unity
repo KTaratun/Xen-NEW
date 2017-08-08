@@ -13020,48 +13020,6 @@ CanvasRenderer:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 882002967}
---- !u!1001 &883311005
-Prefab:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 4270520559704738, guid: ff37a7e1795bd7a4298e2edcadf77a50, type: 2}
-      propertyPath: m_LocalPosition.x
-      value: 1.27
-      objectReference: {fileID: 0}
-    - target: {fileID: 4270520559704738, guid: ff37a7e1795bd7a4298e2edcadf77a50, type: 2}
-      propertyPath: m_LocalPosition.y
-      value: -35.95
-      objectReference: {fileID: 0}
-    - target: {fileID: 4270520559704738, guid: ff37a7e1795bd7a4298e2edcadf77a50, type: 2}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4270520559704738, guid: ff37a7e1795bd7a4298e2edcadf77a50, type: 2}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4270520559704738, guid: ff37a7e1795bd7a4298e2edcadf77a50, type: 2}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4270520559704738, guid: ff37a7e1795bd7a4298e2edcadf77a50, type: 2}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4270520559704738, guid: ff37a7e1795bd7a4298e2edcadf77a50, type: 2}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4270520559704738, guid: ff37a7e1795bd7a4298e2edcadf77a50, type: 2}
-      propertyPath: m_RootOrder
-      value: 6
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_ParentPrefab: {fileID: 100100000, guid: ff37a7e1795bd7a4298e2edcadf77a50, type: 2}
-  m_IsPrefabParent: 0
 --- !u!114 &885967767 stripped
 MonoBehaviour:
   m_PrefabParentObject: {fileID: 114640492427027984, guid: ffdc40d740493d44ba3e2808d8621f67,
@@ -20559,6 +20517,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_camera: {fileID: 485874773}
   m_roundCount: 0
+  m_environmentOBJs:
+  - {fileID: 1879795940171780, guid: 79a7bb7397457ca4485c00a593b7e35f, type: 2}
+  - {fileID: 1947012882963826, guid: a620a08e64569d1419c14f59a4222bf3, type: 2}
   m_panels:
   - {fileID: 1270872295}
   - {fileID: 545066517}
@@ -20574,8 +20535,8 @@ MonoBehaviour:
   m_tile: {fileID: 1782535043158714, guid: 5c85ab1a0780ebb429c0c6953bad95d9, type: 2}
   m_character: {fileID: 1933196064922436, guid: ff37a7e1795bd7a4298e2edcadf77a50,
     type: 2}
-  m_width: 10
-  m_height: 10
+  m_width: 0
+  m_height: 0
   m_selected: {fileID: 0}
   m_oldTile: {fileID: 0}
   m_currTile: {fileID: 0}

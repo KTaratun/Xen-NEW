@@ -3,16 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CharacterScript : MonoBehaviour {
+public class CharacterScript : ObjectScript {
 
     public enum sts { HP, SPD, HIT, EVA, CRT, DMG, DEF, MOV, RNG, RAD, TOT };
     enum trn { MOV, ACT };
-    
-    public GameObject m_tile;
-    public BoardScript m_boardScript;
+
+    Color c_green = new Color(.45f, .7f, .4f, 1);
+    Color c_red = new Color(.8f, .1f, .15f, 1);
+    Color c_white = new Color(.8f, .8f, .8f, 1);
+    Color c_blue = new Color(.45f, .4f, 1, 1);
+
     public GameObject m_turnPanel;
     public GameObject m_healthBar;
     public GameObject m_popupText;
+    public GameObject[] m_popupSpheres;
     public GameObject[] m_colorDisplay;
     public GameObject m_player;
     public string m_currAction;
@@ -25,7 +29,7 @@ public class CharacterScript : MonoBehaviour {
     public int m_currRadius;
     public bool[] m_effects;
     public bool m_isAlive;
-    public bool m_isFree;
+    public bool m_isFree; // Use this to 
     public Color m_teamColor;
 
 	// Use this for initialization
@@ -46,6 +50,15 @@ public class CharacterScript : MonoBehaviour {
 
         for (int i = 0; i < m_stats.Length; i++)
             m_tempStats[i] = m_stats[i];
+
+        for (int i = 0; i < m_popupSpheres.Length; i++)
+        {
+            MeshRenderer[] meshRends = m_popupSpheres[i].GetComponentsInChildren<MeshRenderer>();
+
+            for (int j = 0; j < meshRends.Length; j++)
+                meshRends[j].material.color = new Color(meshRends[j].material.color.r, meshRends[j].material.color.g, meshRends[j].material.color.b, 0);
+        }
+
     }
 
     // Update is called once per frame
@@ -103,10 +116,30 @@ public class CharacterScript : MonoBehaviour {
                     m_colorDisplay[i].transform.LookAt(2 * m_colorDisplay[i].transform.position - m_boardScript.m_camera.transform.position);
             }
 
+            float fadeSpeed = .01f;
+            // Update energy gained/lost
+            for (int i = 0; i < m_popupSpheres.Length; i++)
+            {
+                if (m_popupSpheres[i].activeSelf)
+                {
+                    m_popupSpheres[i].transform.LookAt(2 * m_popupSpheres[i].transform.position - m_boardScript.m_camera.transform.position);
+
+                    MeshRenderer[] meshRends = m_popupSpheres[i].GetComponentsInChildren<MeshRenderer>();
+                    for (int j = 0; j < meshRends.Length; j++)
+                    {
+                        meshRends[j].material.color =
+                        new Color(meshRends[j].material.color.r, meshRends[j].material.color.g,
+                        meshRends[j].material.color.b, meshRends[j].material.color.a - fadeSpeed);
+
+                        if (meshRends[j].material.color.a <= 0)
+                            m_popupSpheres[i].SetActive(false);
+                    }
+                }
+            }
+
             // Update character's popup text
             if (m_popupText.activeSelf)
             {
-                float fadeSpeed = .01f;
                 m_popupText.transform.LookAt(2 * m_popupText.transform.position - m_boardScript.m_camera.transform.position);
                 TextMesh textMesh = m_popupText.GetComponent<TextMesh>();
                 textMesh.color = new Color(textMesh.color.r, textMesh.color.g, textMesh.color.b, textMesh.color.a - fadeSpeed);
@@ -288,6 +321,7 @@ public class CharacterScript : MonoBehaviour {
         }
 
         m_currRadius = 0;
+        m_isFree = false;
         m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PREVIEW].GetComponent<PanelScript>().m_inView = false;
     }
 
@@ -617,31 +651,89 @@ public class CharacterScript : MonoBehaviour {
         }
     }
 
-    private void EnergyConversion(string energy)
+    private void EnergyConversion(string _energy)
     {
         PlayerScript playScript = m_player.GetComponent<PlayerScript>();
-        // Assign energy symbols
-        for (int i = 0; i < energy.Length; i++)
+        // Assign _energy symbols
+        for (int i = 0; i < _energy.Length; i++)
         {
-            if (energy[i] == 'g')
+            if (_energy[i] == 'g')
                 playScript.m_energy[0] += 1;
-            else if (energy[i] == 'r')
+            else if (_energy[i] == 'r')
                 playScript.m_energy[1] += 1;
-            else if (energy[i] == 'w')
+            else if (_energy[i] == 'w')
                 playScript.m_energy[2] += 1;
-            else if (energy[i] == 'b')
+            else if (_energy[i] == 'b')
                 playScript.m_energy[3] += 1;
-            else if (energy[i] == 'G')
+            else if (_energy[i] == 'G')
                 playScript.m_energy[0] -= 1;
-            else if (energy[i] == 'R')
+            else if (_energy[i] == 'R')
                 playScript.m_energy[1] -= 1;
-            else if (energy[i] == 'W')
+            else if (_energy[i] == 'W')
                 playScript.m_energy[2] -= 1;
-            else if (energy[i] == 'B')
+            else if (_energy[i] == 'B')
                 playScript.m_energy[3] -= 1;
         }
 
+        SetPopupSpheres(_energy);
         playScript.SetEnergyPanel();
+    }
+
+    public void SetPopupSpheres(string _energy)
+    {
+        GameObject[] colorSpheres = m_popupSpheres;
+        if (_energy.Length == 0)
+        {
+            _energy = m_color;
+            colorSpheres = m_colorDisplay;
+        }
+
+        GameObject spheres = null;
+        if (_energy.Length == 1)
+        {
+            colorSpheres[0].SetActive(true);
+            spheres = colorSpheres[0];
+        }
+        else if (_energy.Length == 2)
+        {
+            colorSpheres[1].SetActive(true);
+            spheres = colorSpheres[1];
+        }
+        else if (_energy.Length == 3)
+        {
+            colorSpheres[2].SetActive(true);
+            spheres = colorSpheres[2];
+        }
+        else if (_energy.Length == 4)
+        {
+            colorSpheres[3].SetActive(true);
+            spheres = colorSpheres[3];
+        }
+
+        Color color = Color.white;
+        if (_energy[0] == 'g' || _energy[0] == 'G')
+            color = c_green;
+        else if (_energy[0] == 'r' || _energy[0] == 'R')
+            color = c_red;
+        else if (_energy[0] == 'w' || _energy[0] == 'W')
+            color = c_white;
+        else if (_energy[0] == 'b' || _energy[0] == 'B')
+            color = c_blue;
+
+        SphereCollider[] orbs = spheres.GetComponentsInChildren<SphereCollider>();
+        int j = 0;
+
+        for (int i = 0; i < orbs.Length; i++)
+        {
+            Renderer orbRend = orbs[i].GetComponent<Renderer>();
+            
+            if (orbs[i].name == "Sphere Outline")
+                orbRend.material.color = new Color(0, 0, 0, 1);
+            else
+                orbRend.material.color = color;
+
+            j++;
+        }
     }
 
     public void Pass()
@@ -730,54 +822,6 @@ public class CharacterScript : MonoBehaviour {
         {
             PanelScript panScript = m_boardScript.m_panels[(int)BoardScript.pnls.HUD_LEFT_PANEL].GetComponent<PanelScript>();
             panScript.PopulateHUD();
-        }
-    }
-
-    public void SetCharColor()
-    {
-        GameObject colors = m_colorDisplay[0];
-
-        if (m_color.Length == 1)
-        {
-            colors = m_colorDisplay[0];
-            colors.SetActive(true);
-        }
-        else if (m_color.Length == 2)
-        {
-            colors = m_colorDisplay[1];
-            colors.SetActive(true);
-        }
-        else if (m_color.Length == 3)
-        {
-            colors = m_colorDisplay[2];
-            colors.SetActive(true);
-        }
-        else if (m_color.Length == 4)
-        {
-            colors = m_colorDisplay[3];
-            colors.SetActive(true);
-        }
-    
-        SphereCollider[] orbs = colors.GetComponentsInChildren<SphereCollider>();
-        int j = 0;
-
-        for (int i = 0; i < orbs.Length; i++)
-        {
-            if (orbs[i].name == "Sphere Outline")
-                continue;
-
-            Renderer orbRend = orbs[i].GetComponent<Renderer>();
-
-            if (m_color[j] == 'G')
-                orbRend.material.color = new Color(.45f, .7f, .4f, 1);
-            else if (m_color[j] == 'R')
-                orbRend.material.color = new Color(.8f, .1f, .15f, 1);
-            else if (m_color[j] == 'W')
-                orbRend.material.color = new Color(.8f, .8f, .8f, 1);
-            else if (m_color[j] == 'B')
-                orbRend.material.color = new Color(.45f, .4f, 1, 1);
-
-            j++;
         }
     }
 }

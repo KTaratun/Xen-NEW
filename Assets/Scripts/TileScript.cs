@@ -66,7 +66,8 @@ public class TileScript : MonoBehaviour {
             return;
         }
 
-        if (renderer.material.color == new Color(1, 0, 0, 1) && m_holding || renderer.material.color == new Color(0, 1, 0, 1) && m_holding) // Otherwise if color is red, perform action code
+        if (renderer.material.color == new Color(1, 0, 0, 1) && m_holding && m_holding.tag == "Player" || 
+            renderer.material.color == new Color(0, 1, 0, 1) && m_holding && m_holding.tag == "Player") // Otherwise if color is red, perform action code
         {
             List<GameObject> targets = new List<GameObject>();
             targets.Add(m_holding);
@@ -83,7 +84,7 @@ public class TileScript : MonoBehaviour {
             for (int i = 0; i < m_targetRadius.Count; i++)
             {
                 TileScript tarTile = m_targetRadius[i].GetComponent<TileScript>();
-                if (tarTile.m_holding)
+                if (tarTile.m_holding && tarTile.m_holding.tag == "Player")
                     targets.Add(tarTile.m_holding);
             }
 

@@ -10,6 +10,7 @@ public class BoardScript : MonoBehaviour {
 
     public Camera m_camera; // Why it do that squiggle?
     public int m_roundCount;
+    public GameObject[] m_environmentOBJs;
     public GameObject[] m_panels; // All movable GUI on screen
     public GameObject[] m_tiles; // All m_tiles on the board
     public GameObject m_tile; // A reference to the m_tile prefab
@@ -42,6 +43,7 @@ public class BoardScript : MonoBehaviour {
 
         InitBoardTiles();
         AssignNeighbors();
+        EnvironmentInit();
         CharacterInit();
     }
 	
@@ -57,6 +59,19 @@ public class BoardScript : MonoBehaviour {
         {
             NewRound();
             NewTurn();
+        }
+    }
+
+    private void EnvironmentInit()
+    {
+        int numOfObstacles = (m_height * m_width) / 10;
+
+        while (numOfObstacles > 0)
+        {
+            int randomOBJ = Random.Range(0, m_environmentOBJs.Length);
+            GameObject newOBJ = Instantiate(m_environmentOBJs[randomOBJ]);
+            PlaceOnBoard(newOBJ);
+            numOfObstacles--;
         }
     }
 
@@ -169,48 +184,44 @@ public class BoardScript : MonoBehaviour {
                     key = i.ToString() + ',' + j.ToString() + ",color";
                     string color = PlayerPrefs.GetString(key);
                     cScript.m_color = color;
-                    cScript.SetCharColor();
+                    cScript.SetPopupSpheres("");
                     
                     key = i.ToString() + ',' + j.ToString() + ",actions";
                     string[] acts = PlayerPrefs.GetString(key).Split(';');
 
-                    // ATTEMPT AT UPDATING DATA FROM PHPADMIN BUT FAILED BECAUSE OF RACE CONDITION
-                    //DatabaseScript db = GetComponent<DatabaseScript>();
-                    //for (int k = 0; k < acts.Length; k++)
-                    //{
-                    //    string[] actSeparated = acts[k].Split('|');
-                    //    string[] id = actSeparated[0].Split(':');
-                    //    acts[k] = db.m_actions[int.Parse(id[1])];
-                    //}
-
                     cScript.m_actions = acts;
-
-                    // Set up position
-                    TileScript script;
-                    int randX;
-                    int randZ;
-                    
-                    do
-                    {
-                        randX = Random.Range(0, m_width - 1);
-                        randZ = Random.Range(0, m_height - 1);
-                    
-                        script = m_tiles[randX + randZ * m_width].GetComponent<TileScript>();
-                    } while (script.m_holding);
-                    
-                    script.m_holding = newChar;
-                    newChar.transform.SetPositionAndRotation(m_tiles[randX + randZ * m_width].transform.position, new Quaternion());
-                    cScript.m_tile = m_tiles[randX + randZ * m_width];
-                    cScript.m_boardScript = GetComponent<BoardScript>();
-
                     m_characters.Add(newChar);
 
                     // Link to player
                     cScript.m_player = m_players[i];
                     PlayerScript playScript = m_players[i].GetComponent<PlayerScript>();
                     playScript.m_characters.Add(newChar);
+
+                    PlaceOnBoard(newChar);
                 }
             }
+    }
+
+    private void PlaceOnBoard(GameObject _obj)
+    {
+        // Set up position
+        TileScript script;
+        int randX;
+        int randZ;
+
+        do
+        {
+            randX = Random.Range(0, m_width - 1);
+            randZ = Random.Range(0, m_height - 1);
+
+            script = m_tiles[randX + randZ * m_width].GetComponent<TileScript>();
+        } while (script.m_holding);
+
+        script.m_holding = _obj;
+        _obj.transform.SetPositionAndRotation(m_tiles[randX + randZ * m_width].transform.position, new Quaternion());
+        ObjectScript objScript = _obj.GetComponent<ObjectScript>();
+        objScript.m_tile = m_tiles[randX + randZ * m_width];
+        objScript.m_boardScript = GetComponent<BoardScript>();
     }
 
     public void Hover()
@@ -257,17 +268,20 @@ public class BoardScript : MonoBehaviour {
         {
             tile = hit.collider.gameObject;
             TileScript tScript = tile.GetComponent<TileScript>();
-            if (tScript.m_holding)
+            if (tScript.m_holding && tScript.m_holding.tag == "Player")
             {
                 character = tScript.m_holding;
                 charScript = character.GetComponent<CharacterScript>();
             }
         }
-        if (hit.collider.gameObject.tag == "Player")
+        else
         {
-            character = hit.collider.gameObject;
-            charScript = character.GetComponent<CharacterScript>();
-            tile = charScript.m_tile;
+            tile = hit.collider.GetComponent<ObjectScript>().m_tile;
+            if (hit.collider.gameObject.tag == "Player")
+            {
+                character = hit.collider.gameObject;
+                charScript = character.GetComponent<CharacterScript>();
+            }
         }
 
         if (character)
