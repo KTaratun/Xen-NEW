@@ -8,10 +8,14 @@ public class CharacterScript : ObjectScript {
     public enum sts { HP, SPD, HIT, EVA, CRT, DMG, DEF, MOV, RNG, RAD, TOT };
     enum trn { MOV, ACT };
 
-    Color c_green = new Color(.45f, .7f, .4f, 1);
-    Color c_red = new Color(.8f, .1f, .15f, 1);
-    Color c_white = new Color(.8f, .8f, .8f, 1);
-    Color c_blue = new Color(.45f, .4f, 1, 1);
+    static public Color c_green = new Color(.45f, .7f, .4f, 1);
+    static public Color c_red = new Color(.8f, .1f, .15f, 1);
+    static public Color c_white = new Color(.8f, .8f, .8f, 1);
+    static public Color c_blue = new Color(.45f, .4f, 1, 1);
+
+    static public Color c_attack = new Color(1, 0, 0, 0.5f);
+    static public Color c_action = new Color(0, 1, 0, 0.5f);
+    static public Color c_move = new Color(0, 0, 1, 0.5f);
 
     public GameObject m_turnPanel;
     public GameObject m_healthBar;
@@ -19,6 +23,8 @@ public class CharacterScript : ObjectScript {
     public GameObject[] m_popupSpheres;
     public GameObject[] m_colorDisplay;
     public GameObject m_player;
+    public Animator m_anim;
+    public string m_name;
     public string m_currAction;
     public int m_currStatus;
     public string[] m_actions;
@@ -29,13 +35,18 @@ public class CharacterScript : ObjectScript {
     public int m_currRadius;
     public bool[] m_effects;
     public bool m_isAlive;
-    public bool m_isFree; // Use this to 
     public Color m_teamColor;
+    public bool m_isAI;
+    public float m_level;
+    public int m_exp;
+    public bool m_isFree;
 
 	// Use this for initialization
 	void Start ()
     {
+        m_anim = GetComponent<Animator>();
         m_popupText.SetActive(false);
+        m_isFree = false;
 
         m_accessories = new string[2];
         m_accessories[0] = "Ring of DEATH";
@@ -51,6 +62,8 @@ public class CharacterScript : ObjectScript {
         for (int i = 0; i < m_stats.Length; i++)
             m_tempStats[i] = m_stats[i];
 
+
+        // Set up the spheres that pop up over the characters heads when they gain or lose energy
         for (int i = 0; i < m_popupSpheres.Length; i++)
         {
             MeshRenderer[] meshRends = m_popupSpheres[i].GetComponentsInChildren<MeshRenderer>();
@@ -65,91 +78,115 @@ public class CharacterScript : ObjectScript {
     void Update()
     {
         // Move towards new tile
-        if (m_tile && transform.position != m_tile.transform.position && m_isAlive)
-        {
-            // Determine how much the character will be moving this update
-            float charAcceleration = 0.04f;
-            float charSpeed = 0.03f;
-            float charMovement = Vector3.Distance(transform.position, m_tile.transform.position) * charAcceleration + charSpeed;
-            transform.SetPositionAndRotation(new Vector3(transform.position.x + transform.forward.x * charMovement, transform.position.y, transform.position.z + transform.forward.z * charMovement), transform.rotation);
-
-            float snapDistance = 0.02f;
-            if (Vector3.Distance(transform.position, m_tile.transform.position) < snapDistance)
-                transform.SetPositionAndRotation(m_tile.transform.position, new Quaternion());
-        }
+        MovementUpdate();
 
         if (m_boardScript)
         {
-            PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
+            EndTurn(false);
+            UpdateOverheadItems();
+        }
+    }
 
-            // END OF TURN
-            if (m_boardScript.m_currPlayer == gameObject && mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable == false
-                && mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable == false
-                && !m_boardScript.m_isForcedMove)
+    private void MovementUpdate()
+    {
+        if (m_tile && transform.position != m_tile.transform.position && m_isAlive)
+        {
+            // Determine how much the character will be moving this update
+            float charAcceleration = 0.02f;
+            float charSpeed = 0.015f;
+            float charMovement = Vector3.Distance(transform.position, m_tile.transform.position) * charAcceleration + charSpeed;
+            transform.SetPositionAndRotation(new Vector3(transform.position.x + transform.forward.x * charMovement, transform.position.y, transform.position.z + transform.forward.z * charMovement), transform.rotation);
+            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = gameObject;
+
+            float snapDistance = 0.007f;
+            if (Vector3.Distance(transform.position, m_tile.transform.position) < snapDistance)
             {
-                mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = true;
-                mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = true;
-                StatusScript.UpdateStatus(gameObject, StatusScript.mode.TURN_END);
-                m_boardScript.NewTurn();
+                transform.SetPositionAndRotation(m_tile.transform.position, transform.rotation);
+                m_boardScript.m_camIsFrozen = false;
+                CameraScript cam = m_boardScript.m_camera.GetComponent<CameraScript>();
+                cam.m_target = null;
+                m_anim.Play("Idle", -1, 0);
             }
+        }
+    }
 
-            // Update health bar
-            if (m_healthBar.activeSelf && m_isAlive)
+    public void EndTurn(bool _isForced)
+    {
+        PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
+
+        if (_isForced && !m_boardScript.m_camIsFrozen || m_boardScript.m_currPlayer == gameObject && mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable == false
+                && mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable == false && !m_boardScript.m_isForcedMove && !m_boardScript.m_camIsFrozen)
+        {
+            mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = true;
+            mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = true;
+            mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].GetComponent<Image>().color = Color.white;
+            mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].GetComponent<Image>().color = Color.white;
+            StatusScript.UpdateStatus(gameObject, StatusScript.mode.TURN_END);
+            m_boardScript.NewTurn();
+        }
+    }
+
+    private void UpdateOverheadItems()
+    {
+        // Update Health bar
+        if (m_healthBar.activeSelf && m_isAlive)
+        {
+            Transform outline = m_healthBar.transform.parent;
+
+            outline.LookAt(2 * outline.position - m_boardScript.m_camera.transform.position);
+            m_healthBar.transform.LookAt(2 * m_healthBar.transform.position - m_boardScript.m_camera.transform.position);
+            float ratio = ((float)m_stats[(int)sts.HP] - (float)m_tempStats[(int)sts.HP]) / (float)m_stats[(int)sts.HP];
+
+            Renderer hpRend = m_healthBar.GetComponent<Renderer>();
+            hpRend.material.color = new Color(ratio + 0.2f, 1 - ratio + 0.2f, 0.2f, 1);
+            m_healthBar.transform.localScale = new Vector3(0.95f - ratio, m_healthBar.transform.localScale.y, m_healthBar.transform.localScale.z);
+        }
+        else
+            m_healthBar.GetComponent<Renderer>().material.color = Color.black;
+
+        // Update character's color spheres
+        for (int i = 0; i < m_colorDisplay.Length; i++)
+        {
+            if (m_colorDisplay[i].activeSelf)
+                m_colorDisplay[i].transform.LookAt(2 * m_colorDisplay[i].transform.position - m_boardScript.m_camera.transform.position);
+        }
+
+        float fadeSpeed = .01f;
+
+        // Update energy gained/lost
+        for (int i = 0; i < m_popupSpheres.Length; i++)
+        {
+            if (m_popupSpheres[i].activeSelf)
             {
-                Transform outline = m_healthBar.transform.parent;
+                m_popupSpheres[i].transform.LookAt(2 * m_popupSpheres[i].transform.position - m_boardScript.m_camera.transform.position);
 
-                outline.LookAt(2 * outline.position - m_boardScript.m_camera.transform.position);
-                m_healthBar.transform.LookAt(2 * m_healthBar.transform.position - m_boardScript.m_camera.transform.position);
-                float ratio = ((float)m_stats[(int)sts.HP] - (float)m_tempStats[(int)sts.HP]) / (float)m_stats[(int)sts.HP]; // ADD EQUIPMENT
-
-                Renderer hpRend = m_healthBar.GetComponent<Renderer>();
-                hpRend.material.color = new Color(ratio + 0.2f, 1 - ratio + 0.2f, 0.2f, 1);
-                m_healthBar.transform.localScale = new Vector3(0.95f - ratio, m_healthBar.transform.localScale.y, m_healthBar.transform.localScale.z);
-            }
-            else
-                m_healthBar.GetComponent<Renderer>().material.color = Color.black;
-
-            // Update character's color spheres
-            for (int i = 0; i < m_colorDisplay.Length; i++)
-            {
-                if (m_colorDisplay[i].activeSelf)
-                    m_colorDisplay[i].transform.LookAt(2 * m_colorDisplay[i].transform.position - m_boardScript.m_camera.transform.position);
-            }
-
-            float fadeSpeed = .01f;
-            // Update energy gained/lost
-            for (int i = 0; i < m_popupSpheres.Length; i++)
-            {
-                if (m_popupSpheres[i].activeSelf)
+                MeshRenderer[] meshRends = m_popupSpheres[i].GetComponentsInChildren<MeshRenderer>();
+                for (int j = 0; j < meshRends.Length; j++)
                 {
-                    m_popupSpheres[i].transform.LookAt(2 * m_popupSpheres[i].transform.position - m_boardScript.m_camera.transform.position);
+                    meshRends[j].material.color =
+                    new Color(meshRends[j].material.color.r, meshRends[j].material.color.g,
+                    meshRends[j].material.color.b, meshRends[j].material.color.a - fadeSpeed);
 
-                    MeshRenderer[] meshRends = m_popupSpheres[i].GetComponentsInChildren<MeshRenderer>();
-                    for (int j = 0; j < meshRends.Length; j++)
-                    {
-                        meshRends[j].material.color =
-                        new Color(meshRends[j].material.color.r, meshRends[j].material.color.g,
-                        meshRends[j].material.color.b, meshRends[j].material.color.a - fadeSpeed);
-
-                        if (meshRends[j].material.color.a <= 0)
-                            m_popupSpheres[i].SetActive(false);
-                    }
+                    if (meshRends[j].material.color.a <= 0)
+                        m_popupSpheres[i].SetActive(false);
                 }
             }
+        }
 
-            // Update character's popup text
-            if (m_popupText.activeSelf)
+        // Update character's popup text
+        if (m_popupText.activeSelf)
+        {
+            m_popupText.transform.LookAt(2 * m_popupText.transform.position - m_boardScript.m_camera.transform.position);
+            TextMesh textMesh = m_popupText.GetComponent<TextMesh>();
+            textMesh.color = new Color(textMesh.color.r, textMesh.color.g, textMesh.color.b, textMesh.color.a - fadeSpeed);
+
+            if (textMesh.color.a <= 0)
             {
-                m_popupText.transform.LookAt(2 * m_popupText.transform.position - m_boardScript.m_camera.transform.position);
-                TextMesh textMesh = m_popupText.GetComponent<TextMesh>();
-                textMesh.color = new Color(textMesh.color.r, textMesh.color.g, textMesh.color.b, textMesh.color.a - fadeSpeed);
-
-                if (textMesh.color.a <= 0)
-                {
-                    textMesh.color = Color.white;
-                    textMesh.text = "0";
-                    m_popupText.SetActive(false);
-                }
+                textMesh.color = Color.white;
+                textMesh.text = "0";
+                m_popupText.SetActive(false);
+                m_boardScript.m_camIsFrozen = false;
+                m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_currPlayer;
             }
         }
     }
@@ -167,7 +204,7 @@ public class CharacterScript : ObjectScript {
         if (_forceMove > 0)
             move = _forceMove;
         else
-            move = m_tempStats[(int)sts.MOV]; // ADD EQUIPMENT
+            move = m_tempStats[(int)sts.MOV];
 
         TileScript tileScript = m_tile.GetComponent<TileScript>();
         tileScript.FetchTilesWithinRange(move, new Color (0, 0, 1, 0.5f), false, TileScript.targetRestriction.NONE, false);
@@ -180,6 +217,8 @@ public class CharacterScript : ObjectScript {
         newScript.m_holding = selectedScript.m_holding;
         selectedScript.m_holding = null;
         m_tile = newScript.gameObject;
+        m_boardScript.m_camIsFrozen = true;
+        m_anim.Play("Running", -1, 0);
 
         if (gameObject == m_boardScript.m_currPlayer)
             m_boardScript.m_currTile = m_tile;
@@ -187,6 +226,9 @@ public class CharacterScript : ObjectScript {
         {
             PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
             mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
+
+            if (mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].GetComponent<Image>().color == Color.yellow)
+                mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
         }
 
         transform.LookAt(m_tile.transform);
@@ -212,27 +254,42 @@ public class CharacterScript : ObjectScript {
         string actRng = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RNG);
         string actRad = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RAD);
 
-        TileScript tileScript = m_tile.GetComponent<TileScript>();
+        // If the action doesn't target
+        if (actName == "Channel")
+        {
+            m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>().m_inView = false;
+            List<GameObject> myself = new List<GameObject>();
+            myself.Add(gameObject);
+            Action(myself);
+            return;
+        }
 
+        TileScript tileScript = m_tile.GetComponent<TileScript>();
         TileScript.targetRestriction targetingRestriction = TileScript.targetRestriction.NONE;
+
+        // If the action only targets horizontal and vertical or diagonal
         if (actName == "Pull ATK" || actName == "Piercing ATK")
             targetingRestriction = TileScript.targetRestriction.HORVERT;
         else if (actName == "Cross ATK")
             targetingRestriction = TileScript.targetRestriction.DIAGONAL;
 
+        // If the action cannot be blocked
         bool isBlockable = true;
         if (actName == "Piercing ATK" || actName == "Cross ATK")
             isBlockable = false;
 
         m_currRadius = int.Parse(actRad);
         bool targetSelf = false;
+
+        // If the action can target the source
         if (m_currRadius > 0)
             targetSelf = true;
 
-        if (CheckIfAttack(actName)) // See if it's an attack
-            tileScript.FetchTilesWithinRange(int.Parse(actRng) + m_tempStats[(int)sts.RNG], new Color(1, 0, 0, 0.5f), targetSelf, targetingRestriction, isBlockable);
+        // See if it's an attack or not
+        if (CheckIfAttack(actName))
+            tileScript.FetchTilesWithinRange(int.Parse(actRng) + m_tempStats[(int)sts.RNG], c_attack, targetSelf, targetingRestriction, isBlockable);
         else
-            tileScript.FetchTilesWithinRange(int.Parse(actRng) + m_tempStats[(int)sts.RNG], new Color(0, 1, 0, 0.5f), true, targetingRestriction, isBlockable);
+            tileScript.FetchTilesWithinRange(int.Parse(actRng) + m_tempStats[(int)sts.RNG], c_action, true, targetingRestriction, isBlockable);
 
         PanelScript actionPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
         actionPanScript.m_inView = false;
@@ -244,71 +301,101 @@ public class CharacterScript : ObjectScript {
 
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
         string actEng = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.ENERGY);
+        PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
+        bool miss = true;
+
+        if (CheckIfAttack(actName)) // See if it's an attack
+            miss = Attack(_targets);
+        else // If it's not an attack
+        {
+            miss = false;
+            for (int i = 0; i < _targets.Count; i++)
+                if (!m_effects[(int)StatusScript.effects.HINDER])
+                    Ability(_targets[i], actName);
+
+            if (mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable == false ||
+                mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].GetComponent<Image>().color == Color.yellow
+                || m_isFree)
+            {
+                mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
+                mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
+            }
+            else if (!m_isFree)
+                mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].GetComponent<Image>().color = Color.yellow;
+                
+        }
+
+        if (PlayerScript.CheckIfGains(actEng) && !miss || !PlayerScript.CheckIfGains(actEng) && !m_isFree)
+            EnergyConversion(actEng);
+
+        if (!miss)
+            m_exp += actEng.Length;
+
+        m_isFree = false;
+        m_currRadius = 0;
+        m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PREVIEW].GetComponent<PanelScript>().m_inView = false;
+    }
+
+    public bool Attack(List<GameObject> _targets)
+    {
+        string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
         string actHit = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.HIT);
         string actDmg = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.DMG);
         string actCrt = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.CRT);
+        PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
 
-        if (CheckIfAttack(actName)) // See if it's an attack
+        bool miss = true;
+        int roll = Random.Range(1, 21); // Because Random.Range doesn't include the max number
+
+        for (int i = 0; i < _targets.Count; i++)
         {
-            int roll = Random.Range(1, 21); // Because Random.Range doesn't include the max number
+            CharacterScript targetScript = _targets[i].GetComponent<CharacterScript>();
 
+            if (targetScript.m_isAlive == false)
+                continue;
 
-            for (int i = 0; i < _targets.Count; i++)
+            int DC = int.Parse(actHit) - m_tempStats[(int)sts.HIT] + targetScript.m_tempStats[(int)sts.EVA];
+            int totalCrit = int.Parse(actCrt) + m_tempStats[(int)sts.CRT];
+            string finalDMG = "0";
+
+            print("Rolled " + roll + " against " + actHit + " - my HIT mod of " + m_tempStats[(int)sts.HIT] + " + my opponents EVA mod of " + targetScript.m_tempStats[(int)sts.EVA] +
+                " for a total DC of " + DC + ". Crit: " + actCrt + " + my CRT mod of " + m_tempStats[(int)sts.CRT] + " for a total of Crit: " + totalCrit + ".\n");
+
+            if (actName == "Bypass ATK")
             {
-                bool miss = false;
-                CharacterScript targetScript = _targets[i].GetComponent<CharacterScript>();
-                int DC = int.Parse(actHit) - m_tempStats[(int)sts.HIT] + targetScript.m_tempStats[(int)sts.EVA];
-                int totalCrit = int.Parse(actCrt) + m_tempStats[(int)sts.CRT];
-                string finalDMG = "0";
-
-                print("Rolled " + roll + " against " + actHit + " - my HIT mod of " + m_tempStats[(int)sts.HIT] + " + my opponents EVA mod of " + targetScript.m_tempStats[(int)sts.EVA] +
-                    " for a total DC of " + DC + ". Crit: " + actCrt + " + my CRT mod of " + m_tempStats[(int)sts.CRT] + " for a total of Crit: " + totalCrit + ".\n");
-
-                if (actName == "Bypass ATK")
-                {
-                    DC -= targetScript.m_tempStats[(int)sts.EVA];
-                    finalDMG = (0 + targetScript.m_tempStats[(int)sts.DEF]).ToString();
-                }
-
-                if (roll >= int.Parse(actCrt) + m_tempStats[(int)sts.CRT]) // ADD EQUIPMENT
-                {
-                    if ((int.Parse(actDmg) * 2) + m_tempStats[(int)sts.DMG] + targetScript.m_tempStats[(int)sts.DEF] >= 0)
-                        finalDMG = ((int.Parse(actDmg) * 2) + m_tempStats[(int)sts.DMG] - targetScript.m_tempStats[(int)sts.DEF]).ToString();
-
-                    print("Hit with a crit dealing " + actDmg + "x2 + my DMG mod of " + m_tempStats[(int)sts.DMG] + " - my opponent's DEF mod of " + targetScript.m_tempStats[(int)sts.DEF] + " for a total of " + finalDMG + ".\n");
-                    targetScript.ReceiveDamage(finalDMG, Color.red);
-
-                    if (PlayerScript.CheckIfGains(actEng) || !PlayerScript.CheckIfGains(actEng) && !m_isFree)
-                        EnergyConversion(actEng);
-                }
-                else if (roll < DC) // ADD EQUIPMENT
-                {
-                    targetScript.ReceiveDamage("MISS", Color.white);
-                    miss = true;
-
-                    print("Missed.\n");
-                    if (!PlayerScript.CheckIfGains(actEng))
-                        EnergyConversion(actEng);
-                }
-                else
-                {
-                    if (int.Parse(actDmg) + m_tempStats[(int)sts.DMG] + targetScript.m_tempStats[(int)sts.DEF] >= 0)
-                        finalDMG = (int.Parse(actDmg) + m_tempStats[(int)sts.DMG] - targetScript.m_tempStats[(int)sts.DEF]).ToString();
-
-                    print("Hit dealing " + actDmg + " + my DMG mod of " + m_tempStats[(int)sts.DMG] + " - my opponent's DEF mod of " + targetScript.m_tempStats[(int)sts.DEF] + " for a total of " + finalDMG + ".\n");
-                    targetScript.ReceiveDamage(finalDMG, Color.white);
-
-                    if (PlayerScript.CheckIfGains(actEng) || !PlayerScript.CheckIfGains(actEng) && !m_isFree)
-                        EnergyConversion(actEng);
-                }
-
-                if (!miss && !m_effects[(int)StatusScript.effects.HINDER])
-                    Ability(_targets[i], actName);
+                DC -= targetScript.m_tempStats[(int)sts.EVA];
+                finalDMG = (0 + targetScript.m_tempStats[(int)sts.DEF]).ToString();
             }
-        }
-        else // If it's not an attack
-            for (int i = 0; i < _targets.Count; i++)
+
+            // If Critical
+            if (roll >= int.Parse(actCrt) + m_tempStats[(int)sts.CRT])
+            {
+                if ((int.Parse(actDmg) * 2) + m_tempStats[(int)sts.DMG] + targetScript.m_tempStats[(int)sts.DEF] >= 0)
+                    finalDMG = ((int.Parse(actDmg) * 2) + m_tempStats[(int)sts.DMG] - targetScript.m_tempStats[(int)sts.DEF]).ToString();
+
+                print("Hit with a crit dealing " + actDmg + "x2 + my DMG mod of " + m_tempStats[(int)sts.DMG] + " - my opponent's DEF mod of " + targetScript.m_tempStats[(int)sts.DEF] + " for a total of " + finalDMG + ".\n");
+                targetScript.ReceiveDamage(finalDMG, Color.red);
+                miss = false;
+            }
+            else if (roll < DC) // If Miss
+            {
+                targetScript.ReceiveDamage("MISS", Color.white);
+                print("Missed.\n");
+            }
+            else // If Hit
+            {
+                if (int.Parse(actDmg) + m_tempStats[(int)sts.DMG] + targetScript.m_tempStats[(int)sts.DEF] >= 0)
+                    finalDMG = (int.Parse(actDmg) + m_tempStats[(int)sts.DMG] - targetScript.m_tempStats[(int)sts.DEF]).ToString();
+
+                print("Hit dealing " + actDmg + " + my DMG mod of " + m_tempStats[(int)sts.DMG] + " - my opponent's DEF mod of " + targetScript.m_tempStats[(int)sts.DEF] + " for a total of " + finalDMG + ".\n");
+                targetScript.ReceiveDamage(finalDMG, Color.white);
+                miss = false;
+            }
+
+            // Use ability
+            if (!miss && !m_effects[(int)StatusScript.effects.HINDER])
                 Ability(_targets[i], actName);
+        }
 
         // REFACTOR
         if (actName == "Redirect ATK" && m_boardScript.m_isForcedMove ||
@@ -316,13 +403,18 @@ public class CharacterScript : ObjectScript {
             m_boardScript.m_isForcedMove = null;
         else
         {
-            PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
             mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
+            if (mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].GetComponent<Image>().color == Color.yellow)
+                EndTurn(true);
         }
 
-        m_currRadius = 0;
-        m_isFree = false;
-        m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PREVIEW].GetComponent<PanelScript>().m_inView = false;
+        if (_targets.Count > 1)
+            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_selected;
+        else
+            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = _targets[0];
+
+        m_boardScript.m_camIsFrozen = true;
+        return miss;
     }
 
     static public bool CheckIfAttack(string _action)
@@ -428,7 +520,7 @@ public class CharacterScript : ObjectScript {
             case "Weakening ATK":
             case "Scarring ATK":
             case "Boost":
-            case "AIM":
+            case "Aim":
             case "Bleed ATK":
             case "Critical":
             case "Hindering ATK":
@@ -497,7 +589,7 @@ public class CharacterScript : ObjectScript {
                     SelectorInit(targetScript, BoardScript.pnls.STATUS_SELECTOR);
                 break;
             case "Heal":
-                targetScript.HealHealth(3);
+                targetScript.HealHealth(4);
                 break;
             case "Purification":
                 StatusScript.DestroyAll(_currTarget);
@@ -796,6 +888,7 @@ public class CharacterScript : ObjectScript {
 
     public void ViewStatus()
     {
+        // REFACTOR: Better menu/panel system
         PanelScript sPScript = m_boardScript.m_panels[(int)BoardScript.pnls.STATUS_PANEL].GetComponent<PanelScript>();
         PanelScript mainPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
         PanelScript auxPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.AUXILIARY_PANEL].GetComponent<PanelScript>();

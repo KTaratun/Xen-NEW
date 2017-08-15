@@ -70,12 +70,12 @@ public class PlayerScript : MonoBehaviour {
         List<int> energyOverZero = new List<int>();
         for (int i = 0; i < m_energy.Length; i++)
             if (m_energy[i] > 0)
-                energyOverZero.Add(m_energy[i]);
+                energyOverZero.Add(i);
 
         if (energyOverZero.Count > 0)
         {
             int randomEnergy = Random.Range(0, energyOverZero.Count);
-            m_energy[randomEnergy]--;
+            m_energy[energyOverZero[randomEnergy]]--;
         }
     }
 }

@@ -57,7 +57,7 @@ public class ButtonScript : MonoBehaviour {
 
         Text text = GetComponent<Button>().GetComponentInChildren<Text>();
 
-        if (text.text == "EMPTY" || !m_actionViewer || !m_actionPanel)
+        if (text.text == "EMPTY" || !m_actionViewer || !m_actionPanel || GetComponent<Image>().color == new Color(1, .5f, .5f, 1))
             return;
 
         PanelScript actViewScript = m_actionViewer.GetComponent<PanelScript>();
@@ -67,6 +67,13 @@ public class ButtonScript : MonoBehaviour {
         actViewScript.m_cScript = actPanScript.m_cScript.GetComponent<CharacterScript>();
         if (actPanScript.m_inView) // Need this check to avoid selecting another action while menu is moving
             actViewScript.m_cScript.m_currAction = name;
+        if (actPanScript.m_inView && m_boardScript) // Need this check to avoid selecting another action while menu is moving
+        {
+            CharacterScript charScript = m_boardScript.m_currPlayer.GetComponent<CharacterScript>();
+            if (GetComponent<Button>().GetComponent<Image>().color == PanelScript.b_isFree)
+                charScript.m_isFree = GetComponent<Button>();
+            charScript.m_currAction = name;
+        }
 
         actViewScript.PopulatePanel();
     }

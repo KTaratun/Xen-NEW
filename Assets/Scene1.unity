@@ -753,7 +753,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 49597315}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.28, y: -36.27, z: 0.113687515}
+  m_LocalPosition: {x: 0.28, y: -36.683, z: 0.113687515}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 485874774}
@@ -2263,7 +2263,7 @@ GameObject:
   - component: {fileID: 179682807}
   m_Layer: 5
   m_Name: Status Selector
-  m_TagString: Untagged
+  m_TagString: Selector
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2567,7 +2567,9 @@ MonoBehaviour:
   m_main: {fileID: 1512219745}
   m_parent: {fileID: 0}
   m_buttons: []
-  m_panels: []
+  m_panels:
+  - {fileID: 593418249}
+  - {fileID: 560834650}
   m_text: []
   m_images: []
 --- !u!114 &183463198
@@ -16383,7 +16385,8 @@ MonoBehaviour:
   m_main: {fileID: 1512219745}
   m_parent: {fileID: 0}
   m_buttons: []
-  m_panels: []
+  m_panels:
+  - {fileID: 516815613}
   m_text: []
   m_images:
   - {fileID: 282094185}
@@ -19125,7 +19128,7 @@ GameObject:
   - component: {fileID: 1420022999}
   m_Layer: 5
   m_Name: Energy Selector
-  m_TagString: Untagged
+  m_TagString: Selector
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -20517,9 +20520,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_camera: {fileID: 485874773}
   m_roundCount: 0
+  m_environmentalDensity: 10
   m_environmentOBJs:
   - {fileID: 1879795940171780, guid: 79a7bb7397457ca4485c00a593b7e35f, type: 2}
   - {fileID: 1947012882963826, guid: a620a08e64569d1419c14f59a4222bf3, type: 2}
+  - {fileID: 1230478045263714, guid: 546327cc83c3f11499bcd138db57233f, type: 2}
+  - {fileID: 1615538172956454, guid: 7ebacf542d2122f41984dec06aa934f3, type: 2}
+  m_obstacles: []
   m_panels:
   - {fileID: 1270872295}
   - {fileID: 545066517}
@@ -20550,6 +20557,7 @@ MonoBehaviour:
   m_currRound: []
   m_isForcedMove: {fileID: 0}
   m_livingPlayersInRound: 0
+  m_camIsFrozen: 0
 --- !u!114 &1512219751
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27565,7 +27573,8 @@ MonoBehaviour:
   m_main: {fileID: 1512219745}
   m_parent: {fileID: 0}
   m_buttons: []
-  m_panels: []
+  m_panels:
+  - {fileID: 245402127}
   m_text: []
   m_images:
   - {fileID: 825579523}

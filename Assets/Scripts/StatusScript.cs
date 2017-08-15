@@ -105,7 +105,7 @@ public class StatusScript : MonoBehaviour {
                 m_sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
                 m_color = buffColor;
                 break;
-            case "AIM":
+            case "Aim":
                 m_statMod[(int)CharacterScript.sts.HIT] = 3;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
@@ -121,7 +121,7 @@ public class StatusScript : MonoBehaviour {
                 m_color = debuffColor;
                 break;
             case "Critical":
-                m_statMod[(int)CharacterScript.sts.CRT] = 3;
+                m_statMod[(int)CharacterScript.sts.CRT] = -3;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Critical Symbol");
@@ -135,7 +135,7 @@ public class StatusScript : MonoBehaviour {
                 m_color = statusColor;
                 break;
             case "Unnerving ATK":
-                m_statMod[(int)CharacterScript.sts.CRT] = -2;
+                m_statMod[(int)CharacterScript.sts.CRT] = 2;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Critical Symbol");
@@ -191,7 +191,7 @@ public class StatusScript : MonoBehaviour {
                 m_color = buffColor;
                 break;
             case "Protect":
-                m_statMod[(int)CharacterScript.sts.DEF] = 2;
+                m_statMod[(int)CharacterScript.sts.DEF] = 1;
                 m_mode = mode.ROUND_END;
                 m_lifeSpan = 2;
                 m_sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");

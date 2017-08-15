@@ -6,10 +6,14 @@ public class ObjectScript : MonoBehaviour {
 
     public GameObject m_tile;
     public BoardScript m_boardScript;
+    public int m_width;
+    public TileScript.nbors m_facing;
 
     // Use this for initialization
-    void Start () {
-		
+    void Start ()
+    {
+        m_width = 1;
+        m_facing = TileScript.nbors.bottom;
 	}
 	
 	// Update is called once per frame

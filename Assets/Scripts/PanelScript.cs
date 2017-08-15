@@ -8,6 +8,9 @@ public class PanelScript : MonoBehaviour {
     public enum butts { MOV_BUTT, ACT_BUTT, PASS_BUTT, STATUS_BUTT }
     public enum dir { UP, DOWN, LEFT, RIGHT, NULL}
 
+    static public Color b_isFree = new Color(.5f, 1, .5f, 1);
+    static public Color b_isDisallowed = new Color(1, .5f, .5f, 1);
+
     public bool m_inView;
     public dir m_direction;
     public int m_boundryDis;
@@ -43,6 +46,8 @@ public class PanelScript : MonoBehaviour {
         if (name == "Turn Panel")
             for (int i = 0; i < m_panels.Length; i++)
                 m_panels[i].SetActive(false);
+
+        //BPlayerPrefs.DeleteAll();
     }
 	
 	// Update is called once per frame
@@ -50,7 +55,7 @@ public class PanelScript : MonoBehaviour {
     {
         RectTransform recTrans = GetComponent<RectTransform>();
 
-        if (Input.GetMouseButtonDown(1) && m_inView)
+        if (Input.GetMouseButtonDown(1) && m_inView && gameObject.tag != "Selector")
         {
             if (m_direction == dir.UP && recTrans.offsetMax.y < 200)
             {
@@ -84,7 +89,9 @@ public class PanelScript : MonoBehaviour {
         {
             if (!m_cScript.m_effects[(int)StatusScript.effects.IMMOBILE])
             {
-                m_buttons[(int)butts.MOV_BUTT].GetComponent<Image>().color = Color.white;
+                if (m_buttons[(int)butts.ACT_BUTT].GetComponent<Image>().color == Color.yellow)
+                    m_buttons[(int)butts.MOV_BUTT].GetComponent<Image>().color = Color.yellow;
+
                 if (m_buttons[(int)butts.MOV_BUTT].interactable == true)
                     m_buttons[(int)butts.MOV_BUTT].interactable = true;
                 else
@@ -106,7 +113,7 @@ public class PanelScript : MonoBehaviour {
             m_buttons[0].onClick.AddListener(() => menuScript.NewCharacter());
             m_buttons[1].onClick.AddListener(() => menuScript.LoadCharacter());
             m_buttons[2].onClick.AddListener(() => menuScript.PresetCharacter());
-            m_buttons[2].onClick.AddListener(() => menuScript.RandomCharacter());
+            m_buttons[3].onClick.AddListener(() => menuScript.RandomCharacter());
         }
         else if (name == "Auxiliary Panel")
             m_buttons[0].onClick.AddListener(() => m_cScript.ViewStatus());
@@ -212,6 +219,7 @@ public class PanelScript : MonoBehaviour {
         }
         else if (name == "HUD Panel LEFT" || name == "HUD Panel RIGHT")
         {
+            m_panels[0].GetComponent<Image>().color = new Color(m_cScript.m_teamColor.r + 0.3f, m_cScript.m_teamColor.g + 0.3f, m_cScript.m_teamColor.b + 0.3f, 1);
             m_text[0].text = m_cScript.name;
             m_text[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
         }
@@ -232,9 +240,11 @@ public class PanelScript : MonoBehaviour {
         {
             BoardScript bScript = m_main.GetComponent<BoardScript>();
             CharacterScript currScript = bScript.m_currPlayer.GetComponent<CharacterScript>();
+            m_panels[0].GetComponent<Image>().color = new Color(currScript.m_teamColor.r + 0.3f, currScript.m_teamColor.g + 0.3f, currScript.m_teamColor.b + 0.3f, 1);
+            m_panels[1].GetComponent<Image>().color = new Color(m_cScript.m_teamColor.r + 0.3f, m_cScript.m_teamColor.g + 0.3f, m_cScript.m_teamColor.b + 0.3f, 1);
             int hit = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.HIT)) * 5;
             int dmg = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.DMG)) + currScript.m_tempStats[(int)CharacterScript.sts.DMG];
-            m_text[0].text = "Hit %: " + (100 - hit - (currScript.m_tempStats[(int)CharacterScript.sts.HIT] * 5) + (m_cScript.m_tempStats[(int)CharacterScript.sts.EVA] * 5)).ToString();
+            m_text[0].text = "Hit %: " + (100 - hit + (currScript.m_tempStats[(int)CharacterScript.sts.HIT] * 5) - (m_cScript.m_tempStats[(int)CharacterScript.sts.EVA] * 5)).ToString();
             m_text[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP].ToString() + " -> " + (m_cScript.m_tempStats[(int)CharacterScript.sts.HP] - dmg).ToString();
         }
     }
@@ -291,14 +301,13 @@ public class PanelScript : MonoBehaviour {
                     currCharActName == "Redirect ATK" && currCharScript != m_cScript && eng[1].Length > 2 ||
                     currCharActName == "Copy ATK" && currCharScript != m_cScript && !CharacterScript.CheckIfAttack(name[1]) ||
                     currCharActName == "Copy ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) && eng[1].Length > 2)
-                    buttons[i].GetComponent<Image>().color = new Color(1, .5f, .5f, 1);
+                    buttons[i].GetComponent<Image>().color = b_isDisallowed;
                 else if (currCharActName == "Redirect ATK" && currCharScript != m_cScript && !CharacterScript.CheckIfAttack(name[1]) && eng[1].Length <= 2 ||
                     currCharActName == "Copy ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) && eng[1].Length <= 2)
                 {
-                    buttons[i].GetComponent<Image>().color = new Color(.5f, 1, .5f, 1);
+                    buttons[i].GetComponent<Image>().color = b_isFree;
                     buttons[i].onClick.AddListener(() => currCharScript.ActionTargeting());
                     buttons[i].interactable = true;
-                    currCharScript.m_isFree = true;
                 }
                 else
                 {
@@ -423,7 +432,7 @@ public class PanelScript : MonoBehaviour {
                 if (charScript.m_effects[(int)StatusScript.effects.STUN] && i == 0)
                     m_panels[i].GetComponent<Image>().color = new Color(1, .5f, .5f, 1);
                 else
-                    m_panels[i].GetComponent<Image>().color = Color.white;
+                    m_panels[i].GetComponent<Image>().color = new Color(charScript.m_teamColor.r + 0.3f, charScript.m_teamColor.g + 0.3f, charScript.m_teamColor.b + 0.3f, 1);
 
                 Text t = m_panels[i].GetComponentInChildren<Text>();
                 t.text = bScript.m_currRound[i].name;

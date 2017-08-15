@@ -8,6 +8,7 @@ TagManager:
   - Turn Panel
   - Status Image
   - Environment
+  - Selector
   layers:
   - Default
   - TransparentFX

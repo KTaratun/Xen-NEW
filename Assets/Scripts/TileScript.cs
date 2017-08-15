@@ -39,7 +39,8 @@ public class TileScript : MonoBehaviour {
         PanelScript ActionPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
         PanelScript StsPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.STATUS_PANEL].GetComponent<PanelScript>();
         PanelScript AuxPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.AUXILIARY_PANEL].GetComponent<PanelScript>();
-        if (mainPanScript.m_inView == true || ActionPanScript.m_inView == true || StsPanScript.m_inView == true || AuxPanScript.m_inView == true)
+        if (mainPanScript.m_inView == true || ActionPanScript.m_inView == true || StsPanScript.m_inView == true || AuxPanScript.m_inView == true
+            || m_boardScript.m_camIsFrozen)
             return;
 
         CharacterScript currPlayerScript = m_boardScript.m_currPlayer.GetComponent<CharacterScript>();
@@ -136,7 +137,7 @@ public class TileScript : MonoBehaviour {
         // Handle attacks with radius
         GameObject originalTile = gameObject;
         TileScript originalTileScript = this;
-        if (currCharScript.m_currAction.Length > 0)
+        if (currCharScript.m_currAction.Length > 0 && _color != CharacterScript.c_move)
         {
             string[] actSeparated = currCharScript.m_currAction.Split('|');
             string[] range = actSeparated[(int)DatabaseScript.actions.RNG].Split(':');
@@ -205,7 +206,7 @@ public class TileScript : MonoBehaviour {
                     }
 
                     // if color is movement color and the current tile is holding someone
-                    if (_color == new Color(0, 0, 1, 0.5f) && tScript.m_holding || !_targetSelf && currNeighbor == originalTile)
+                    if (_color == CharacterScript.c_move && tScript.m_holding || !_targetSelf && currNeighbor == originalTile)
                         continue;
 
                     if (_targetingRestriction == targetRestriction.HORVERT && tScript.m_x != m_x && tScript.m_z != m_z)
@@ -234,7 +235,7 @@ public class TileScript : MonoBehaviour {
                                     continue;
 
                                 Renderer neiRend = tScript.m_neighbors[j].GetComponent<Renderer>();
-                                if (neiRend.material.color == new Color(1, 0, 0, 0.5f) || tR.material.color == new Color(1, 0, 0, 0.5f))
+                                if (neiRend.material.color == CharacterScript.c_attack || tR.material.color == CharacterScript.c_attack)
                                 {
                                     redNeigbor = true;
                                     break;
@@ -294,7 +295,7 @@ public class TileScript : MonoBehaviour {
                 return false;
             else
             {
-                if (tarTileScript.m_holding && tarTileScript.m_holding.tag == "Player" && !tarTileScript.m_holding.GetComponent<CharacterScript>().m_isAlive)
+                if (raycastHit.collider && raycastHit.collider.tag == "Player" && !raycastHit.collider.GetComponent<CharacterScript>().m_isAlive)
                     return false;
                 else
                     return true;

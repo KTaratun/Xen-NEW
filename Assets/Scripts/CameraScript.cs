@@ -7,6 +7,7 @@ public class CameraScript : MonoBehaviour {
     public GameObject m_freeCam;
     public GameObject m_target;
     public GameObject m_board;
+    //public float m_oldZ;
 
 	// Use this for initialization
 	void Start () {
@@ -15,17 +16,27 @@ public class CameraScript : MonoBehaviour {
 	// Update is called once per frame
 	void Update ()
     {
+        // REFACTOR: Make all of this into FUNCTIONS
+
         if (m_target) // If the camera is told to focus on something
         {
+            // Determine how much camera will be moving this update
+            float camAcceleration = 0.04f;
+            float camSpeed = 0.03f;
+            float camMovement = Vector3.Distance(m_freeCam.transform.position, m_target.transform.position) * camAcceleration + camSpeed;
+
+            Transform looker = m_freeCam.transform;
+            looker.LookAt(m_target.transform);
+
+            if (m_board.GetComponent<BoardScript>().m_camIsFrozen)
+            {
+                float zoomSpeed = 0.1f;
+                if (Vector3.Distance(transform.position, m_freeCam.transform.position) > 2)
+                    transform.SetPositionAndRotation(new Vector3(transform.position.x + transform.forward.x * zoomSpeed, transform.position.y + transform.forward.y * zoomSpeed, transform.position.z + transform.forward.z * zoomSpeed), transform.rotation);
+            }
+
             if (transform.position != m_target.transform.position)
             {
-                // Determine how much camera will be moving this update
-                float camAcceleration = 0.04f;
-                float camSpeed = 0.03f;
-                float camMovement = Vector3.Distance(m_freeCam.transform.position, m_target.transform.position) * camAcceleration + camSpeed;
-
-                Transform looker = m_freeCam.transform;
-                looker.LookAt(m_target.transform);
 
                 // Move camera along it's forward vector towards target
                 m_freeCam.transform.SetPositionAndRotation(new Vector3(m_freeCam.transform.position.x + looker.forward.x * camMovement, m_freeCam.transform.position.y, m_freeCam.transform.position.z + looker.forward.z * camMovement), Quaternion.identity);
