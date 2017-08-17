@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class TileScript : MonoBehaviour {
 
@@ -46,54 +47,59 @@ public class TileScript : MonoBehaviour {
 
         m_boardScript.m_selected = gameObject;
 
+        // If selecting a tile while moving
         if (renderer.material.color == Color.blue) // If tile is blue when clicked, perform movement code
         {
-            CharacterScript mover = currPlayerScript;
-            TileScript moverTile = currTileScript;
-            if (m_boardScript.m_isForcedMove)
-            {
-                mover = m_boardScript.m_isForcedMove.GetComponent<CharacterScript>();
-                moverTile = mover.m_tile.GetComponent<TileScript>();
-            }
-            mover.Movement(moverTile, GetComponent<TileScript>(), false);
-
-            return;
+            Button[] buttons = PanelScript.GetConfirmationPanel().GetComponentsInChildren<Button>();
+            buttons[1].GetComponent<ButtonScript>().m_character = m_boardScript.m_currPlayer;
+            buttons[1].GetComponent<ButtonScript>().ConfirmationButton();
+            
+            //CharacterScript mover = currPlayerScript;
+            //TileScript moverTile = currTileScript;
+            //if (m_boardScript.m_isForcedMove)
+            //{
+            //    mover = m_boardScript.m_isForcedMove.GetComponent<CharacterScript>();
+            //    moverTile = mover.m_tile.GetComponent<TileScript>();
+            //}
+            //mover.Movement(moverTile, GetComponent<TileScript>(), false);
         }
-
-        if (renderer.material.color == new Color(1, 0, 0, 1) && m_holding && m_holding.tag == "Player" || 
-            renderer.material.color == new Color(0, 1, 0, 1) && m_holding && m_holding.tag == "Player") // Otherwise if color is red, perform action code
+        // If selecting a tile that is holding a character while using an action
+        else if (renderer.material.color == new Color(1, 0, 0, 1) && m_holding && m_holding.tag == "Player" || 
+            renderer.material.color == new Color(0, 1, 0, 1) && m_holding && m_holding.tag == "Player" ||
+            renderer.material.color == Color.yellow) // Otherwise if color is red, perform action code
         {
-            List<GameObject> targets = new List<GameObject>();
-            targets.Add(m_holding);
-            currPlayerScript.Action(targets);
-
-            if (!m_boardScript.m_isForcedMove)
-                ClearRadius(currTileScript);
-
-            return;
+            Button[] buttons = PanelScript.GetConfirmationPanel().GetComponentsInChildren<Button>();
+            buttons[1].GetComponent<ButtonScript>().m_character = m_boardScript.m_currPlayer;
+            buttons[1].GetComponent<ButtonScript>().ConfirmationButton();
+            //List<GameObject> targets = new List<GameObject>();
+            //targets.Add(m_holding);
+            //currPlayerScript.Action(targets);
+            //
+            //if (!m_boardScript.m_isForcedMove)
+            //    ClearRadius(currTileScript);
         }
-        if (renderer.material.color == Color.yellow)
-        {
-            List<GameObject> targets = new List<GameObject>();
-            for (int i = 0; i < m_targetRadius.Count; i++)
-            {
-                TileScript tarTile = m_targetRadius[i].GetComponent<TileScript>();
-                if (tarTile.m_holding && tarTile.m_holding.tag == "Player")
-                    targets.Add(tarTile.m_holding);
-            }
-
-            if (targets.Count > 0)
-            {
-                currPlayerScript.Action(targets);
-                ClearRadius(this);
-
-                if (!m_boardScript.m_isForcedMove)
-                    ClearRadius(currTileScript);
-            }
-            return;
-        }
-
-        if (m_holding && m_holding.tag == "Player" && !m_boardScript.m_isForcedMove)
+        // If selecting a tile whilch is targeting multiple tiles
+        //else if (renderer.material.color == Color.yellow)
+        //{
+        //    //List<GameObject> targets = new List<GameObject>();
+            //for (int i = 0; i < m_targetRadius.Count; i++)
+            //{
+            //    TileScript tarTile = m_targetRadius[i].GetComponent<TileScript>();
+            //    if (tarTile.m_holding && tarTile.m_holding.tag == "Player")
+            //        targets.Add(tarTile.m_holding);
+            //}
+            //
+            //if (targets.Count > 0)
+            //{
+            //    currPlayerScript.Action(targets);
+            //    ClearRadius(this);
+            //
+            //    if (!m_boardScript.m_isForcedMove)
+            //        ClearRadius(currTileScript);
+            //}
+        //}
+        // If selecting a player
+        else if (m_holding && m_holding.tag == "Player" && !m_boardScript.m_isForcedMove)
         {
             Renderer holdingR = m_holding.GetComponent<Renderer>();
             if (holdingR.material.color == Color.green)

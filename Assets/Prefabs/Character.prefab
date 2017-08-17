@@ -3608,19 +3608,24 @@ MonoBehaviour:
   - {fileID: 1885874490562972}
   - {fileID: 1476873142885516}
   m_player: {fileID: 0}
+  m_anim: {fileID: 0}
+  m_teamColor: {r: 0, g: 0, b: 0, a: 0}
+  m_name: 
   m_currAction: 
   m_currStatus: 0
   m_actions: []
-  m_stats: 
-  m_tempStats: 
-  m_accessories: []
+  m_stats: 0c0000000a0000000000000000000000000000000000000000000000050000000000000000000000
+  m_tempStats: 0c0000000a0000000000000000000000000000000000000000000000050000000000000000000000
+  m_accessories:
+  - 
+  - 
   m_color: 
-  m_currRadius: 0
   m_effects: 
+  m_level: 0
+  m_currRadius: 0
   m_isAlive: 0
-  m_isFree: 0
-  m_teamColor: {r: 0, g: 0, b: 0, a: 0}
   m_isAI: 0
+  m_isFree: 0
 --- !u!135 &135047136950433516
 SphereCollider:
   m_ObjectHideFlags: 1

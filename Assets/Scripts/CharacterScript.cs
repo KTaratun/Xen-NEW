@@ -47,18 +47,12 @@ public class CharacterScript : ObjectScript {
         m_popupText.SetActive(false);
         m_isFree = false;
 
-        m_accessories = new string[2];
-        m_accessories[0] = "Ring of DEATH";
         m_currRadius = 0;
         m_effects = new bool[(int)StatusScript.effects.TOT];
         m_isAlive = true;
 
         if (m_stats.Length == 0)
-        {
-            m_stats = new int[(int)sts.TOT];
-            m_tempStats = new int[(int)sts.TOT];
             InitializeStats();
-        }
 
         // Set up the spheres that pop up over the characters heads when they gain or lose energy
         for (int i = 0; i < m_popupSpheres.Length; i++)
@@ -73,6 +67,14 @@ public class CharacterScript : ObjectScript {
 
     public void InitializeStats()
     {
+        if (m_stats.Length == 0)
+        {
+            m_stats = new int[(int)sts.TOT];
+            m_tempStats = new int[(int)sts.TOT];
+            m_accessories = new string[2];
+            m_accessories[0] = "Ring of DEATH";
+        }
+
         for (int i = 0; i < m_stats.Length; i++)
             m_stats[i] = 0;
       
@@ -241,6 +243,7 @@ public class CharacterScript : ObjectScript {
                 mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
         }
 
+        PanelScript.CloseHistory();
         transform.LookAt(m_tile.transform);
         m_boardScript.m_isForcedMove = null;
 
@@ -259,7 +262,7 @@ public class CharacterScript : ObjectScript {
             m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>().m_inView = false;
             List<GameObject> myself = new List<GameObject>();
             myself.Add(gameObject);
-            Action(myself);
+            Action();
             return;
         }
 
@@ -294,8 +297,28 @@ public class CharacterScript : ObjectScript {
         actionPanScript.m_inView = false;
     }
 
-    public void Action(List<GameObject> _targets)
+    public void Action()
     {
+        TileScript selectedTileScript = m_boardScript.m_selected.GetComponent<TileScript>();
+        List<GameObject> targets = new List<GameObject>();
+        Renderer r = m_boardScript.m_selected.GetComponent<Renderer>();
+
+        if (r.material.color == new Color(1, 0, 0, 0.5f)
+            || r.material.color == new Color(0, 1, 0, 0.5f)) // single
+        {
+            targets.Add(selectedTileScript.m_holding);
+        }
+        else if (r.material.color == new Color(Color.yellow.r, Color.yellow.g, Color.yellow.b, 0.5f)) // multi
+        {
+            for (int i = 0; i < selectedTileScript.m_targetRadius.Count; i++)
+            {
+                TileScript tarTile = selectedTileScript.m_targetRadius[i].GetComponent<TileScript>();
+                if (tarTile.m_holding && tarTile.m_holding.tag == "Player")
+                    targets.Add(tarTile.m_holding);
+            }
+        }
+
+        PanelScript.CloseHistory();
         transform.LookAt(m_boardScript.m_selected.transform);
 
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
@@ -304,13 +327,13 @@ public class CharacterScript : ObjectScript {
         bool miss = true;
 
         if (CheckIfAttack(actName)) // See if it's an attack
-            miss = Attack(_targets);
+            miss = Attack(targets);
         else // If it's not an attack
         {
             miss = false;
-            for (int i = 0; i < _targets.Count; i++)
+            for (int i = 0; i < targets.Count; i++)
                 if (!m_effects[(int)StatusScript.effects.HINDER])
-                    Ability(_targets[i], actName);
+                    Ability(targets[i], actName);
 
             if (mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable == false ||
                 mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].GetComponent<Image>().color == Color.yellow
@@ -333,6 +356,14 @@ public class CharacterScript : ObjectScript {
         m_isFree = false;
         m_currRadius = 0;
         m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PREVIEW].GetComponent<PanelScript>().m_inView = false;
+
+        if (targets.Count > 0)
+        {
+            m_tile.GetComponent<TileScript>().ClearRadius(m_tile.GetComponent<TileScript>());
+
+            if (!m_boardScript.m_isForcedMove)
+                selectedTileScript.ClearRadius(selectedTileScript);
+        }
     }
 
     public bool Attack(List<GameObject> _targets)
@@ -832,7 +863,7 @@ public class CharacterScript : ObjectScript {
         PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
         mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
         mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
-        mainPanelScript.m_inView = false;
+        PanelScript.CloseHistory();
     }
 
     // Maybe move  REFACTOR: This looks odd

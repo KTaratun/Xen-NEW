@@ -105,8 +105,15 @@ public class BoardScript : MonoBehaviour {
 
     public void OnRightClick()
     {
+        if (PanelScript.GetConfirmationPanel().m_inView)
+        {
+            PanelScript.PopFromHistory();
+            return;
+        }
+
         CharacterScript charScript = m_currPlayer.GetComponent<CharacterScript>();
         TileScript currTScript = charScript.m_tile.GetComponent<TileScript>();
+
 
         if (currTScript.m_radius.Count == 0 || m_isForcedMove)
             return;
@@ -120,11 +127,11 @@ public class BoardScript : MonoBehaviour {
             PanelScript actPan = m_panels[(int)pnls.ACTION_PANEL].GetComponent<PanelScript>();
             actPan.m_inView = true;
         }
-        else if (sRend.material.color == CharacterScript.c_move)
-        {
-            PanelScript panScript = m_panels[(int)pnls.MAIN_PANEL].GetComponent<PanelScript>();
-            panScript.m_inView = true;
-        }
+        //else if (sRend.material.color == CharacterScript.c_move)
+        //{
+        //    PanelScript panScript = m_panels[(int)pnls.MAIN_PANEL].GetComponent<PanelScript>();
+        //    panScript.m_inView = true;
+        //}
 
         if (m_highlightedTile)
         {

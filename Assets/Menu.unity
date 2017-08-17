@@ -5000,12 +5000,6 @@ CanvasRenderer:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 154707836}
---- !u!114 &159745944 stripped
-MonoBehaviour:
-  m_PrefabParentObject: {fileID: 114166443152984292, guid: 4716000483cd46b4fa3b4ca23b083688,
-    type: 2}
-  m_PrefabInternal: {fileID: 1951211896}
-  m_Script: {fileID: 11500000, guid: 38c19b1279105cc419a0a7fbe5a5113f, type: 3}
 --- !u!1 &159855543
 GameObject:
   m_ObjectHideFlags: 0
@@ -14502,7 +14496,6 @@ MonoBehaviour:
   m_panels: []
   m_text: []
   m_images: []
-  m_confirmPanel: {fileID: 0}
 --- !u!1 &427072500
 GameObject:
   m_ObjectHideFlags: 0
@@ -20406,7 +20399,6 @@ MonoBehaviour:
   m_panels: []
   m_text: []
   m_images: []
-  m_confirmPanel: {fileID: 0}
 --- !u!114 &632242971
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -28027,6 +28019,11 @@ Prefab:
       propertyPath: m_main
       value: 
       objectReference: {fileID: 1789116521}
+    - target: {fileID: 114190005952473594, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2098346378}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
   m_IsPrefabParent: 0
@@ -32048,7 +32045,6 @@ MonoBehaviour:
   - {fileID: 1431309383}
   m_text: []
   m_images: []
-  m_confirmPanel: {fileID: 0}
 --- !u!1 &961106329
 GameObject:
   m_ObjectHideFlags: 0
@@ -35471,7 +35467,6 @@ MonoBehaviour:
   - {fileID: 147751006}
   m_text: []
   m_images: []
-  m_confirmPanel: {fileID: 0}
 --- !u!114 &1055611440
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -36658,7 +36653,6 @@ MonoBehaviour:
   m_panels: []
   m_text: []
   m_images: []
-  m_confirmPanel: {fileID: 0}
 --- !u!1 &1095213771
 GameObject:
   m_ObjectHideFlags: 0
@@ -40301,10 +40295,10 @@ MonoBehaviour:
   m_cScript: {fileID: 0}
   m_main: {fileID: 2098346378}
   m_buttons: []
-  m_panels: []
+  m_panels:
+  - {fileID: 1789116521}
   m_text: []
   m_images: []
-  m_confirmPanel: {fileID: 0}
 --- !u!114 &1222976996
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -40809,7 +40803,6 @@ MonoBehaviour:
   m_panels: []
   m_text: []
   m_images: []
-  m_confirmPanel: {fileID: 0}
 --- !u!1 &1247323998 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 1116467622549812, guid: 89fd5be2f2585d34793c71a6ae217b4b,
@@ -40887,29 +40880,6 @@ CanvasRenderer:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1248271448}
---- !u!1 &1249706239 stripped
-GameObject:
-  m_PrefabParentObject: {fileID: 1601028759442654, guid: 4716000483cd46b4fa3b4ca23b083688,
-    type: 2}
-  m_PrefabInternal: {fileID: 1951211896}
---- !u!114 &1249706244
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1249706239}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb332c32d90c4de40a256a275c40ab65, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_boardScript: {fileID: 0}
-  m_main: {fileID: 1055611439}
-  m_character: {fileID: 0}
-  m_parent: {fileID: 159745944}
-  m_camera: {fileID: 0}
-  m_energyPanel: []
-  m_action: 
 --- !u!1 &1252352028
 GameObject:
   m_ObjectHideFlags: 0
@@ -46862,7 +46832,6 @@ MonoBehaviour:
   m_panels: []
   m_text: []
   m_images: []
-  m_confirmPanel: {fileID: 0}
 --- !u!1001 &1438627726
 Prefab:
   m_ObjectHideFlags: 0
@@ -62829,11 +62798,6 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 719920516}
     m_Modifications:
-    - target: {fileID: 114820070968894218, guid: 4716000483cd46b4fa3b4ca23b083688,
-        type: 2}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 224786901943811374, guid: 4716000483cd46b4fa3b4ca23b083688,
         type: 2}
       propertyPath: m_LocalPosition.x
@@ -62929,36 +62893,6 @@ Prefab:
       propertyPath: m_main
       value: 
       objectReference: {fileID: 2098346378}
-    - target: {fileID: 114820070968894218, guid: 4716000483cd46b4fa3b4ca23b083688,
-        type: 2}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114820070968894218, guid: 4716000483cd46b4fa3b4ca23b083688,
-        type: 2}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 114820070968894218, guid: 4716000483cd46b4fa3b4ca23b083688,
-        type: 2}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
-      value: 
-      objectReference: {fileID: 1249706244}
-    - target: {fileID: 114820070968894218, guid: 4716000483cd46b4fa3b4ca23b083688,
-        type: 2}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: ConfirmationButton
-      objectReference: {fileID: 0}
-    - target: {fileID: 114820070968894218, guid: 4716000483cd46b4fa3b4ca23b083688,
-        type: 2}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
-      value: UnityEngine.Object, UnityEngine
-      objectReference: {fileID: 0}
-    - target: {fileID: 114166443152984292, guid: 4716000483cd46b4fa3b4ca23b083688,
-        type: 2}
-      propertyPath: m_parent
-      value: 
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 4716000483cd46b4fa3b4ca23b083688, type: 2}
   m_IsPrefabParent: 0

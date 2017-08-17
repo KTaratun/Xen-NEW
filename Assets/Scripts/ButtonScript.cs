@@ -324,16 +324,34 @@ public class ButtonScript : MonoBehaviour {
     public void ResumeGame()
     {
         m_parent.m_cScript.m_boardScript.m_isForcedMove = null;
-        m_parent.m_inView = false;
+        PanelScript.CloseHistory();
     }
 
     public void ConfirmationButton()
     {
+        m_main = PanelScript.GetRecentHistory();
         m_parent.m_inView = true;
         m_parent.PopulatePanel();
         gameObject.GetComponent<Button>().onClick.RemoveAllListeners();
 
-        if (m_main && m_main.name == "Save/Load Panel")
+        CharacterScript charScript = null;
+        if (m_character)
+            charScript = m_character.GetComponent<CharacterScript>();
+
+        if (m_main && m_main.name == "Main Panel")
+        {
+            TileScript moverTile = charScript.m_tile.GetComponent<TileScript>();
+            if (m_boardScript.m_isForcedMove)
+                charScript = m_boardScript.m_isForcedMove.GetComponent<CharacterScript>();
+
+            gameObject.GetComponent<Button>().onClick.AddListener(() => charScript.Movement(moverTile, m_boardScript.m_selected.GetComponent<TileScript>(), false));
+        }
+        else if (m_main && m_main.name == "Action Panel")
+        {
+
+            gameObject.GetComponent<Button>().onClick.AddListener(() => charScript.Action());
+        }
+        else if (m_main && m_main.name == "Save/Load Panel")
         {
                 TeamMenuScript tMenuScript = m_parent.m_main.GetComponent<TeamMenuScript>();
                 tMenuScript.m_saveButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();

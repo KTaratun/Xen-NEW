@@ -16,6 +16,7 @@ public class PanelScript : MonoBehaviour {
     static List<PanelScript> m_allPanels;
     public bool m_inView;
     public dir m_direction;
+    public float m_slideSpeed;
     public int m_boundryDis;
     public CharacterScript m_cScript;
     public GameObject m_main;
@@ -23,11 +24,13 @@ public class PanelScript : MonoBehaviour {
     public GameObject[] m_panels;
     public Text[] m_text;
     public Image[] m_images;
-    public PanelScript m_confirmPanel;
+    static public PanelScript m_confirmPanel;
 
     // Use this for initialization
     void Start ()
     {
+        if (m_slideSpeed == 0)
+            m_slideSpeed = 30.0f;
         if (GameObject.Find("Confirmation Panel"))
             m_confirmPanel = GameObject.Find("Confirmation Panel").GetComponent<PanelScript>();
 
@@ -74,9 +77,7 @@ public class PanelScript : MonoBehaviour {
 
             if (m_history.Count > 0 && recTrans.offsetMax.y < 200)
             {
-                m_history[m_history.Count - 1].m_inView = false;
-                m_history.RemoveAt(m_history.Count - 1);
-
+                PopFromHistory();
                 if (m_history.Count > 0)
                     m_history[m_history.Count - 1].m_inView = true;
             }
@@ -93,16 +94,7 @@ public class PanelScript : MonoBehaviour {
         for (int i = 0; i < m_buttons.Length; i++)
             m_buttons[i].onClick.RemoveAllListeners();
 
-        if (name == "Character Panel")
-        {
-            // REFACTOR: Move all these functions to populate Panel except random character
-            TeamMenuScript menuScript = m_main.GetComponent<TeamMenuScript>();
-            m_buttons[0].onClick.AddListener(() => menuScript.NewCharacter());
-            m_buttons[1].onClick.AddListener(() => PopulatePanel());
-            m_buttons[2].onClick.AddListener(() => menuScript.PresetCharacter());
-            m_buttons[3].onClick.AddListener(() => menuScript.RandomCharacter());
-        }
-        else if (name == "Auxiliary Panel")
+        if (name == "Auxiliary Panel")
             m_buttons[0].onClick.AddListener(() => PopulatePanel());
     }
 
@@ -151,27 +143,28 @@ public class PanelScript : MonoBehaviour {
             engScript.SetTotalEnergy(currStat[1]);
 
             currStat = actStats[3].Split(':');
-            m_text[2].text = "HIT: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.HIT]) + "%";
-            //if (m_cScript.m_stats[(int)CharacterScript.sts.HIT] != 0)
-            //    m_text[2].text += " + " + m_cScript.m_stats[(int)CharacterScript.sts.HIT];
+            if ((int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.HIT]) > 0)
+                m_text[2].text = "HIT: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.HIT]) + "%";
+            else
+                m_text[2].text = "HIT: 0%";
 
             currStat = actStats[4].Split(':');
             if ((int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG]) > 0)
                 m_text[3].text = "DMG: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG]);
             else
                 m_text[3].text = "DMG: 0";
-            //if (m_cScript.m_stats[(int)CharacterScript.sts.DMG] != 0)
-            //    m_text[3].text += " + " + m_cScript.m_stats[(int)CharacterScript.sts.DMG];
 
             currStat = actStats[5].Split(':');
-            m_text[4].text = "RNG: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG]);
-            //if (m_cScript.m_stats[(int)CharacterScript.sts.RNG] != 0)
-            //    m_text[4].text += "+" + m_cScript.m_stats[(int)CharacterScript.sts.RNG];
+            if ((int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG]) > 0)
+                m_text[4].text = "RNG: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG]);
+            else
+                m_text[4].text = "RNG: 0";
 
             currStat = actStats[7].Split(':');
-            m_text[5].text = "CRT: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.CRT]) + "%";
-            //if (m_cScript.m_stats[(int)CharacterScript.sts.CRT] != 0)
-            //    m_text[5].text += " + " + m_cScript.m_stats[(int)CharacterScript.sts.CRT];
+            if ((int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.CRT]) > 0)
+                m_text[5].text = "CRT: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.CRT]) + "%";
+            else
+                m_text[5].text = "CRT: 0%";
 
             currStat = actStats[8].Split(':');
             m_text[6].text = currStat[1];
@@ -182,18 +175,91 @@ public class PanelScript : MonoBehaviour {
             else
                 m_text[7].text = "RAD: 0";
         }
+        else if (name == "Character Panel")
+        {
+            for (int i = 0; i < m_buttons.Length; i++)
+                m_buttons[i].onClick.RemoveAllListeners();
+            // REFACTOR: Move all these functions to populate Panel except random character
+            TeamMenuScript menuScript = m_main.GetComponent<TeamMenuScript>();
+            m_buttons[0].onClick.AddListener(() => menuScript.NewCharacter());
+            m_buttons[1].onClick.AddListener(() => menuScript.m_panels[(int)TeamMenuScript.menuPans.SAVE_LOAD_PANEL].PopulatePanel());
+            m_buttons[2].onClick.AddListener(() => menuScript.m_panels[(int)TeamMenuScript.menuPans.PRESELECT_PANEL].PopulatePanel());
+            m_buttons[3].onClick.AddListener(() => menuScript.RandomCharacter());
+        }
         else if (name == "CharacterViewer Panel")
         {
-            // Fill out name
-            m_text[1].text = m_cScript.m_name;
-            // Fill out energy
-            m_buttons[0].GetComponent<ButtonScript>().SetTotalEnergy(m_cScript.m_color);
-            // Fill out Action Panel
-            m_panels[0].GetComponent<PanelScript>().m_cScript = m_cScript;
-            m_panels[0].GetComponent<PanelScript>().PopulatePanel();
-            // Fill out Status Panel
-            m_panels[1].GetComponent<PanelScript>().m_cScript = m_cScript;
-            m_panels[1].GetComponent<PanelScript>().PopulatePanel();
+            // If another panel is open, don't open character viewer for already loaded character
+            Button currB = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+            int res = 0;
+
+            //if (CheckIfPanelOpen())
+            //    return;
+
+            TeamMenuScript tMenu = m_main.GetComponent<TeamMenuScript>();
+            m_cScript = tMenu.m_currCharacter.GetComponent<CharacterScript>();
+            PanelScript actionScript = m_panels[0].GetComponent<PanelScript>();
+            PanelScript statPan = m_panels[1].GetComponent<PanelScript>();
+
+            m_cScript.InitializeStats();
+            actionScript.m_cScript = m_cScript;
+
+            res = 0;
+            if (int.TryParse(currB.name, out res)) // If last pressed button is an int, it's a preset character panel button. Character slot buttons names are in the x,x format
+            {
+                DatabaseScript dbScript = m_main.GetComponent<DatabaseScript>();
+
+                string[] presetDataSeparated = dbScript.m_presets[int.Parse(currB.name)].Split('|');
+                string[] presetName = presetDataSeparated[(int)DatabaseScript.presets.NAME].Split(':');
+                string[] presetColor = presetDataSeparated[(int)DatabaseScript.presets.COLORS].Split(':');
+
+                tMenu.FillOutCharacterData(presetName[1], presetColor[1], dbScript.GetActions(dbScript.m_presets[int.Parse(currB.name)]), 0);
+
+                // Fill out name
+                m_text[1].text = m_cScript.m_name;
+                // Fill out energy
+                m_buttons[0].GetComponent<ButtonScript>().SetTotalEnergy(m_cScript.m_color);
+                // Fill out Action Panel
+                m_panels[0].GetComponent<PanelScript>().m_cScript = m_cScript;
+                m_panels[0].GetComponent<PanelScript>().PopulatePanel();
+                // Fill out Status Panel
+                m_panels[1].GetComponent<PanelScript>().m_cScript = m_cScript;
+                m_panels[1].GetComponent<PanelScript>().PopulatePanel();
+
+                // Determine if select or remove will be visible
+                for (int i = 0; i < m_buttons.Length; i++)
+                {
+                    if (m_buttons[i].name == "Select Button" && m_buttons[i].gameObject.transform.position.x > 1000)
+                        m_buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(m_buttons[i].gameObject.transform.position.x - 1000, m_buttons[i].gameObject.transform.position.y, m_buttons[i].gameObject.transform.position.z), m_buttons[i].gameObject.transform.rotation);
+                    if (m_buttons[i].name == "Remove Button" && m_buttons[i].gameObject.transform.position.x < 1000)
+                        m_buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(m_buttons[i].gameObject.transform.position.x + 1000, m_buttons[i].gameObject.transform.position.y, m_buttons[i].gameObject.transform.position.z), m_buttons[i].gameObject.transform.rotation);
+                }
+            }
+            else
+            {
+                tMenu.m_currButton = currB;
+
+                m_cScript = PlayerPrefScript.LoadChar(currB.name, m_cScript);
+
+                // Fill out name
+                m_text[1].text = m_cScript.m_name;
+                // Fill out energy
+                m_buttons[0].GetComponent<ButtonScript>().SetTotalEnergy(m_cScript.m_color);
+                // Fill out Action Panel
+                m_panels[0].GetComponent<PanelScript>().m_cScript = m_cScript;
+                m_panels[0].GetComponent<PanelScript>().PopulatePanel();
+                // Fill out Status Panel
+                m_panels[1].GetComponent<PanelScript>().m_cScript = m_cScript;
+                m_panels[1].GetComponent<PanelScript>().PopulatePanel();
+
+                // Determine if select or remove will be visible
+                for (int i = 0; i < m_buttons.Length; i++)
+                {
+                    if (m_buttons[i].name == "Select Button" && m_buttons[i].gameObject.transform.position.x < 1000)
+                        m_buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(m_buttons[i].gameObject.transform.position.x + 1000, m_buttons[i].gameObject.transform.position.y, m_buttons[i].gameObject.transform.position.z), m_buttons[i].gameObject.transform.rotation);
+                    if (m_buttons[i].name == "Remove Button" && m_buttons[i].gameObject.transform.position.x > 1000)
+                        m_buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(m_buttons[i].gameObject.transform.position.x - 1000, m_buttons[i].gameObject.transform.position.y, m_buttons[i].gameObject.transform.position.z), m_buttons[i].gameObject.transform.rotation);
+                }
+            }
         }
         else if (name == "HUD Panel LEFT" || name == "HUD Panel RIGHT")
         {
@@ -226,6 +292,7 @@ public class PanelScript : MonoBehaviour {
                     m_buttons[(int)butts.MOV_BUTT].interactable = true;
                 else
                     m_buttons[(int)butts.MOV_BUTT].interactable = false;
+
                 m_buttons[(int)butts.MOV_BUTT].onClick.AddListener(() => m_cScript.MovementSelection(0));
             }
             else
@@ -242,6 +309,22 @@ public class PanelScript : MonoBehaviour {
             PanelScript stsPanScript = mainPanScript.m_panels[(int)BoardScript.pnls.STATUS_PANEL].GetComponent<PanelScript>();
             stsPanScript.m_cScript = m_cScript;
             m_buttons[(int)butts.STATUS_BUTT].onClick.AddListener(() => stsPanScript.PopulatePanel());
+        }
+        else if (name == "PresetSelect Panel")
+        {
+            DatabaseScript dbScript = m_main.GetComponent<DatabaseScript>();
+
+            for (int i = 0; i < m_buttons.Length; i++)
+            {
+                Button butt = m_buttons[i];
+                Text t = butt.GetComponentInChildren<Text>();
+                t.text = dbScript.GetDataValue(dbScript.m_presets[i], "Name:");
+                butt.name = i.ToString();
+                butt.onClick.RemoveAllListeners();
+                butt.onClick.AddListener(() => m_panels[0].GetComponent<PanelScript>().PopulatePanel());
+                ButtonScript buttScript = butt.GetComponent<ButtonScript>();
+                buttScript.SetTotalEnergy(dbScript.GetDataValue(dbScript.m_presets[i], "Colors:"));
+            }
         }
         else if (name == "Round Panel")
         {
@@ -275,7 +358,6 @@ public class PanelScript : MonoBehaviour {
                         {
                             Button[] childButtons = m_confirmPanel.GetComponentsInChildren<Button>();
                             button[i * 4 + j].onClick.AddListener(() => childButtons[1].GetComponent<ButtonScript>().ConfirmationButton());
-
                         }
                         else if (EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name == "Load")
                             button[i * 4 + j].onClick.AddListener(() => m_main.GetComponent<TeamMenuScript>().Load());
@@ -347,6 +429,12 @@ public class PanelScript : MonoBehaviour {
 
         if (m_direction != dir.NULL)
             m_inView = true;
+
+        if (name == "Confirmation Panel")
+        {
+            transform.SetPositionAndRotation(new Vector3(Input.mousePosition.x, transform.position.y, transform.position.z), transform.rotation);
+            m_boundryDis = (int)Input.mousePosition.y - 350;
+        }
     }
 
     private void CheckIfModded(int _ind, int _origStat, int _tempStat)
@@ -458,44 +546,44 @@ public class PanelScript : MonoBehaviour {
             if (m_inView)
             {
                 if (recTrans.offsetMax.y >  m_boundryDis)
-                    transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y - 25.0f, transform.position.z), transform.rotation);
+                    transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y - m_slideSpeed, transform.position.z), transform.rotation);
             }
             else
                 if (recTrans.offsetMax.y < 750)
-                    transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y + 25.0f, transform.position.z), transform.rotation);
+                    transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y + m_slideSpeed, transform.position.z), transform.rotation);
         }
         else if (m_direction == dir.RIGHT)
         {
             if (m_inView)
             {
                 if (recTrans.offsetMax.x > m_boundryDis)
-                    transform.SetPositionAndRotation(new Vector3(transform.position.x - 25.0f, transform.position.y, transform.position.z), transform.rotation);
+                    transform.SetPositionAndRotation(new Vector3(transform.position.x - m_slideSpeed, transform.position.y, transform.position.z), transform.rotation);
             }
             else
                 if (recTrans.offsetMax.x < 877)
-                    transform.SetPositionAndRotation(new Vector3(transform.position.x + 25.0f, transform.position.y, transform.position.z), transform.rotation);
+                    transform.SetPositionAndRotation(new Vector3(transform.position.x + m_slideSpeed, transform.position.y, transform.position.z), transform.rotation);
         }
         else if (m_direction == dir.LEFT)
         {
             if (m_inView)
             {
                 if (recTrans.offsetMax.x > m_boundryDis)
-                    transform.SetPositionAndRotation(new Vector3(transform.position.x - 25.0f, transform.position.y, transform.position.z), transform.rotation);
+                    transform.SetPositionAndRotation(new Vector3(transform.position.x - m_slideSpeed, transform.position.y, transform.position.z), transform.rotation);
             }
             else
                 if (recTrans.offsetMax.x < -877)
-                    transform.SetPositionAndRotation(new Vector3(transform.position.x + 25.0f, transform.position.y, transform.position.z), transform.rotation);
+                    transform.SetPositionAndRotation(new Vector3(transform.position.x + m_slideSpeed, transform.position.y, transform.position.z), transform.rotation);
         }
         else if (m_direction == dir.DOWN)
         {
             if (m_inView)
             {
                 if (recTrans.offsetMax.y < m_boundryDis)
-                    transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y + 25.0f, transform.position.z), transform.rotation);
+                    transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y + m_slideSpeed, transform.position.z), transform.rotation);
             }
             else
                 if (recTrans.offsetMax.y > -500)
-                    transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y - 25.0f, transform.position.z), transform.rotation);
+                    transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y - m_slideSpeed, transform.position.z), transform.rotation);
         }
     }
     
@@ -596,10 +684,11 @@ public class PanelScript : MonoBehaviour {
 
     static public void CloseHistory()
     {
-        for (int i = 0; i < m_history.Count; i++)
-            m_history[i].m_inView = false;
-
-        m_history.Clear();
+        while(m_history.Count > 0)
+        {
+            m_history[0].m_inView = false;
+            m_history.RemoveAt(0);
+        }
     }
 
     static public bool CheckIfPanelOpen()
@@ -609,5 +698,21 @@ public class PanelScript : MonoBehaviour {
                 return true;
 
         return false;
+    }
+
+    static public PanelScript GetConfirmationPanel()
+    {
+        return m_confirmPanel;
+    }
+
+    static public PanelScript GetRecentHistory()
+    {
+        return m_history[m_history.Count - 1];
+    }
+
+    static public void PopFromHistory()
+    {
+        m_history[m_history.Count - 1].m_inView = false;
+        m_history.RemoveAt(m_history.Count - 1);
     }
 }
