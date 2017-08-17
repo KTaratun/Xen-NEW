@@ -24,6 +24,7 @@ public class CharacterScript : ObjectScript {
     public GameObject[] m_colorDisplay;
     public GameObject m_player;
     public Animator m_anim;
+    public Color m_teamColor;
     public string m_name;
     public string m_currAction;
     public int m_currStatus;
@@ -32,13 +33,11 @@ public class CharacterScript : ObjectScript {
     public int[] m_tempStats;
     public string[] m_accessories;
     public string m_color;
-    public int m_currRadius;
     public bool[] m_effects;
-    public bool m_isAlive;
-    public Color m_teamColor;
-    public bool m_isAI;
     public float m_level;
-    public int m_exp;
+    public int m_currRadius;
+    public bool m_isAlive;
+    public bool m_isAI;
     public bool m_isFree;
 
 	// Use this for initialization
@@ -50,18 +49,16 @@ public class CharacterScript : ObjectScript {
 
         m_accessories = new string[2];
         m_accessories[0] = "Ring of DEATH";
-        m_stats = new int[(int)sts.TOT];
-        m_tempStats = new int[(int)sts.TOT];
-        m_stats[(int)sts.HP] = 12;
-        m_stats[(int)sts.SPD] = 10;
-        m_stats[(int)sts.MOV] = 5;
         m_currRadius = 0;
         m_effects = new bool[(int)StatusScript.effects.TOT];
         m_isAlive = true;
 
-        for (int i = 0; i < m_stats.Length; i++)
-            m_tempStats[i] = m_stats[i];
-
+        if (m_stats.Length == 0)
+        {
+            m_stats = new int[(int)sts.TOT];
+            m_tempStats = new int[(int)sts.TOT];
+            InitializeStats();
+        }
 
         // Set up the spheres that pop up over the characters heads when they gain or lose energy
         for (int i = 0; i < m_popupSpheres.Length; i++)
@@ -72,6 +69,19 @@ public class CharacterScript : ObjectScript {
                 meshRends[j].material.color = new Color(meshRends[j].material.color.r, meshRends[j].material.color.g, meshRends[j].material.color.b, 0);
         }
 
+    }
+
+    public void InitializeStats()
+    {
+        for (int i = 0; i < m_stats.Length; i++)
+            m_stats[i] = 0;
+      
+        m_stats[(int)sts.HP] = 12;
+        m_stats[(int)sts.SPD] = 10;
+        m_stats[(int)sts.MOV] = 5;
+
+        for (int i = 0; i < m_stats.Length; i++)
+            m_tempStats[i] = m_stats[i];
     }
 
     // Update is called once per frame
@@ -237,17 +247,6 @@ public class CharacterScript : ObjectScript {
         selectedScript.ClearRadius(selectedScript);
     }
 
-    public void ActionSelection()
-    {
-        PanelScript mainPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
-        PanelScript aPScript = m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
-        mainPanScript.m_inView = false;
-        aPScript.m_inView = true;
-
-        aPScript.m_cScript = this;
-        aPScript.PopulatePanel();
-    }
-
     public void ActionTargeting()
     {
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
@@ -329,7 +328,7 @@ public class CharacterScript : ObjectScript {
             EnergyConversion(actEng);
 
         if (!miss)
-            m_exp += actEng.Length;
+            m_level += (float)actEng.Length / 10;
 
         m_isFree = false;
         m_currRadius = 0;
@@ -345,7 +344,7 @@ public class CharacterScript : ObjectScript {
         PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
 
         bool miss = true;
-        int roll = Random.Range(1, 21); // Because Random.Range doesn't include the max number
+        int roll = Random.Range(0, 100); // Because Random.Range doesn't include the max number
 
         for (int i = 0; i < _targets.Count; i++)
         {
@@ -354,12 +353,12 @@ public class CharacterScript : ObjectScript {
             if (targetScript.m_isAlive == false)
                 continue;
 
-            int DC = int.Parse(actHit) - m_tempStats[(int)sts.HIT] + targetScript.m_tempStats[(int)sts.EVA];
-            int totalCrit = int.Parse(actCrt) + m_tempStats[(int)sts.CRT];
+            int DC = 100 - int.Parse(actHit) - m_tempStats[(int)sts.HIT] + targetScript.m_tempStats[(int)sts.EVA];
+            int CRT = 100 - int.Parse(actCrt) - m_tempStats[(int)sts.CRT];
             string finalDMG = "0";
 
             print("Rolled " + roll + " against " + actHit + " - my HIT mod of " + m_tempStats[(int)sts.HIT] + " + my opponents EVA mod of " + targetScript.m_tempStats[(int)sts.EVA] +
-                " for a total DC of " + DC + ". Crit: " + actCrt + " + my CRT mod of " + m_tempStats[(int)sts.CRT] + " for a total of Crit: " + totalCrit + ".\n");
+                " for a total DC of " + DC + ". Crit: " + actCrt + " - my CRT mod of " + m_tempStats[(int)sts.CRT] + " for a total of Crit: " + (int.Parse(actCrt) - m_tempStats[(int)sts.CRT]) + ".\n");
 
             if (actName == "Bypass ATK")
             {
@@ -368,7 +367,7 @@ public class CharacterScript : ObjectScript {
             }
 
             // If Critical
-            if (roll >= int.Parse(actCrt) + m_tempStats[(int)sts.CRT])
+            if (roll >= CRT)
             {
                 if ((int.Parse(actDmg) * 2) + m_tempStats[(int)sts.DMG] + targetScript.m_tempStats[(int)sts.DEF] >= 0)
                     finalDMG = ((int.Parse(actDmg) * 2) + m_tempStats[(int)sts.DMG] - targetScript.m_tempStats[(int)sts.DEF]).ToString();
@@ -836,6 +835,7 @@ public class CharacterScript : ObjectScript {
         mainPanelScript.m_inView = false;
     }
 
+    // Maybe move  REFACTOR: This looks odd
     public void SelectorInit(CharacterScript _targetScript, BoardScript.pnls _selector)
     {
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
@@ -878,7 +878,6 @@ public class CharacterScript : ObjectScript {
         else if (_selector == BoardScript.pnls.ACTION_PANEL)
             selector = m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
 
-        selector.m_inView = true;
         selector.m_cScript = _targetScript;
         selector.PopulatePanel();
 
@@ -886,35 +885,13 @@ public class CharacterScript : ObjectScript {
         m_boardScript.m_isForcedMove = gameObject;
     }
 
-    public void ViewStatus()
-    {
-        // REFACTOR: Better menu/panel system
-        PanelScript sPScript = m_boardScript.m_panels[(int)BoardScript.pnls.STATUS_PANEL].GetComponent<PanelScript>();
-        PanelScript mainPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
-        PanelScript auxPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.AUXILIARY_PANEL].GetComponent<PanelScript>();
-
-        if (mainPanScript.m_inView)
-        {
-            mainPanScript.m_inView = false;
-            sPScript.m_parent = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL];
-        }
-        else if (auxPanScript.m_inView)
-        {
-            auxPanScript.m_inView = false;
-            sPScript.m_parent = m_boardScript.m_panels[(int)BoardScript.pnls.AUXILIARY_PANEL];
-        }
-
-        sPScript.m_inView = true;
-        sPScript.m_cScript = this;
-        sPScript.PopulatePanel();
-    }
-
+    // The only reason why this exists is because statusscript needs a way to get to HUD LEFT
     public void UpdateStatusImages()
     {
         if (gameObject == m_boardScript.m_currPlayer)
         {
             PanelScript panScript = m_boardScript.m_panels[(int)BoardScript.pnls.HUD_LEFT_PANEL].GetComponent<PanelScript>();
-            panScript.PopulateHUD();
+            panScript.PopulatePanel();
         }
     }
 }

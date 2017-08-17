@@ -22,6 +22,8 @@ public class TeamMenuScript : MonoBehaviour {
 
         GameObject newChar = Instantiate(m_character);
         m_currCharacter = newChar;
+
+        //PlayerPrefs.DeleteAll();
 	}
 	
 	// Update is called once per frame
@@ -102,45 +104,7 @@ public class TeamMenuScript : MonoBehaviour {
             return;
     }
 
-    public void LoadCharacter()
-    {
-        PanelScript panScript = m_panels[(int)menuPans.SAVE_LOAD_PANEL];
-
-        m_panels[(int)menuPans.CHAR_PANEL].m_inView = false;
-
-        if (EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name == "Save Button")
-            panScript.m_text[0].text = "SAVE";
-        else if (EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name == "Load")
-            panScript.m_text[0].text = "LOAD";
-
-        panScript.m_inView = true;
-
-        if (m_panels[(int)menuPans.CHAR_VIEW].m_inView)
-        {
-            m_panels[(int)menuPans.CHAR_VIEW].m_inView = false;
-            panScript.m_parent = m_panels[(int)menuPans.CHAR_VIEW].gameObject;
-        }
-        else
-            panScript.m_parent = null;
-
-        Button[] saveSlots = panScript.m_buttons;
-        for (int i = 0; i < 9; i++)
-        {
-            for (int j = 0; j < 4; j++)
-            {
-                string key = i.ToString() + ',' + j.ToString() + "SAVE" + ",name";
-                string name = PlayerPrefs.GetString(key);
-                if (name.Length > 0)
-                {
-                    key = i.ToString() + ',' + j.ToString() + "SAVE" + ",color";
-                    string color = PlayerPrefs.GetString(key);
-
-                    SetCharSlot(saveSlots[4 * i + j], name, color);
-                }
-            }
-        }
-    }
-
+    // REFACTOR: Move to populate panel
     public void PresetCharacter()
     {
         if (!m_panels[(int)menuPans.CHAR_PANEL].m_inView)
@@ -167,12 +131,10 @@ public class TeamMenuScript : MonoBehaviour {
 
     public void RandomCharacter()
     {
-        if (!m_panels[(int)menuPans.CHAR_PANEL].m_inView)
-            return;
-
         m_panels[(int)menuPans.CHAR_PANEL].m_inView = false;
 
         CharacterScript cScript = m_currCharacter.GetComponent<CharacterScript>();
+
         string actions = null;
         int color = Random.Range(0, 4);
 
@@ -199,18 +161,15 @@ public class TeamMenuScript : MonoBehaviour {
    
             if (i == 1)
             {
-                min = 3;
-                max = 6;
+                min = 3; max = 6;
             }
             else if (i == 2)
             {
-                min = 6;
-                max = 10;
+                min = 6; max = 10;
             }
             else if (i == 3) // New characters can have two -1 actions
             {
-                min = 6;
-                max = 14;
+                min = 6; max = 14;
             }
 
             int randAct;
@@ -221,6 +180,18 @@ public class TeamMenuScript : MonoBehaviour {
 
             prevAct = randAct;
             cScript.m_actions[i] = dbScript.m_actions[randAct + color * 16];
+        }
+
+        DatabaseScript db = gameObject.GetComponent<DatabaseScript>();
+
+        string[] stat = db.m_stat[Random.Range(0, db.m_stat.Length - 2)].Split('|');
+
+        cScript.InitializeStats();
+        for (int i = 0; i < cScript.m_stats.Length; i++) // We're not using the 2 rare stats yet
+        {
+            string[] currStat = stat[i+1].Split(':');
+            cScript.m_stats[i] += int.Parse(currStat[1]);
+            cScript.m_tempStats[i] += int.Parse(currStat[1]);
         }
 
         Select();
@@ -249,6 +220,7 @@ public class TeamMenuScript : MonoBehaviour {
         return name;
     }
 
+    // REFACTOR: Move to populate panel
     public void PopulateCharacterViewer()
     {
         // If another panel is open, don't open character viewer for already loaded character
@@ -269,34 +241,21 @@ public class TeamMenuScript : MonoBehaviour {
         PanelScript statPan = charViewScript.m_panels[1].GetComponent<PanelScript>();
 
         CharacterScript currCharScript = m_currCharacter.GetComponent<CharacterScript>();
+        currCharScript.InitializeStats();
         actionScript.m_cScript = currCharScript;
 
         res = 0;
         if (int.TryParse(currB.name, out res)) // If last pressed button is an int, it's a preset character panel button. Character slot buttons names are in the x,x format
         {
-            charViewScript.m_parent = m_panels[(int)menuPans.PRESELECT_PANEL].gameObject;
             DatabaseScript dbScript = gameObject.GetComponent<DatabaseScript>();
 
             string[] presetDataSeparated = dbScript.m_presets[int.Parse(currB.name)].Split('|');
-
-            // Fill out energy
-            string[] presetColor = presetDataSeparated[(int)DatabaseScript.presets.COLORS].Split(':');
-            ButtonScript buttScript = buttons[0].GetComponent<ButtonScript>(); // button[0] == energy
-            buttons[0].name = presetColor[1];
-            buttScript.SetTotalEnergy(presetColor[1]);
-
-            // Fill out name
             string[] presetName = presetDataSeparated[(int)DatabaseScript.presets.NAME].Split(':');
-            charViewScript.m_text[1].text = presetName[1];
+            string[] presetColor = presetDataSeparated[(int)DatabaseScript.presets.COLORS].Split(':');
 
-            FillOutCharacterData(presetName[1], presetColor[1], dbScript.GetActions(dbScript.m_presets[int.Parse(currB.name)]));
-
-            // Fill out status
-            statPan.m_cScript = currCharScript;
-            statPan.PopulatePanel();
-
-            // Fill out actions
-            actionScript.PopulatePanel();
+            FillOutCharacterData(presetName[1], presetColor[1], dbScript.GetActions(dbScript.m_presets[int.Parse(currB.name)]), 0);
+            charViewScript.m_cScript = currCharScript;
+            charViewScript.PopulatePanel();
 
             // Determine if select or remove will be visible
             for (int i = 0; i < buttons.Length; i++)
@@ -310,23 +269,11 @@ public class TeamMenuScript : MonoBehaviour {
         else
         {
             m_currButton = currB;
-            charViewScript.m_parent = null;
-            ButtonScript buttScript = buttons[0].GetComponent<ButtonScript>(); // button[0] == energy
 
-            string name = PlayerPrefs.GetString(currB.name + ",name");
-            string color = PlayerPrefs.GetString(currB.name + ",color");
-            string[] actions = PlayerPrefs.GetString(currB.name + ",actions").Split(';');
+            currCharScript = PlayerPrefScript.LoadChar(currB.name, currCharScript);
 
-            // Fill out name
-            charViewScript.m_text[1].text = name;
-            // Fill out energy
-            buttScript.SetTotalEnergy(color);
-            // Fill out actions
-            currCharScript.m_actions = actions;
-
-            FillOutCharacterData(name, color, actions);
-
-            actionScript.PopulatePanel();
+            charViewScript.m_cScript = currCharScript;
+            charViewScript.PopulatePanel();
 
             // Determine if select or remove will be visible
             for (int i = 0; i < buttons.Length; i++)
@@ -339,12 +286,13 @@ public class TeamMenuScript : MonoBehaviour {
         }
     }
 
-    public void FillOutCharacterData(string _name, string _color, string[] _actions)
+    public void FillOutCharacterData(string _name, string _color, string[] _actions, float _level)
     {
         CharacterScript currCharScript = m_currCharacter.GetComponent<CharacterScript>();
         currCharScript.m_name = _name;
         currCharScript.m_color = _color;
         currCharScript.m_actions = _actions;
+        currCharScript.m_level = _level;
     }
 
     public void Select()
@@ -353,25 +301,11 @@ public class TeamMenuScript : MonoBehaviour {
         charViewScript.m_inView = false;
 
         CharacterScript cScript = m_currCharacter.GetComponent<CharacterScript>();
-
-        // Save out pertinent character data
-        string key = m_currButton.name + ",actions";
-        string combo = string.Join(";", cScript.m_actions);
-        PlayerPrefs.SetString(key, combo);
-        key = m_currButton.name + ",name";
-        PlayerPrefs.SetString(key, cScript.m_name);
-        key = m_currButton.name + ",color";
-        PlayerPrefs.SetString(key, cScript.m_color);
-
+        PlayerPrefScript.SaveChar(m_currButton.name, cScript);
         SetCharSlot(m_currButton, cScript.m_name, cScript.m_color);
+
         m_currButton.onClick = new Button.ButtonClickedEvent();
         m_currButton.onClick.AddListener(() => PopulateCharacterViewer());
-
-        // Write out stats
-        //key = m_currButton.name + ",stats";
-        //for (int i = 0; i < cScript.m_stats.Length; i++)
-        //    stats += "," + cScript.m_stats[i];
-        //PlayerPrefs.SetString(key, stats);
     }
 
     // In order to make this function button friendly, I made it require setting m_currButton beforehand in order to work properly
@@ -405,50 +339,38 @@ public class TeamMenuScript : MonoBehaviour {
         m_currButton.onClick.AddListener(() => CharacterAssignment());
     }
 
-    public void SaveLoadButtonPress()
+    public void Load()
     {
-        m_saveButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
-
-        if (PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",name").Length == 0)
+         if (PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",name").Length == 0)
             return;
 
-        if (m_panels[(int)menuPans.SAVE_LOAD_PANEL].m_text[0].text == "SAVE")
-        {
-            m_panels[(int)menuPans.CONFIRMATION_PANEL].m_inView = true;
-            m_panels[(int)menuPans.CONFIRMATION_PANEL].m_buttons[1].onClick = new Button.ButtonClickedEvent();
-            m_panels[(int)menuPans.CONFIRMATION_PANEL].m_buttons[1].onClick.AddListener(() => Save());
-        }
-        else if (m_panels[(int)menuPans.SAVE_LOAD_PANEL].m_text[0].text == "LOAD")
-        {
-            FillOutCharacterData(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",name"), PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",color"),
-                PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",actions").Split(';'));
-            Select();
-            m_panels[(int)menuPans.SAVE_LOAD_PANEL].m_inView = false;
-        }
+        FillOutCharacterData(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",name"), PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",color"),
+            PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",actions").Split(';'), float.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",level")));
 
+        Select();
+        m_panels[(int)menuPans.SAVE_LOAD_PANEL].m_inView = false;
     }
 
     public void Save()
     {
         CharacterScript cScript = m_currCharacter.GetComponent<CharacterScript>();
 
-        // Save out pertinent character data
-        string key = m_saveButton.name + "SAVE" + ",actions";
-        string combo = string.Join(";", cScript.m_actions);
-        PlayerPrefs.SetString(key, combo);
-        key = m_saveButton.name + "SAVE" + ",name";
-        PlayerPrefs.SetString(key, cScript.m_name);
-        key = m_saveButton.name + "SAVE" + ",color";
-        PlayerPrefs.SetString(key, cScript.m_color);
-
+        PlayerPrefScript.SaveChar(m_saveButton.name + "SAVE", cScript);
         SetCharSlot(m_saveButton, cScript.m_name, cScript.m_color);
 
-        m_panels[(int)menuPans.CONFIRMATION_PANEL].m_inView = false;
-        m_panels[(int)menuPans.SAVE_LOAD_PANEL].m_inView = false;
+        PanelScript.CloseHistory();
     }
 
     public void RandomTeam()
     {
+        PanelScript panScript = EventSystem.current.currentSelectedGameObject.GetComponent<Button>().transform.parent.GetComponent<PanelScript>();
+        Button[] buttons = panScript.m_buttons;
+        for (int i = 0; i < 6; i++)
+        {
+            m_currButton = buttons[i];
+            RandomCharacter();
+        }
+
         // Let the user decide how many random characters to add
         // What level the the characters will be
         // What colors

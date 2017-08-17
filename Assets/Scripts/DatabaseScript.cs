@@ -9,6 +9,7 @@ public class DatabaseScript : MonoBehaviour {
 
     public string[] m_actions;
     public string[] m_presets;
+    public string[] m_stat;
     // Character Keys: index in 2D array (2,1) and one of the following:
     // (,name), (,actions), (,stats), (,equipment), (,color)
     // ex. 0,1,name to retrieve the name of the second character slot of the first team.
@@ -25,6 +26,11 @@ public class DatabaseScript : MonoBehaviour {
         yield return presetsData;
         string presetsDataString = presetsData.text;
         m_presets = presetsDataString.Split(';');
+
+        WWW statData = new WWW("http://localhost:8081/Xen_New/StatData.php");
+        yield return statData;
+        string statDataString = statData.text;
+        m_stat = statDataString.Split(';');
     }
 
 	// Update is called once per frame

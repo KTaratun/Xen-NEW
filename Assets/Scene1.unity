@@ -172,9 +172,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 1512219750}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 1420022999}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 1420022999}
   m_camera: {fileID: 0}
@@ -513,9 +511,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 1512219750}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 1420022999}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 1420022999}
   m_camera: {fileID: 0}
@@ -1164,7 +1160,7 @@ Prefab:
         type: 2}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 6c29e203e32d6f74b87d0948a5229f8b, type: 2}
+      objectReference: {fileID: 2100000, guid: dee43133f2358374f9c57a0b4da68831, type: 2}
     - target: {fileID: 1464832591278664, guid: 8a7e3622ac875614aa46a1a4da817145, type: 2}
       propertyPath: m_Name
       value: Board
@@ -1178,6 +1174,16 @@ Prefab:
         type: 2}
       propertyPath: m_Enabled
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 23667486144914482, guid: 8a7e3622ac875614aa46a1a4da817145,
+        type: 2}
+      propertyPath: m_ReflectionProbeUsage
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 23667486144914482, guid: 8a7e3622ac875614aa46a1a4da817145,
+        type: 2}
+      propertyPath: m_LightProbeUsage
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 8a7e3622ac875614aa46a1a4da817145, type: 2}
@@ -1751,9 +1757,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 1512219750}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 1420022999}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 1420022999}
   m_camera: {fileID: 0}
@@ -2348,7 +2352,6 @@ MonoBehaviour:
   m_boundryDis: 0
   m_cScript: {fileID: 0}
   m_main: {fileID: 0}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels: []
   m_text: []
@@ -2361,6 +2364,7 @@ MonoBehaviour:
   - {fileID: 1953929500}
   - {fileID: 348012706}
   - {fileID: 888194826}
+  m_confirmPanel: {fileID: 0}
 --- !u!1 &180408719
 GameObject:
   m_ObjectHideFlags: 0
@@ -2565,13 +2569,13 @@ MonoBehaviour:
   m_boundryDis: -200
   m_cScript: {fileID: 0}
   m_main: {fileID: 1512219745}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels:
   - {fileID: 593418249}
   - {fileID: 560834650}
   m_text: []
   m_images: []
+  m_confirmPanel: {fileID: 0}
 --- !u!114 &183463198
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3826,9 +3830,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 427960401}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 485874769}
@@ -4108,9 +4110,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 427960401}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 485874769}
@@ -5668,9 +5668,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 427960401}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 485874769}
@@ -5872,9 +5870,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 427960401}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 485874769}
@@ -10025,9 +10021,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 427960401}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 485874769}
@@ -12222,9 +12216,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 427960401}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 485874769}
@@ -12857,9 +12849,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 1512219750}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 1420022999}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 1420022999}
   m_camera: {fileID: 0}
@@ -14117,7 +14107,6 @@ MonoBehaviour:
   m_boundryDis: 0
   m_cScript: {fileID: 0}
   m_main: {fileID: 1512219745}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels:
   - {fileID: 69650453}
@@ -14130,6 +14119,7 @@ MonoBehaviour:
   - {fileID: 565476133}
   m_text: []
   m_images: []
+  m_confirmPanel: {fileID: 0}
 --- !u!1 &1022013929 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 1363898554961104, guid: fff6f172c2db4194cb58b9311e2e1f28,
@@ -15071,9 +15061,175 @@ Prefab:
       propertyPath: m_boardScript
       value: 
       objectReference: {fileID: 1512219750}
+    - target: {fileID: 114025913299476922, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114328774136556652, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114511649883460394, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114215992682238374, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114044031140697904, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114377506404815880, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114500446075545912, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114737854413470320, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114978624990954256, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114317418556982924, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114540923466729792, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114378464218688226, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114292672426708554, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114651745309431584, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114293012081515412, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114629618232810032, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1036720756}
+    - target: {fileID: 114025913299476922, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
+    - target: {fileID: 114328774136556652, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
+    - target: {fileID: 114511649883460394, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
+    - target: {fileID: 114215992682238374, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
+    - target: {fileID: 114044031140697904, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
+    - target: {fileID: 114377506404815880, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
+    - target: {fileID: 114500446075545912, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
+    - target: {fileID: 114737854413470320, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
+    - target: {fileID: 114978624990954256, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
+    - target: {fileID: 114317418556982924, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
+    - target: {fileID: 114540923466729792, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
+    - target: {fileID: 114378464218688226, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
+    - target: {fileID: 114292672426708554, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
+    - target: {fileID: 114651745309431584, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
+    - target: {fileID: 114293012081515412, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
+    - target: {fileID: 114629618232810032, guid: fff6f172c2db4194cb58b9311e2e1f28,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1294336235}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: fff6f172c2db4194cb58b9311e2e1f28, type: 2}
   m_IsPrefabParent: 0
+--- !u!114 &1036720756 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114394056313263468, guid: fff6f172c2db4194cb58b9311e2e1f28,
+    type: 2}
+  m_PrefabInternal: {fileID: 1036720755}
+  m_Script: {fileID: 11500000, guid: 38c19b1279105cc419a0a7fbe5a5113f, type: 3}
 --- !u!1 &1037797885
 GameObject:
   m_ObjectHideFlags: 0
@@ -15816,9 +15972,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 427960401}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 485874769}
@@ -16383,7 +16537,6 @@ MonoBehaviour:
   m_boundryDis: 0
   m_cScript: {fileID: 0}
   m_main: {fileID: 1512219745}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels:
   - {fileID: 516815613}
@@ -16397,6 +16550,7 @@ MonoBehaviour:
   - {fileID: 98493249}
   - {fileID: 1490346944}
   - {fileID: 2070000795}
+  m_confirmPanel: {fileID: 0}
 --- !u!114 &1194865055
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16971,9 +17125,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 1512219750}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 1420022999}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 1420022999}
   m_camera: {fileID: 0}
@@ -17196,11 +17348,11 @@ MonoBehaviour:
   m_boundryDis: 0
   m_cScript: {fileID: 0}
   m_main: {fileID: 1512219745}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels: []
   m_text: []
   m_images: []
+  m_confirmPanel: {fileID: 0}
 --- !u!114 &1270872298
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17574,6 +17726,12 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 5947d95051c41554ca20de173ea849b6, type: 2}
   m_IsPrefabParent: 0
+--- !u!114 &1294336235 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114110583888902618, guid: 5947d95051c41554ca20de173ea849b6,
+    type: 2}
+  m_PrefabInternal: {fileID: 1294336234}
+  m_Script: {fileID: 11500000, guid: 38c19b1279105cc419a0a7fbe5a5113f, type: 3}
 --- !u!1 &1295895160
 GameObject:
   m_ObjectHideFlags: 0
@@ -19171,8 +19329,7 @@ MonoBehaviour:
   m_direction: 0
   m_boundryDis: 0
   m_cScript: {fileID: 0}
-  m_main: {fileID: 0}
-  m_parent: {fileID: 0}
+  m_main: {fileID: 1512219745}
   m_buttons: []
   m_panels: []
   m_text: []
@@ -19181,6 +19338,7 @@ MonoBehaviour:
   - {fileID: 1432855154}
   - {fileID: 37563707}
   - {fileID: 11960460}
+  m_confirmPanel: {fileID: 0}
 --- !u!114 &1420023000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19273,9 +19431,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 427960401}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 485874769}
@@ -19548,9 +19704,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 1512219750}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 1420022999}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 1420022999}
   m_camera: {fileID: 0}
@@ -20448,10 +20602,10 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
   m_Materials:
-  - {fileID: 2100000, guid: 6c29e203e32d6f74b87d0948a5229f8b, type: 2}
+  - {fileID: 2100000, guid: dee43133f2358374f9c57a0b4da68831, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -20571,6 +20725,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_actions: []
   m_presets: []
+  m_stat: []
 --- !u!1 &1512781093 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 1586835657031230, guid: 5947d95051c41554ca20de173ea849b6,
@@ -21831,11 +21986,11 @@ MonoBehaviour:
   m_boundryDis: 0
   m_cScript: {fileID: 0}
   m_main: {fileID: 1512219745}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels: []
   m_text: []
   m_images: []
+  m_confirmPanel: {fileID: 0}
 --- !u!114 &1602674034
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22838,12 +22993,12 @@ MonoBehaviour:
   m_boundryDis: -220
   m_cScript: {fileID: 0}
   m_main: {fileID: 0}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels: []
   m_text: []
   m_images:
   - {fileID: 885967767}
+  m_confirmPanel: {fileID: 0}
 --- !u!1 &1720083773 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 1172141719212196, guid: fff6f172c2db4194cb58b9311e2e1f28,
@@ -23909,11 +24064,11 @@ MonoBehaviour:
   m_boundryDis: 0
   m_cScript: {fileID: 0}
   m_main: {fileID: 1512219745}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels: []
   m_text: []
   m_images: []
+  m_confirmPanel: {fileID: 0}
 --- !u!1 &1804657944 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 1865594996011166, guid: 5947d95051c41554ca20de173ea849b6,
@@ -24048,9 +24203,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 427960401}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 485874769}
@@ -24490,9 +24643,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 427960401}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 485874769}
@@ -26357,9 +26508,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 1719622439}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 179682807}
   m_camera: {fileID: 0}
@@ -27571,7 +27720,6 @@ MonoBehaviour:
   m_boundryDis: -400
   m_cScript: {fileID: 0}
   m_main: {fileID: 1512219745}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels:
   - {fileID: 245402127}
@@ -27585,6 +27733,7 @@ MonoBehaviour:
   - {fileID: 526063679}
   - {fileID: 1507809400}
   - {fileID: 1133054469}
+  m_confirmPanel: {fileID: 0}
 --- !u!114 &2146951929
 MonoBehaviour:
   m_ObjectHideFlags: 0

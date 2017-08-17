@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class PanelScript : MonoBehaviour {
 
@@ -11,20 +12,32 @@ public class PanelScript : MonoBehaviour {
     static public Color b_isFree = new Color(.5f, 1, .5f, 1);
     static public Color b_isDisallowed = new Color(1, .5f, .5f, 1);
 
+    static List<PanelScript> m_history;
+    static List<PanelScript> m_allPanels;
     public bool m_inView;
     public dir m_direction;
     public int m_boundryDis;
     public CharacterScript m_cScript;
     public GameObject m_main;
-    public GameObject m_parent;
     public Button[] m_buttons;
     public GameObject[] m_panels;
     public Text[] m_text;
     public Image[] m_images;
+    public PanelScript m_confirmPanel;
 
     // Use this for initialization
     void Start ()
     {
+        if (GameObject.Find("Confirmation Panel"))
+            m_confirmPanel = GameObject.Find("Confirmation Panel").GetComponent<PanelScript>();
+
+        if (m_history == null)
+            m_history = new List<PanelScript>();
+
+        if (m_allPanels == null)
+            m_allPanels = new List<PanelScript>();
+
+        m_allPanels.Add(this);
 
         m_buttons = GetComponentsInChildren<Button>();
 
@@ -46,8 +59,6 @@ public class PanelScript : MonoBehaviour {
         if (name == "Turn Panel")
             for (int i = 0; i < m_panels.Length; i++)
                 m_panels[i].SetActive(false);
-
-        //BPlayerPrefs.DeleteAll();
     }
 	
 	// Update is called once per frame
@@ -55,22 +66,19 @@ public class PanelScript : MonoBehaviour {
     {
         RectTransform recTrans = GetComponent<RectTransform>();
 
-        if (Input.GetMouseButtonDown(1) && m_inView && gameObject.tag != "Selector")
+        if (Input.GetMouseButtonDown(1) && m_inView && m_direction == dir.UP && recTrans.offsetMax.y < 200 &&
+            gameObject.tag != "Selector" && gameObject.name != "Confirmation Panel")
         {
-            if (m_direction == dir.UP && recTrans.offsetMax.y < 200)
+            if (m_cScript && m_cScript.m_boardScript)
+                m_cScript.m_boardScript.m_selected = null;
+
+            if (m_history.Count > 0 && recTrans.offsetMax.y < 200)
             {
-                //PanelScript hudPanScript = hudPanel.GetComponent<PanelScript>();
-                //hudPanScript.inView = false;
-                m_inView = false;
-          
-                if (m_cScript && m_cScript.m_boardScript)
-                    m_cScript.m_boardScript.m_selected = null;
-            }
-            if (m_parent && recTrans.offsetMax.y < 200)
-            {
-                PanelScript parentScript = m_parent.GetComponent<PanelScript>();
-                parentScript.m_inView = true;
-                m_inView = false;
+                m_history[m_history.Count - 1].m_inView = false;
+                m_history.RemoveAt(m_history.Count - 1);
+
+                if (m_history.Count > 0)
+                    m_history[m_history.Count - 1].m_inView = true;
             }
         }
 
@@ -85,50 +93,23 @@ public class PanelScript : MonoBehaviour {
         for (int i = 0; i < m_buttons.Length; i++)
             m_buttons[i].onClick.RemoveAllListeners();
 
-        if (name == "Main Panel")
+        if (name == "Character Panel")
         {
-            if (!m_cScript.m_effects[(int)StatusScript.effects.IMMOBILE])
-            {
-                if (m_buttons[(int)butts.ACT_BUTT].GetComponent<Image>().color == Color.yellow)
-                    m_buttons[(int)butts.MOV_BUTT].GetComponent<Image>().color = Color.yellow;
-
-                if (m_buttons[(int)butts.MOV_BUTT].interactable == true)
-                    m_buttons[(int)butts.MOV_BUTT].interactable = true;
-                else
-                    m_buttons[(int)butts.MOV_BUTT].interactable = false;
-                m_buttons[(int)butts.MOV_BUTT].onClick.AddListener(() => m_cScript.MovementSelection(0));
-            }
-            else
-            {
-                m_buttons[(int)butts.MOV_BUTT].GetComponent<Image>().color = new Color(1, .5f, .5f, 1);
-                m_buttons[(int)butts.MOV_BUTT].interactable = false;
-            }
-            m_buttons[(int)butts.ACT_BUTT].onClick.AddListener(() => m_cScript.ActionSelection());
-            m_buttons[(int)butts.PASS_BUTT].onClick.AddListener(() => m_cScript.Pass());
-            m_buttons[(int)butts.STATUS_BUTT].onClick.AddListener(() => m_cScript.ViewStatus());
-        }
-        else if (name == "Character Panel")
-        {
+            // REFACTOR: Move all these functions to populate Panel except random character
             TeamMenuScript menuScript = m_main.GetComponent<TeamMenuScript>();
             m_buttons[0].onClick.AddListener(() => menuScript.NewCharacter());
-            m_buttons[1].onClick.AddListener(() => menuScript.LoadCharacter());
+            m_buttons[1].onClick.AddListener(() => PopulatePanel());
             m_buttons[2].onClick.AddListener(() => menuScript.PresetCharacter());
             m_buttons[3].onClick.AddListener(() => menuScript.RandomCharacter());
         }
         else if (name == "Auxiliary Panel")
-            m_buttons[0].onClick.AddListener(() => m_cScript.ViewStatus());
+            m_buttons[0].onClick.AddListener(() => PopulatePanel());
     }
 
     // General Panel
     public void PopulatePanel()
     {
-        if (name == "Round Panel")
-        {
-            BoardScript bScript = m_main.GetComponent<BoardScript>();
-            if (m_text != null)
-                m_text[0].text = "Round: " + bScript.m_roundCount;
-        }
-        else if (name == "Action Panel")
+        if (name == "Action Panel")
         {
             ResetButtons();
 
@@ -147,38 +128,16 @@ public class PanelScript : MonoBehaviour {
                     FirstActionAvailable(m_panels[3], m_cScript.m_actions[i]);
             }
         }
-        else if (name == "Status Panel")
+        else if (name == "ActionPreview")
         {
-            m_text[(int)CharacterScript.sts.HP].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
-            m_text[(int)CharacterScript.sts.SPD].text = "SPD: " + m_cScript.m_tempStats[(int)CharacterScript.sts.SPD];
-
-            m_text[(int)CharacterScript.sts.HIT].text = "HIT: " + m_cScript.m_stats[(int)CharacterScript.sts.HIT];
-            CheckIfModded((int)CharacterScript.sts.HIT, m_cScript.m_stats[(int)CharacterScript.sts.HIT], m_cScript.m_tempStats[(int)CharacterScript.sts.HIT]);
-
-            m_text[(int)CharacterScript.sts.EVA].text = "EVA: " + m_cScript.m_stats[(int)CharacterScript.sts.EVA];
-            CheckIfModded((int)CharacterScript.sts.EVA, m_cScript.m_stats[(int)CharacterScript.sts.EVA], m_cScript.m_tempStats[(int)CharacterScript.sts.EVA]);
-
-            m_text[(int)CharacterScript.sts.CRT].text = "CRT: " + m_cScript.m_stats[(int)CharacterScript.sts.CRT];
-            CheckIfModded((int)CharacterScript.sts.CRT, m_cScript.m_stats[(int)CharacterScript.sts.CRT], m_cScript.m_tempStats[(int)CharacterScript.sts.CRT]);
-
-            m_text[(int)CharacterScript.sts.DMG].text = "DMG: " + m_cScript.m_stats[(int)CharacterScript.sts.DMG];
-            CheckIfModded((int)CharacterScript.sts.DMG, m_cScript.m_stats[(int)CharacterScript.sts.DMG], m_cScript.m_tempStats[(int)CharacterScript.sts.DMG]);
-
-            m_text[(int)CharacterScript.sts.DEF].text = "DEF: " + m_cScript.m_stats[(int)CharacterScript.sts.DEF];
-            CheckIfModded((int)CharacterScript.sts.DEF, m_cScript.m_stats[(int)CharacterScript.sts.DEF], m_cScript.m_tempStats[(int)CharacterScript.sts.DEF]);
-
-            m_text[(int)CharacterScript.sts.MOV].text = "MOV: " + m_cScript.m_stats[(int)CharacterScript.sts.MOV];
-            CheckIfModded((int)CharacterScript.sts.MOV, m_cScript.m_stats[(int)CharacterScript.sts.MOV], m_cScript.m_tempStats[(int)CharacterScript.sts.MOV]);
-
-            m_text[(int)CharacterScript.sts.RNG].text = "RNG: " + m_cScript.m_stats[(int)CharacterScript.sts.RNG];
-            CheckIfModded((int)CharacterScript.sts.RNG, m_cScript.m_stats[(int)CharacterScript.sts.RNG], m_cScript.m_tempStats[(int)CharacterScript.sts.RNG]);
-
-            if (m_cScript.m_accessories[0] != null)
-                m_text[9].text = "ACC: " + m_cScript.m_accessories[0];
-            if (m_cScript.m_accessories[1] != null)
-                m_text[10].text = "ACC: " + m_cScript.m_accessories[1];
-
-            StatusSymbolSetup();
+            BoardScript bScript = m_main.GetComponent<BoardScript>();
+            CharacterScript currScript = bScript.m_currPlayer.GetComponent<CharacterScript>();
+            m_panels[0].GetComponent<Image>().color = new Color(currScript.m_teamColor.r + 0.3f, currScript.m_teamColor.g + 0.3f, currScript.m_teamColor.b + 0.3f, 1);
+            m_panels[1].GetComponent<Image>().color = new Color(m_cScript.m_teamColor.r + 0.3f, m_cScript.m_teamColor.g + 0.3f, m_cScript.m_teamColor.b + 0.3f, 1);
+            int hit = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.HIT));
+            int dmg = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.DMG)) + currScript.m_tempStats[(int)CharacterScript.sts.DMG];
+            m_text[0].text = "Hit %: " + (hit + currScript.m_tempStats[(int)CharacterScript.sts.HIT] - m_cScript.m_tempStats[(int)CharacterScript.sts.EVA]).ToString();
+            m_text[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP].ToString() + " -> " + (m_cScript.m_tempStats[(int)CharacterScript.sts.HP] - dmg).ToString();
         }
         else if (name == "ActionViewer Panel")
         {
@@ -192,36 +151,180 @@ public class PanelScript : MonoBehaviour {
             engScript.SetTotalEnergy(currStat[1]);
 
             currStat = actStats[3].Split(':');
-            m_text[2].text = "HIT: " + currStat[1];
-            if (m_cScript.m_stats[(int)CharacterScript.sts.HIT] != 0)
-                m_text[2].text += " + " + m_cScript.m_stats[(int)CharacterScript.sts.HIT];
+            m_text[2].text = "HIT: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.HIT]) + "%";
+            //if (m_cScript.m_stats[(int)CharacterScript.sts.HIT] != 0)
+            //    m_text[2].text += " + " + m_cScript.m_stats[(int)CharacterScript.sts.HIT];
 
             currStat = actStats[4].Split(':');
-            m_text[3].text = "DMG: " + currStat[1];
-            if (m_cScript.m_stats[(int)CharacterScript.sts.DMG] != 0)
-                m_text[3].text += " + " + m_cScript.m_stats[(int)CharacterScript.sts.DMG];
+            if ((int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG]) > 0)
+                m_text[3].text = "DMG: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG]);
+            else
+                m_text[3].text = "DMG: 0";
+            //if (m_cScript.m_stats[(int)CharacterScript.sts.DMG] != 0)
+            //    m_text[3].text += " + " + m_cScript.m_stats[(int)CharacterScript.sts.DMG];
 
             currStat = actStats[5].Split(':');
-            m_text[4].text = "RNG: " + currStat[1];
-            if (m_cScript.m_stats[(int)CharacterScript.sts.RNG] != 0)
-                m_text[4].text += "+" + m_cScript.m_stats[(int)CharacterScript.sts.RNG];
+            m_text[4].text = "RNG: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG]);
+            //if (m_cScript.m_stats[(int)CharacterScript.sts.RNG] != 0)
+            //    m_text[4].text += "+" + m_cScript.m_stats[(int)CharacterScript.sts.RNG];
 
             currStat = actStats[7].Split(':');
-            m_text[5].text = "CRT: " + currStat[1];
-            if (m_cScript.m_stats[(int)CharacterScript.sts.CRT] != 0)
-                m_text[5].text += " + " + m_cScript.m_stats[(int)CharacterScript.sts.CRT];
+            m_text[5].text = "CRT: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.CRT]) + "%";
+            //if (m_cScript.m_stats[(int)CharacterScript.sts.CRT] != 0)
+            //    m_text[5].text += " + " + m_cScript.m_stats[(int)CharacterScript.sts.CRT];
 
             currStat = actStats[8].Split(':');
             m_text[6].text = currStat[1];
 
             currStat = actStats[6].Split(':');
-            m_text[7].text = "RAD: " + currStat[1];
+            if ((int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RAD]) > 0)
+                m_text[7].text = "RAD: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RAD]);
+            else
+                m_text[7].text = "RAD: 0";
+        }
+        else if (name == "CharacterViewer Panel")
+        {
+            // Fill out name
+            m_text[1].text = m_cScript.m_name;
+            // Fill out energy
+            m_buttons[0].GetComponent<ButtonScript>().SetTotalEnergy(m_cScript.m_color);
+            // Fill out Action Panel
+            m_panels[0].GetComponent<PanelScript>().m_cScript = m_cScript;
+            m_panels[0].GetComponent<PanelScript>().PopulatePanel();
+            // Fill out Status Panel
+            m_panels[1].GetComponent<PanelScript>().m_cScript = m_cScript;
+            m_panels[1].GetComponent<PanelScript>().PopulatePanel();
         }
         else if (name == "HUD Panel LEFT" || name == "HUD Panel RIGHT")
         {
             m_panels[0].GetComponent<Image>().color = new Color(m_cScript.m_teamColor.r + 0.3f, m_cScript.m_teamColor.g + 0.3f, m_cScript.m_teamColor.b + 0.3f, 1);
-            m_text[0].text = m_cScript.name;
+            m_text[0].text = m_cScript.m_name;
             m_text[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
+
+            if (GetComponentInChildren<Button>())
+            {
+                Button button = GetComponentInChildren<Button>();
+                ButtonScript buttScript = button.GetComponent<ButtonScript>();
+                buttScript.SetTotalEnergy(m_cScript.m_color);
+
+                StatusSymbolSetup();
+            }
+        }
+        else if (name == "Main Panel")
+        {
+            for (int i = 0; i < m_buttons.Length; i++)
+                m_buttons[i].onClick.RemoveAllListeners();
+
+            BoardScript mainPanScript = m_main.GetComponent<BoardScript>();
+
+            if (!m_cScript.m_effects[(int)StatusScript.effects.IMMOBILE])
+            {
+                if (m_buttons[(int)butts.ACT_BUTT].GetComponent<Image>().color == Color.yellow)
+                    m_buttons[(int)butts.MOV_BUTT].GetComponent<Image>().color = Color.yellow;
+
+                if (m_buttons[(int)butts.MOV_BUTT].interactable == true)
+                    m_buttons[(int)butts.MOV_BUTT].interactable = true;
+                else
+                    m_buttons[(int)butts.MOV_BUTT].interactable = false;
+                m_buttons[(int)butts.MOV_BUTT].onClick.AddListener(() => m_cScript.MovementSelection(0));
+            }
+            else
+            {
+                m_buttons[(int)butts.MOV_BUTT].GetComponent<Image>().color = new Color(1, .5f, .5f, 1);
+                m_buttons[(int)butts.MOV_BUTT].interactable = false;
+            }
+            PanelScript actPanScript = mainPanScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
+            actPanScript.m_cScript = m_cScript;
+            m_buttons[(int)butts.ACT_BUTT].onClick.AddListener(() => actPanScript.PopulatePanel());
+
+            m_buttons[(int)butts.PASS_BUTT].onClick.AddListener(() => m_cScript.Pass());
+
+            PanelScript stsPanScript = mainPanScript.m_panels[(int)BoardScript.pnls.STATUS_PANEL].GetComponent<PanelScript>();
+            stsPanScript.m_cScript = m_cScript;
+            m_buttons[(int)butts.STATUS_BUTT].onClick.AddListener(() => stsPanScript.PopulatePanel());
+        }
+        else if (name == "Round Panel")
+        {
+            BoardScript bScript = m_main.GetComponent<BoardScript>();
+            if (m_text != null)
+                m_text[0].text = "Round: " + bScript.m_roundCount;
+        }
+        else if (name == "Save/Load Panel")
+        {
+            if (EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name == "Save Button")
+                m_text[0].text = "SAVE";
+            else if (EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name == "Load")
+                m_text[0].text = "LOAD";
+
+            Button[] button = m_buttons;
+            for (int i = 0; i < 4; i++)
+            {
+                for (int j = 0; j < 9; j++)
+                {
+                    string key = i.ToString() + ',' + j.ToString() + "SAVE" + ",name";
+                    string name = PlayerPrefs.GetString(key);
+                    if (name.Length > 0)
+                    {
+                        key = i.ToString() + ',' + j.ToString() + "SAVE" + ",color";
+                        string color = PlayerPrefs.GetString(key);
+
+                        m_main.GetComponent<TeamMenuScript>().SetCharSlot(button[i * 4 + j], name, color);
+
+                        button[i * 4 + j].onClick.RemoveAllListeners();
+                        if (EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name == "Save Button")
+                        {
+                            Button[] childButtons = m_confirmPanel.GetComponentsInChildren<Button>();
+                            button[i * 4 + j].onClick.AddListener(() => childButtons[1].GetComponent<ButtonScript>().ConfirmationButton());
+
+                        }
+                        else if (EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name == "Load")
+                            button[i * 4 + j].onClick.AddListener(() => m_main.GetComponent<TeamMenuScript>().Load());
+                    }
+                }
+            }
+        }
+        else if (name == "Status Panel")
+        {
+            m_text[(int)CharacterScript.sts.HP].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
+            m_text[(int)CharacterScript.sts.SPD].text = "SPD: " + m_cScript.m_tempStats[(int)CharacterScript.sts.SPD];
+
+            m_text[(int)CharacterScript.sts.HIT].text = "HIT: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HIT];
+            if (m_cScript.m_stats[(int)CharacterScript.sts.HIT] != 0)
+                m_text[(int)CharacterScript.sts.HIT].text += "%";
+            //CheckIfModded((int)CharacterScript.sts.HIT, m_cScript.m_stats[(int)CharacterScript.sts.HIT], m_cScript.m_tempStats[(int)CharacterScript.sts.HIT]);
+
+            m_text[(int)CharacterScript.sts.EVA].text = "EVA: " + m_cScript.m_tempStats[(int)CharacterScript.sts.EVA];
+            if (m_cScript.m_stats[(int)CharacterScript.sts.EVA] != 0)
+                m_text[(int)CharacterScript.sts.EVA].text += "%";
+            //CheckIfModded((int)CharacterScript.sts.EVA, m_cScript.m_stats[(int)CharacterScript.sts.EVA], m_cScript.m_tempStats[(int)CharacterScript.sts.EVA]);
+
+            m_text[(int)CharacterScript.sts.CRT].text = "CRT: " + m_cScript.m_tempStats[(int)CharacterScript.sts.CRT];
+            if (m_cScript.m_stats[(int)CharacterScript.sts.CRT] != 0)
+                m_text[(int)CharacterScript.sts.CRT].text += "%";
+            //CheckIfModded((int)CharacterScript.sts.CRT, m_cScript.m_stats[(int)CharacterScript.sts.CRT], m_cScript.m_tempStats[(int)CharacterScript.sts.CRT]);
+
+            m_text[(int)CharacterScript.sts.DMG].text = "DMG: " + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG];
+            //CheckIfModded((int)CharacterScript.sts.DMG, m_cScript.m_stats[(int)CharacterScript.sts.DMG], m_cScript.m_tempStats[(int)CharacterScript.sts.DMG]);
+
+            m_text[(int)CharacterScript.sts.DEF].text = "DEF: " + m_cScript.m_tempStats[(int)CharacterScript.sts.DEF];
+            //CheckIfModded((int)CharacterScript.sts.DEF, m_cScript.m_stats[(int)CharacterScript.sts.DEF], m_cScript.m_tempStats[(int)CharacterScript.sts.DEF]);
+
+            m_text[(int)CharacterScript.sts.MOV].text = "MOV: " + m_cScript.m_tempStats[(int)CharacterScript.sts.MOV];
+            //CheckIfModded((int)CharacterScript.sts.MOV, m_cScript.m_stats[(int)CharacterScript.sts.MOV], m_cScript.m_tempStats[(int)CharacterScript.sts.MOV]);
+
+            m_text[(int)CharacterScript.sts.RNG].text = "RNG: " + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG];
+            //CheckIfModded((int)CharacterScript.sts.RNG, m_cScript.m_stats[(int)CharacterScript.sts.RNG], m_cScript.m_tempStats[(int)CharacterScript.sts.RNG]);
+
+            if (m_cScript.m_accessories[0] != null)
+                m_text[9].text = "ACC: " + m_cScript.m_accessories[0];
+            if (m_cScript.m_accessories[1] != null)
+                m_text[10].text = "ACC: " + m_cScript.m_accessories[1];
+
+            StatusSymbolSetup();
+        }
+        else if (name == "Status Selector")
+        {
+            StatusSymbolSetup();
         }
         else if (name == "StatusViewer Panel")
         {
@@ -234,27 +337,24 @@ public class PanelScript : MonoBehaviour {
             m_text[1].text = statScripts[m_cScript.m_currStatus].m_effect;
 
         }
-        else if (name == "Status Selector")
-            StatusSymbolSetup();
-        else if (name == "ActionPreview")
+
+        if (m_direction == dir.UP)
         {
-            BoardScript bScript = m_main.GetComponent<BoardScript>();
-            CharacterScript currScript = bScript.m_currPlayer.GetComponent<CharacterScript>();
-            m_panels[0].GetComponent<Image>().color = new Color(currScript.m_teamColor.r + 0.3f, currScript.m_teamColor.g + 0.3f, currScript.m_teamColor.b + 0.3f, 1);
-            m_panels[1].GetComponent<Image>().color = new Color(m_cScript.m_teamColor.r + 0.3f, m_cScript.m_teamColor.g + 0.3f, m_cScript.m_teamColor.b + 0.3f, 1);
-            int hit = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.HIT)) * 5;
-            int dmg = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.DMG)) + currScript.m_tempStats[(int)CharacterScript.sts.DMG];
-            m_text[0].text = "Hit %: " + (100 - hit + (currScript.m_tempStats[(int)CharacterScript.sts.HIT] * 5) - (m_cScript.m_tempStats[(int)CharacterScript.sts.EVA] * 5)).ToString();
-            m_text[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP].ToString() + " -> " + (m_cScript.m_tempStats[(int)CharacterScript.sts.HP] - dmg).ToString();
+            if (m_history.Count > 0 && name != "Confirmation Panel")
+                m_history[m_history.Count - 1].GetComponent<PanelScript>().m_inView = false;
+            m_history.Add(this);
         }
+
+        if (m_direction != dir.NULL)
+            m_inView = true;
     }
 
     private void CheckIfModded(int _ind, int _origStat, int _tempStat)
     {
         if (_tempStat > _origStat)
-            m_text[_ind].text += " +" + (_tempStat - _origStat).ToString();
+            m_text[_ind].text += "+" + (_tempStat - _origStat).ToString();
         else if (_tempStat < _origStat)
-            m_text[_ind].text += " -" + (_tempStat - _origStat).ToString();
+            m_text[_ind].text += (_tempStat - _origStat).ToString();
     }
 
     public void FirstActionAvailable(GameObject panel, string action)
@@ -435,7 +535,7 @@ public class PanelScript : MonoBehaviour {
                     m_panels[i].GetComponent<Image>().color = new Color(charScript.m_teamColor.r + 0.3f, charScript.m_teamColor.g + 0.3f, charScript.m_teamColor.b + 0.3f, 1);
 
                 Text t = m_panels[i].GetComponentInChildren<Text>();
-                t.text = bScript.m_currRound[i].name;
+                t.text = charScript.m_name;
 
                 if (m_panels[i].GetComponentInChildren<Button>())
                 {
@@ -475,20 +575,7 @@ public class PanelScript : MonoBehaviour {
         }
     }
 
-    public void PopulateHUD()
-    {
-        PopulatePanel();
-
-        if (GetComponentInChildren<Button>())
-        {
-            Button button = GetComponentInChildren<Button>();
-            ButtonScript buttScript = button.GetComponent<ButtonScript>();
-            buttScript.SetTotalEnergy(m_cScript.m_color);
-
-            StatusSymbolSetup();
-        }
-    }
-
+    // Maybe move
     private void StatusSymbolSetup()
     {
         StatusScript[] statScripts = m_cScript.GetComponents<StatusScript>();
@@ -505,5 +592,22 @@ public class PanelScript : MonoBehaviour {
             m_images[i].sprite = statScripts[i].m_sprite;
             m_images[i].color = statScripts[i].m_color;
         }
+    }
+
+    static public void CloseHistory()
+    {
+        for (int i = 0; i < m_history.Count; i++)
+            m_history[i].m_inView = false;
+
+        m_history.Clear();
+    }
+
+    static public bool CheckIfPanelOpen()
+    {
+        for (int i = 0; i < m_allPanels.Count; i++)
+            if (m_allPanels[i].m_inView && m_allPanels[i].m_direction == dir.UP)
+                return true;
+
+        return false;
     }
 }

@@ -78,7 +78,7 @@ public class StatusScript : MonoBehaviour {
                 m_color = buffColor;
                 break;
             case "Winding ATK":
-                m_statMod[(int)CharacterScript.sts.EVA] = -2;
+                m_statMod[(int)CharacterScript.sts.EVA] = -10;
                 m_mode = mode.ROUND_END;
                 m_lifeSpan = 2;
                 m_sprite = Resources.Load<Sprite>("Symbols/Evasion Symbol");
@@ -106,7 +106,7 @@ public class StatusScript : MonoBehaviour {
                 m_color = buffColor;
                 break;
             case "Aim":
-                m_statMod[(int)CharacterScript.sts.HIT] = 3;
+                m_statMod[(int)CharacterScript.sts.HIT] = 15;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Hit Symbol");
@@ -121,7 +121,7 @@ public class StatusScript : MonoBehaviour {
                 m_color = debuffColor;
                 break;
             case "Critical":
-                m_statMod[(int)CharacterScript.sts.CRT] = -3;
+                m_statMod[(int)CharacterScript.sts.CRT] = 15;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Critical Symbol");
@@ -135,7 +135,7 @@ public class StatusScript : MonoBehaviour {
                 m_color = statusColor;
                 break;
             case "Unnerving ATK":
-                m_statMod[(int)CharacterScript.sts.CRT] = 2;
+                m_statMod[(int)CharacterScript.sts.CRT] = -5;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Critical Symbol");
@@ -149,7 +149,7 @@ public class StatusScript : MonoBehaviour {
                 m_color = debuffColor;
                 break;
             case "Blinding ATK":
-                m_statMod[(int)CharacterScript.sts.HIT] = -3;
+                m_statMod[(int)CharacterScript.sts.HIT] = -15;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Hit Symbol");
@@ -177,14 +177,14 @@ public class StatusScript : MonoBehaviour {
                 m_color = statusColor;
                 break;
             case "Bolstering ATK":
-                m_statMod[(int)CharacterScript.sts.EVA] = 3;
+                m_statMod[(int)CharacterScript.sts.EVA] = 15;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 2;
                 m_sprite = Resources.Load<Sprite>("Symbols/Evasion Symbol");
                 m_color = buffColor;
                 break;
             case "Prepare":
-                m_statMod[(int)CharacterScript.sts.EVA] = 5;
+                m_statMod[(int)CharacterScript.sts.EVA] = 25;
                 m_mode = mode.ROUND_END;
                 m_lifeSpan = 2;
                 m_sprite = Resources.Load<Sprite>("Symbols/Evasion Symbol");

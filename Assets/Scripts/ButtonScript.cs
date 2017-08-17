@@ -6,10 +6,9 @@ using UnityEngine.EventSystems;
 
 public class ButtonScript : MonoBehaviour {
 
+    // Get rid of board
     public BoardScript m_boardScript;
-    public GameObject m_actionViewer;
     public PanelScript m_main;
-    public GameObject m_actionPanel;
     public GameObject m_character;
     public PanelScript m_parent;
     public GameObject m_camera;
@@ -57,17 +56,15 @@ public class ButtonScript : MonoBehaviour {
 
         Text text = GetComponent<Button>().GetComponentInChildren<Text>();
 
-        if (text.text == "EMPTY" || !m_actionViewer || !m_actionPanel || GetComponent<Image>().color == new Color(1, .5f, .5f, 1))
+        // REFACTOR: That's so wack though
+        if (text.text == "EMPTY" || !m_main || !m_parent || GetComponent<Image>().color == new Color(1, .5f, .5f, 1) ||
+            m_parent && m_parent.m_main && m_parent.m_main.GetComponent<PanelScript>() && !m_parent.m_main.GetComponent<PanelScript>().m_inView)
             return;
 
-        PanelScript actViewScript = m_actionViewer.GetComponent<PanelScript>();
-        actViewScript.m_inView = true;
-
-        PanelScript actPanScript = m_actionPanel.GetComponent<PanelScript>();
-        actViewScript.m_cScript = actPanScript.m_cScript.GetComponent<CharacterScript>();
-        if (actPanScript.m_inView) // Need this check to avoid selecting another action while menu is moving
-            actViewScript.m_cScript.m_currAction = name;
-        if (actPanScript.m_inView && m_boardScript) // Need this check to avoid selecting another action while menu is moving
+        m_main.m_cScript = m_parent.m_cScript.GetComponent<CharacterScript>();
+        if (m_parent.m_inView) // Need this check to avoid selecting another action while menu is moving
+            m_main.m_cScript.m_currAction = name;
+        if (m_parent.m_inView && m_boardScript) // Need this check to avoid selecting another action while menu is moving
         {
             CharacterScript charScript = m_boardScript.m_currPlayer.GetComponent<CharacterScript>();
             if (GetComponent<Button>().GetComponent<Image>().color == PanelScript.b_isFree)
@@ -75,7 +72,7 @@ public class ButtonScript : MonoBehaviour {
             charScript.m_currAction = name;
         }
 
-        actViewScript.PopulatePanel();
+        m_main.PopulatePanel();
     }
 
     public void HoverFalse()
@@ -96,11 +93,10 @@ public class ButtonScript : MonoBehaviour {
         else if (gameObject.tag == "Status Image")
             m_main.m_inView = false;
 
-        if (!m_actionViewer)
+        if (!m_main)
             return;
 
-        PanelScript actPanel = m_actionViewer.GetComponent<PanelScript>();
-        actPanel.m_inView = false;
+        m_main.m_inView = false;
     }
 
     public void SetTotalEnergy(string energy)
@@ -329,5 +325,20 @@ public class ButtonScript : MonoBehaviour {
     {
         m_parent.m_cScript.m_boardScript.m_isForcedMove = null;
         m_parent.m_inView = false;
+    }
+
+    public void ConfirmationButton()
+    {
+        m_parent.m_inView = true;
+        m_parent.PopulatePanel();
+        gameObject.GetComponent<Button>().onClick.RemoveAllListeners();
+
+        if (m_main && m_main.name == "Save/Load Panel")
+        {
+                TeamMenuScript tMenuScript = m_parent.m_main.GetComponent<TeamMenuScript>();
+                tMenuScript.m_saveButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+
+                gameObject.GetComponent<Button>().onClick.AddListener(() => tMenuScript.Save());
+        }
     }
 }

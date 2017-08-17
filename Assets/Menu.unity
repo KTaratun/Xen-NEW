@@ -641,9 +641,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -781,9 +779,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -1295,11 +1291,22 @@ MonoBehaviour:
     m_HighlightedTrigger: Highlighted
     m_PressedTrigger: Pressed
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 48626840}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2098346379}
+        m_MethodName: RandomTeam
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &48626840
@@ -2031,9 +2038,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -2099,9 +2104,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -2197,18 +2200,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 80535383}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &80535383
@@ -3031,9 +3023,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -3983,9 +3973,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -4081,18 +4069,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 132540122}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &132540122
@@ -4521,9 +4498,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -5025,6 +5000,12 @@ CanvasRenderer:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 154707836}
+--- !u!114 &159745944 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114166443152984292, guid: 4716000483cd46b4fa3b4ca23b083688,
+    type: 2}
+  m_PrefabInternal: {fileID: 1951211896}
+  m_Script: {fileID: 11500000, guid: 38c19b1279105cc419a0a7fbe5a5113f, type: 3}
 --- !u!1 &159855543
 GameObject:
   m_ObjectHideFlags: 0
@@ -5230,9 +5211,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -6504,9 +6483,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -7201,9 +7178,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -7866,9 +7841,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -7964,18 +7937,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 233563638}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &233563638
@@ -8403,9 +8365,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -8881,9 +8841,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -8979,18 +8937,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 262924754}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &262924754
@@ -9928,9 +9875,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -10531,9 +10476,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -11648,9 +11591,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -11746,18 +11687,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 347381277}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &347381277
@@ -12099,7 +12029,7 @@ MonoBehaviour:
     m_HighlightedTrigger: Highlighted
     m_PressedTrigger: Pressed
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 361091223}
   m_OnClick:
     m_PersistentCalls:
@@ -13223,9 +13153,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -13546,9 +13474,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -13579,9 +13505,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -13761,9 +13685,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -14347,9 +14269,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -14445,18 +14365,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 426034000}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &426034000
@@ -14589,11 +14498,11 @@ MonoBehaviour:
   m_boundryDis: 0
   m_cScript: {fileID: 0}
   m_main: {fileID: 0}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels: []
   m_text: []
   m_images: []
+  m_confirmPanel: {fileID: 0}
 --- !u!1 &427072500
 GameObject:
   m_ObjectHideFlags: 0
@@ -14939,9 +14848,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -17710,11 +17617,22 @@ MonoBehaviour:
     m_HighlightedTrigger: Highlighted
     m_PressedTrigger: Pressed
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 534061221}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2098346379}
+        m_MethodName: RandomTeam
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &534061221
@@ -18191,9 +18109,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -18289,18 +18205,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 549718644}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &549718644
@@ -18547,9 +18452,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -18645,18 +18548,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 560522020}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &560522020
@@ -19618,9 +19510,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -19686,9 +19576,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -20371,9 +20259,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -20516,11 +20402,11 @@ MonoBehaviour:
   m_boundryDis: 0
   m_cScript: {fileID: 0}
   m_main: {fileID: 2098346378}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels: []
   m_text: []
   m_images: []
+  m_confirmPanel: {fileID: 0}
 --- !u!114 &632242971
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21198,9 +21084,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -21296,18 +21180,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 646787853}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &646787853
@@ -22000,9 +21873,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -22098,18 +21969,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 680638357}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &680638357
@@ -22569,9 +22429,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -23564,9 +23422,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -24031,9 +23887,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -25008,11 +24862,22 @@ MonoBehaviour:
     m_HighlightedTrigger: Highlighted
     m_PressedTrigger: Pressed
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 767997723}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2098346379}
+        m_MethodName: RandomTeam
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &767997723
@@ -25401,9 +25266,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -25862,9 +25725,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -25960,18 +25821,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 800185502}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &800185502
@@ -28012,6 +27862,171 @@ Prefab:
       propertyPath: m_RootOrder
       value: 6
       objectReference: {fileID: 0}
+    - target: {fileID: 114683481026178614, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114243046844369778, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114025172815216588, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114035814613950926, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114096656997986064, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114615141457602620, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114643896617505838, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114716798601558818, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114486485682654334, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114983826357380746, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114276035825898104, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114299652986125384, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114299081838434246, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114543434491276342, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114108161114558042, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114258201857436242, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114683481026178614, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114243046844369778, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114025172815216588, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114035814613950926, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114096656997986064, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114615141457602620, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114643896617505838, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114716798601558818, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114486485682654334, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114983826357380746, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114276035825898104, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114299652986125384, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114299081838434246, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114543434491276342, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114108161114558042, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114258201857436242, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 2086643348}
+    - target: {fileID: 114638944620014056, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_main
+      value: 
+      objectReference: {fileID: 1789116521}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
   m_IsPrefabParent: 0
@@ -28541,9 +28556,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -28971,9 +28984,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -29069,18 +29080,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 881810417}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &881810417
@@ -29464,9 +29464,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -30775,9 +30773,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -30873,18 +30869,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 922910518}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &922910518
@@ -31571,9 +31556,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -31669,18 +31652,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 946969789}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &946969789
@@ -32068,7 +32040,6 @@ MonoBehaviour:
   m_boundryDis: 0
   m_cScript: {fileID: 0}
   m_main: {fileID: 0}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels:
   - {fileID: 427052764}
@@ -32077,6 +32048,7 @@ MonoBehaviour:
   - {fileID: 1431309383}
   m_text: []
   m_images: []
+  m_confirmPanel: {fileID: 0}
 --- !u!1 &961106329
 GameObject:
   m_ObjectHideFlags: 0
@@ -32320,9 +32292,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -32616,9 +32586,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -32976,9 +32944,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -33074,18 +33040,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 976582749}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &976582749
@@ -34815,9 +34770,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -35477,7 +35430,6 @@ MonoBehaviour:
   m_boundryDis: 50
   m_cScript: {fileID: 0}
   m_main: {fileID: 2098346378}
-  m_parent: {fileID: 0}
   m_buttons:
   - {fileID: 680638356}
   - {fileID: 1997213655}
@@ -35519,6 +35471,7 @@ MonoBehaviour:
   - {fileID: 147751006}
   m_text: []
   m_images: []
+  m_confirmPanel: {fileID: 0}
 --- !u!114 &1055611440
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -35761,9 +35714,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -35859,18 +35810,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1060592338}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1060592338
@@ -36236,9 +36176,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -36716,11 +36654,11 @@ MonoBehaviour:
   m_boundryDis: 0
   m_cScript: {fileID: 0}
   m_main: {fileID: 0}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels: []
   m_text: []
   m_images: []
+  m_confirmPanel: {fileID: 0}
 --- !u!1 &1095213771
 GameObject:
   m_ObjectHideFlags: 0
@@ -37669,9 +37607,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -37767,18 +37703,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1125369071}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1125369071
@@ -38165,9 +38090,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -38263,18 +38186,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1137135577}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1137135577
@@ -40388,11 +40300,11 @@ MonoBehaviour:
   m_boundryDis: 50
   m_cScript: {fileID: 0}
   m_main: {fileID: 2098346378}
-  m_parent: {fileID: 632242968}
   m_buttons: []
   m_panels: []
   m_text: []
   m_images: []
+  m_confirmPanel: {fileID: 0}
 --- !u!114 &1222976996
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -40893,11 +40805,11 @@ MonoBehaviour:
   m_boundryDis: 0
   m_cScript: {fileID: 0}
   m_main: {fileID: 0}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels: []
   m_text: []
   m_images: []
+  m_confirmPanel: {fileID: 0}
 --- !u!1 &1247323998 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 1116467622549812, guid: 89fd5be2f2585d34793c71a6ae217b4b,
@@ -40975,6 +40887,29 @@ CanvasRenderer:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1248271448}
+--- !u!1 &1249706239 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1601028759442654, guid: 4716000483cd46b4fa3b4ca23b083688,
+    type: 2}
+  m_PrefabInternal: {fileID: 1951211896}
+--- !u!114 &1249706244
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1249706239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb332c32d90c4de40a256a275c40ab65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_boardScript: {fileID: 0}
+  m_main: {fileID: 1055611439}
+  m_character: {fileID: 0}
+  m_parent: {fileID: 159745944}
+  m_camera: {fileID: 0}
+  m_energyPanel: []
+  m_action: 
 --- !u!1 &1252352028
 GameObject:
   m_ObjectHideFlags: 0
@@ -42293,9 +42228,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -44751,9 +44684,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -44849,18 +44780,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1379447994}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1379447994
@@ -45467,9 +45387,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -45565,18 +45483,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1397566015}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1397566015
@@ -46494,9 +46401,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -46592,18 +46497,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1420727548}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1420727548
@@ -46964,11 +46858,11 @@ MonoBehaviour:
   m_boundryDis: 0
   m_cScript: {fileID: 0}
   m_main: {fileID: 0}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels: []
   m_text: []
   m_images: []
+  m_confirmPanel: {fileID: 0}
 --- !u!1001 &1438627726
 Prefab:
   m_ObjectHideFlags: 0
@@ -47585,9 +47479,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -48224,9 +48116,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -48322,18 +48212,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1496846252}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1496846252
@@ -48646,9 +48525,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -48744,18 +48621,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1514310912}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1514310912
@@ -50260,9 +50126,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -51660,9 +51524,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -51758,18 +51620,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1615503741}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1615503741
@@ -51812,6 +51663,12 @@ GameObject:
   m_PrefabParentObject: {fileID: 1479818915058400, guid: df1673fdf6742894b960ac5037278fcf,
     type: 2}
   m_PrefabInternal: {fileID: 839837458}
+--- !u!114 &1619410403 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114638944620014056, guid: df1673fdf6742894b960ac5037278fcf,
+    type: 2}
+  m_PrefabInternal: {fileID: 839837458}
+  m_Script: {fileID: 11500000, guid: 38c19b1279105cc419a0a7fbe5a5113f, type: 3}
 --- !u!1 &1621610266
 GameObject:
   m_ObjectHideFlags: 0
@@ -52021,9 +51878,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -52119,18 +51974,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1624420196}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1624420196
@@ -53286,9 +53130,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -53759,9 +53601,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -54018,9 +53858,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -54759,9 +54597,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -54857,18 +54693,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1729607004}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1729607004
@@ -55063,8 +54888,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: LoadCharacter
+      - m_Target: {fileID: 1055611439}
+        m_MethodName: PopulatePanel
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -55909,9 +55734,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -56007,18 +55830,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1761221671}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1761221671
@@ -56444,9 +56256,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -56772,9 +56582,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -57001,6 +56809,11 @@ CanvasRenderer:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1788175507}
+--- !u!1 &1789116521 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1620529811145698, guid: df1673fdf6742894b960ac5037278fcf,
+    type: 2}
+  m_PrefabInternal: {fileID: 839837458}
 --- !u!1 &1797056233
 GameObject:
   m_ObjectHideFlags: 0
@@ -57135,9 +56948,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -57416,9 +57227,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -57514,18 +57323,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1815187725}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1815187725
@@ -58208,9 +58006,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -58412,9 +58208,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -58510,18 +58304,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1836554019}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1836554019
@@ -59308,9 +59091,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -59993,9 +59774,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -60426,9 +60205,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -62011,9 +61788,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -62346,9 +62121,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -62904,9 +62677,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -63058,6 +62829,11 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 719920516}
     m_Modifications:
+    - target: {fileID: 114820070968894218, guid: 4716000483cd46b4fa3b4ca23b083688,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 224786901943811374, guid: 4716000483cd46b4fa3b4ca23b083688,
         type: 2}
       propertyPath: m_LocalPosition.x
@@ -63153,6 +62929,36 @@ Prefab:
       propertyPath: m_main
       value: 
       objectReference: {fileID: 2098346378}
+    - target: {fileID: 114820070968894218, guid: 4716000483cd46b4fa3b4ca23b083688,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114820070968894218, guid: 4716000483cd46b4fa3b4ca23b083688,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 114820070968894218, guid: 4716000483cd46b4fa3b4ca23b083688,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1249706244}
+    - target: {fileID: 114820070968894218, guid: 4716000483cd46b4fa3b4ca23b083688,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ConfirmationButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 114820070968894218, guid: 4716000483cd46b4fa3b4ca23b083688,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 114166443152984292, guid: 4716000483cd46b4fa3b4ca23b083688,
+        type: 2}
+      propertyPath: m_parent
+      value: 
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 4716000483cd46b4fa3b4ca23b083688, type: 2}
   m_IsPrefabParent: 0
@@ -63373,9 +63179,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -63471,18 +63275,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1955910200}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1955910200
@@ -63577,9 +63370,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -63675,18 +63466,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1957492183}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1957492183
@@ -64530,11 +64310,22 @@ MonoBehaviour:
     m_HighlightedTrigger: Highlighted
     m_PressedTrigger: Pressed
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 1979399268}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2098346379}
+        m_MethodName: RandomTeam
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1979399268
@@ -64627,9 +64418,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -64913,9 +64702,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -65011,18 +64798,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1989166951}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1989166951
@@ -65264,9 +65040,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -65540,9 +65314,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -65638,18 +65410,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1993220225}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1993220225
@@ -65817,9 +65578,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -66099,9 +65858,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -66197,18 +65954,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1997213656}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1997213656
@@ -66447,9 +66193,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -66545,18 +66289,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2018842619}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &2018842619
@@ -67439,9 +67172,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -67717,9 +67448,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -68018,6 +67747,12 @@ RectTransform:
   m_PrefabParentObject: {fileID: 224602994527757386, guid: 5947d95051c41554ca20de173ea849b6,
     type: 2}
   m_PrefabInternal: {fileID: 1192429006}
+--- !u!114 &2086643348 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114110583888902618, guid: 5947d95051c41554ca20de173ea849b6,
+    type: 2}
+  m_PrefabInternal: {fileID: 1192429006}
+  m_Script: {fileID: 11500000, guid: 38c19b1279105cc419a0a7fbe5a5113f, type: 3}
 --- !u!1 &2087040901 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 1454386680076926, guid: 89fd5be2f2585d34793c71a6ae217b4b,
@@ -68162,6 +67897,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_actions: []
   m_presets: []
+  m_stat: []
 --- !u!1 &2101217541
 GameObject:
   m_ObjectHideFlags: 0
@@ -69099,9 +68835,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 2086643346}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -69197,18 +68931,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2129450504}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2098346379}
-        m_MethodName: SaveLoadButtonPress
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &2129450504

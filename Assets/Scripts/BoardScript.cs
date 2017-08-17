@@ -189,13 +189,15 @@ public class BoardScript : MonoBehaviour {
         for (int i = 0; i < 4; i++)
             for (int j = 0; j < 6; j++)
             {
-                string key = i.ToString() + ',' + j.ToString() + ",name";
-                string name = PlayerPrefs.GetString(key);
+                string key = i.ToString() + ',' + j.ToString();
+                string name = PlayerPrefs.GetString(key + ",name");
                 if (name.Length > 0)
                 {
                     // Set up character
                     GameObject newChar = Instantiate(m_character);
                     CharacterScript cScript = newChar.GetComponent<CharacterScript>();
+
+                    cScript = PlayerPrefScript.LoadChar(key, cScript);
 
                     if (i == 0)
                         cScript.m_teamColor = new Color(1, .5f, 0, 1);
@@ -208,18 +210,8 @@ public class BoardScript : MonoBehaviour {
                     
                     newChar.GetComponent<Renderer>().material.color = cScript.m_teamColor;
 
-                    cScript.name = name;
-                    key = i.ToString() + ',' + j.ToString() + ",color";
-                    string color = PlayerPrefs.GetString(key);
-                    cScript.m_color = color;
                     cScript.SetPopupSpheres("");
-                    
-                    key = i.ToString() + ',' + j.ToString() + ",actions";
-                    string[] acts = PlayerPrefs.GetString(key).Split(';');
-
-                    cScript.m_actions = acts;
                     m_characters.Add(newChar);
-
 
                     // Link to player
                     cScript.m_player = m_players[i];
@@ -268,13 +260,7 @@ public class BoardScript : MonoBehaviour {
 
     public void Hover()
     {
-        PanelScript mainPanScript = m_panels[(int)pnls.MAIN_PANEL].GetComponent<PanelScript>();
-        PanelScript actPanScript = m_panels[(int)pnls.ACTION_PANEL].GetComponent<PanelScript>();
-        PanelScript statPanScript = m_panels[(int)pnls.STATUS_PANEL].GetComponent<PanelScript>();
-        PanelScript auxPanScript = m_panels[(int)pnls.AUXILIARY_PANEL].GetComponent<PanelScript>();
-        PanelScript statSelScript = m_panels[(int)pnls.STATUS_SELECTOR].GetComponent<PanelScript>();
-
-        if (!m_currPlayer || actPanScript.m_inView || mainPanScript.m_inView || statPanScript.m_inView || auxPanScript.m_inView || statSelScript.m_inView)
+        if (!m_currPlayer || PanelScript.CheckIfPanelOpen())
         {
             if (m_oldTile)
             {
@@ -338,7 +324,6 @@ public class BoardScript : MonoBehaviour {
             PanelScript actPreviewScript = m_panels[(int)pnls.ACTION_PREVIEW].GetComponent<PanelScript>();
             actPreviewScript.m_cScript = charScript;
             actPreviewScript.PopulatePanel();
-            actPreviewScript.m_inView = true;
         }
 
         if (m_highlightedTile && hit.collider.gameObject != m_highlightedTile)
@@ -418,8 +403,7 @@ public class BoardScript : MonoBehaviour {
             // Reveal right HUD with highlighted character's data
             PanelScript hudPanScript = m_panels[(int)pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
             hudPanScript.m_cScript = charScript;
-            hudPanScript.PopulateHUD();
-            hudPanScript.m_inView = true;
+            hudPanScript.PopulatePanel();
 
             Image[] hudEnergy = GameObject.Find("HUD RIGHT Energy").GetComponentsInChildren<Image>();
             int[] charEnergy = charScript.m_player.GetComponent<PlayerScript>().m_energy;
@@ -489,7 +473,7 @@ public class BoardScript : MonoBehaviour {
 
         PanelScript HUDLeftScript = m_panels[(int)pnls.HUD_LEFT_PANEL].GetComponent<PanelScript>();
         HUDLeftScript.m_cScript = m_currPlayer.GetComponent<CharacterScript>();
-        HUDLeftScript.PopulateHUD();
+        HUDLeftScript.PopulatePanel();
 
         PlayerScript playScript = charScript.m_player.GetComponent<PlayerScript>();
         if (playScript)

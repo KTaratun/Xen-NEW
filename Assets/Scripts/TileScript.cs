@@ -33,14 +33,7 @@ public class TileScript : MonoBehaviour {
 
     public void OnMouseDown()
     {
-        // REFACTOR: Disallow the clicking of tiles if any menu is up
-        // If a menu is up, don't let the board be selected
-        PanelScript mainPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
-        PanelScript ActionPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
-        PanelScript StsPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.STATUS_PANEL].GetComponent<PanelScript>();
-        PanelScript AuxPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.AUXILIARY_PANEL].GetComponent<PanelScript>();
-        if (mainPanScript.m_inView == true || ActionPanScript.m_inView == true || StsPanScript.m_inView == true || AuxPanScript.m_inView == true
-            || m_boardScript.m_camIsFrozen)
+        if (PanelScript.CheckIfPanelOpen() || m_boardScript.m_camIsFrozen)
             return;
 
         CharacterScript currPlayerScript = m_boardScript.m_currPlayer.GetComponent<CharacterScript>();
@@ -105,21 +98,17 @@ public class TileScript : MonoBehaviour {
             Renderer holdingR = m_holding.GetComponent<Renderer>();
             if (holdingR.material.color == Color.green)
             {
-                mainPanScript.m_inView = true;
-
                 // Assign character to panels
-                CharacterScript cScript = m_holding.GetComponent<CharacterScript>();
-                mainPanScript.m_cScript = cScript;
-                mainPanScript.SetButtons();
+                PanelScript mainPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
+                mainPanScript.m_cScript = m_holding.GetComponent<CharacterScript>();
+                mainPanScript.PopulatePanel();
             }
             else
             {
-                AuxPanScript.m_inView = true;
-
                 // Assign character to panels
-                CharacterScript cScript = m_holding.GetComponent<CharacterScript>();
-                AuxPanScript.m_cScript = cScript;
-                AuxPanScript.SetButtons();
+                PanelScript stsPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.STATUS_PANEL].GetComponent<PanelScript>();
+                stsPanScript.m_cScript = m_holding.GetComponent<CharacterScript>();
+                stsPanScript.PopulatePanel();
             }
         }
     }
