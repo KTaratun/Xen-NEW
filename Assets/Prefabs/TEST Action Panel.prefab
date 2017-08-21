@@ -1855,7 +1855,7 @@ GameObject:
   - component: {fileID: 114409289017740200}
   - component: {fileID: 114394056313263468}
   m_Layer: 5
-  m_Name: Action Panel
+  m_Name: TEST Action Panel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3404,9 +3404,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -3565,9 +3563,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -4751,9 +4747,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -5245,9 +5239,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -5265,9 +5257,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -5386,9 +5376,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -5485,9 +5473,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -5822,9 +5808,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -5842,9 +5826,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -5983,10 +5965,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_inView: 0
   m_direction: 0
+  m_slideSpeed: 0
   m_boundryDis: 0
   m_cScript: {fileID: 0}
   m_main: {fileID: 0}
-  m_parent: {fileID: 0}
   m_buttons: []
   m_panels: []
   m_text: []
@@ -6662,9 +6644,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -6790,9 +6770,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -7012,9 +6990,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -7555,9 +7531,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -7760,9 +7734,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -8443,9 +8415,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}
@@ -10057,9 +10027,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
-  m_actionViewer: {fileID: 0}
   m_main: {fileID: 0}
-  m_actionPanel: {fileID: 0}
   m_character: {fileID: 0}
   m_parent: {fileID: 0}
   m_camera: {fileID: 0}

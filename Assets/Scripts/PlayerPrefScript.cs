@@ -20,6 +20,7 @@ public class PlayerPrefScript : MonoBehaviour {
         PlayerPrefs.SetString(_key + ",name", _charScript.m_name);
         PlayerPrefs.SetString(_key + ",color", _charScript.m_color);
         PlayerPrefs.SetString(_key + ",actions", string.Join(";", _charScript.m_actions));
+        PlayerPrefs.SetString(_key + ",exp", _charScript.m_exp.ToString());
         PlayerPrefs.SetString(_key + ",level", _charScript.m_level.ToString());
 
         // Write out stats
@@ -38,7 +39,8 @@ public class PlayerPrefScript : MonoBehaviour {
         _charScript.m_name = PlayerPrefs.GetString(_key + ",name");
         _charScript.m_color = PlayerPrefs.GetString(_key + ",color");
         _charScript.m_actions = PlayerPrefs.GetString(_key + ",actions").Split(';');
-        _charScript.m_level = float.Parse(PlayerPrefs.GetString(_key + ",level"));
+        _charScript.m_exp = int.Parse(PlayerPrefs.GetString(_key + ",exp"));
+        _charScript.m_level = int.Parse(PlayerPrefs.GetString(_key + ",level"));
 
         // Load in stats
         string[] stats = PlayerPrefs.GetString(_key + ",stats").Split(',');

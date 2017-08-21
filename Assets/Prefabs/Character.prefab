@@ -3622,6 +3622,7 @@ MonoBehaviour:
   m_color: 
   m_effects: 
   m_level: 0
+  m_exp: 0
   m_currRadius: 0
   m_isAlive: 0
   m_isAI: 0
@@ -4022,7 +4023,7 @@ CapsuleCollider:
   m_Radius: 0.15
   m_Height: 0.6
   m_Direction: 1
-  m_Center: {x: 0, y: -0, z: 0}
+  m_Center: {x: 0, y: 0.25, z: 0}
 --- !u!137 &137545963766810248
 SkinnedMeshRenderer:
   m_ObjectHideFlags: 1

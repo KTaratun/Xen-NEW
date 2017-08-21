@@ -105,9 +105,9 @@ public class BoardScript : MonoBehaviour {
 
     public void OnRightClick()
     {
-        if (PanelScript.GetConfirmationPanel().m_inView)
+        if (PanelScript.m_confirmPanel.m_inView)
         {
-            PanelScript.PopFromHistory();
+            PanelScript.RemoveFromHistory("");
             return;
         }
 
@@ -267,7 +267,9 @@ public class BoardScript : MonoBehaviour {
 
     public void Hover()
     {
-        if (!m_currPlayer || PanelScript.CheckIfPanelOpen())
+        if (PanelScript.m_confirmPanel.m_inView)
+            return;
+        else if (!m_currPlayer || PanelScript.CheckIfPanelOpen())
         {
             if (m_oldTile)
             {

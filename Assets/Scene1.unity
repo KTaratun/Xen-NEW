@@ -15222,6 +15222,10 @@ Prefab:
       propertyPath: m_main
       value: 
       objectReference: {fileID: 1294336235}
+    - target: {fileID: 1514142352107782, guid: fff6f172c2db4194cb58b9311e2e1f28, type: 2}
+      propertyPath: m_Name
+      value: Action Panel
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: fff6f172c2db4194cb58b9311e2e1f28, type: 2}
   m_IsPrefabParent: 0
@@ -20702,8 +20706,8 @@ MonoBehaviour:
   m_tile: {fileID: 1782535043158714, guid: 5c85ab1a0780ebb429c0c6953bad95d9, type: 2}
   m_character: {fileID: 1933196064922436, guid: ff37a7e1795bd7a4298e2edcadf77a50,
     type: 2}
-  m_width: 5
-  m_height: 5
+  m_width: 0
+  m_height: 0
   m_selected: {fileID: 0}
   m_oldTile: {fileID: 0}
   m_currTile: {fileID: 0}
@@ -20905,6 +20909,11 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 693983839}
     m_Modifications:
+    - target: {fileID: 114462566879706492, guid: 4716000483cd46b4fa3b4ca23b083688,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 224786901943811374, guid: 4716000483cd46b4fa3b4ca23b083688,
         type: 2}
       propertyPath: m_LocalPosition.x
@@ -21009,6 +21018,31 @@ Prefab:
         type: 2}
       propertyPath: m_slideSpeed
       value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 114462566879706492, guid: 4716000483cd46b4fa3b4ca23b083688,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114462566879706492, guid: 4716000483cd46b4fa3b4ca23b083688,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 114462566879706492, guid: 4716000483cd46b4fa3b4ca23b083688,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1512219750}
+    - target: {fileID: 114462566879706492, guid: 4716000483cd46b4fa3b4ca23b083688,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OnRightClick
+      objectReference: {fileID: 0}
+    - target: {fileID: 114462566879706492, guid: 4716000483cd46b4fa3b4ca23b083688,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 4716000483cd46b4fa3b4ca23b083688, type: 2}

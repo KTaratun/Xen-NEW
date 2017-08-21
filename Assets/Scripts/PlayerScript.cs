@@ -39,22 +39,22 @@ public class PlayerScript : MonoBehaviour {
         return true;
     }
 
-    public bool CheckEnergy(string eng)
+    public bool CheckEnergy(string _eng)
     {
-        if (CheckIfGains(eng))
+        if (CheckIfGains(_eng))
             return true;
 
         int[] engCheck =  new int[4];
 
-        for (int i = 0; i < eng.Length; i++)
+        for (int i = 0; i < _eng.Length; i++)
         {
-            if (eng[i] == 'G')
+            if (_eng[i] == 'G')
                 engCheck[0]++;
-            else if (eng[i] == 'R')
+            else if (_eng[i] == 'R')
                 engCheck[1]++;
-            else if (eng[i] == 'W')
+            else if (_eng[i] == 'W')
                 engCheck[2]++;
-            else if (eng[i] == 'B')
+            else if (_eng[i] == 'B')
                 engCheck[3]++;
         }
 
@@ -63,6 +63,45 @@ public class PlayerScript : MonoBehaviour {
                 return false;
 
         return true;
+    }
+
+    static public string CheckCharColors(string[] _actions)
+    {
+        string colors = "";
+
+        for (int i = 0; i < _actions.Length; i++)
+        {
+            string actEng = DatabaseScript.GetActionData(_actions[i], DatabaseScript.actions.ENERGY);
+            if (CheckIfGains(actEng))
+                continue;
+
+            for (int j = 0; j < actEng.Length; j++)
+            {
+                bool newColor = false;  
+                for (int k = 0; k < colors.Length; k++)
+                {
+                    if (actEng[j] == colors[k])
+                        break;
+
+                    if (k == colors.Length - 1)
+                        newColor = true;
+                }
+
+                if (newColor || colors.Length == 0)
+                {
+                    if (actEng[j] == 'g' || actEng[j] == 'G')
+                        colors += 'G';
+                    else if (actEng[j] == 'r' || actEng[j] == 'R')
+                        colors += 'R';
+                    else if (actEng[j] == 'w' || actEng[j] == 'W')
+                        colors += 'W';
+                    else if (actEng[j] == 'b' || actEng[j] == 'B')
+                        colors += 'B';
+                }
+            }
+        }
+
+        return colors;
     }
 
     public void RemoveRandomEnergy()

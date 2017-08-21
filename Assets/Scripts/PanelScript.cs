@@ -12,8 +12,8 @@ public class PanelScript : MonoBehaviour {
     static public Color b_isFree = new Color(.5f, 1, .5f, 1);
     static public Color b_isDisallowed = new Color(1, .5f, .5f, 1);
 
-    static List<PanelScript> m_history;
-    static List<PanelScript> m_allPanels;
+    static public List<PanelScript> m_history;
+    static public List<PanelScript> m_allPanels;
     public bool m_inView;
     public dir m_direction;
     public float m_slideSpeed;
@@ -24,11 +24,14 @@ public class PanelScript : MonoBehaviour {
     public GameObject[] m_panels;
     public Text[] m_text;
     public Image[] m_images;
+    static public bool m_locked;
     static public PanelScript m_confirmPanel;
 
     // Use this for initialization
     void Start ()
     {
+        m_locked = false;
+
         if (m_slideSpeed == 0)
             m_slideSpeed = 30.0f;
         if (GameObject.Find("Confirmation Panel"))
@@ -38,9 +41,7 @@ public class PanelScript : MonoBehaviour {
             m_history = new List<PanelScript>();
 
         if (m_allPanels == null)
-            m_allPanels = new List<PanelScript>();
-
-        m_allPanels.Add(this);
+            MenuPanelInit("Canvas");
 
         m_buttons = GetComponentsInChildren<Button>();
 
@@ -51,7 +52,7 @@ public class PanelScript : MonoBehaviour {
             else if (m_direction == dir.RIGHT)
                 m_boundryDis = 480;
             else if (m_direction == dir.LEFT)
-                m_boundryDis = -571;
+                m_boundryDis = -480;
             else if (m_direction == dir.DOWN)
                 m_boundryDis = -180;
         }
@@ -68,25 +69,42 @@ public class PanelScript : MonoBehaviour {
 	void Update ()
     {
         RectTransform recTrans = GetComponent<RectTransform>();
-
         if (Input.GetMouseButtonDown(1) && m_inView && m_direction == dir.UP && recTrans.offsetMax.y < 200 &&
-            gameObject.tag != "Selector" && gameObject.name != "Confirmation Panel")
-        {
-            if (m_cScript && m_cScript.m_boardScript)
-                m_cScript.m_boardScript.m_selected = null;
-
-            if (m_history.Count > 0 && recTrans.offsetMax.y < 200)
-            {
-                PopFromHistory();
-                if (m_history.Count > 0)
-                    m_history[m_history.Count - 1].m_inView = true;
-            }
-        }
+            gameObject.tag != "Selector" && gameObject.name != "Confirmation Panel" && !m_locked ||
+            Input.GetMouseButtonDown(1) && m_history.Count > 0 && GetRecentHistory().name == "Confirmation Panel" && m_locked)
+            OnRightClick();
 
         Slide();
 
         if (name == "Turn Panel")
             TurnSlide();
+    }
+
+    public void OnRightClick()
+    {     
+        if (m_cScript && m_cScript.m_boardScript)
+            m_cScript.m_boardScript.m_selected = null;
+
+        if (m_history.Count > 0)
+        {
+            RemoveFromHistory("");
+            if (m_history.Count > 0)
+                m_history[m_history.Count - 1].m_inView = true;
+        }
+    }
+
+    public void MenuPanelInit(string _canvasName)
+    {
+        string canvasName = _canvasName;
+        Canvas can = GameObject.Find(canvasName).GetComponent<Canvas>();
+        PanelScript[] pans = can.GetComponentsInChildren<PanelScript>();
+        m_allPanels = new List<PanelScript>();
+
+        for (int i = 0; i < pans.Length; i++)
+        {
+            if (pans[i].transform.parent.name == _canvasName)
+                m_allPanels.Add(pans[i]);
+        }
     }
 
     public void SetButtons()
@@ -182,21 +200,28 @@ public class PanelScript : MonoBehaviour {
             // REFACTOR: Move all these functions to populate Panel except random character
             TeamMenuScript menuScript = m_main.GetComponent<TeamMenuScript>();
             m_buttons[0].onClick.AddListener(() => menuScript.NewCharacter());
-            m_buttons[1].onClick.AddListener(() => menuScript.m_panels[(int)TeamMenuScript.menuPans.SAVE_LOAD_PANEL].PopulatePanel());
-            m_buttons[2].onClick.AddListener(() => menuScript.m_panels[(int)TeamMenuScript.menuPans.PRESELECT_PANEL].PopulatePanel());
+            m_buttons[1].onClick.AddListener(() => m_allPanels[(int)TeamMenuScript.menuPans.SAVE_LOAD_PANEL].PopulatePanel());
+            m_buttons[2].onClick.AddListener(() => m_allPanels[(int)TeamMenuScript.menuPans.PRESELECT_PANEL].PopulatePanel());
             m_buttons[3].onClick.AddListener(() => menuScript.RandomCharacter());
         }
         else if (name == "CharacterViewer Panel")
         {
             // If another panel is open, don't open character viewer for already loaded character
-            Button currB = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+
+            Button currB = null;
+            TeamMenuScript tMenu = m_main.GetComponent<TeamMenuScript>();
+
+            if (EventSystem.current.currentSelectedGameObject)
+                currB = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+            else
+                currB = tMenu.m_currButton;
+
             int res = 0;
 
             //if (CheckIfPanelOpen())
             //    return;
 
-            TeamMenuScript tMenu = m_main.GetComponent<TeamMenuScript>();
-            m_cScript = tMenu.m_currCharacter.GetComponent<CharacterScript>();
+            m_cScript = tMenu.m_currCharScript;
             PanelScript actionScript = m_panels[0].GetComponent<PanelScript>();
             PanelScript statPan = m_panels[1].GetComponent<PanelScript>();
 
@@ -212,7 +237,7 @@ public class PanelScript : MonoBehaviour {
                 string[] presetName = presetDataSeparated[(int)DatabaseScript.presets.NAME].Split(':');
                 string[] presetColor = presetDataSeparated[(int)DatabaseScript.presets.COLORS].Split(':');
 
-                tMenu.FillOutCharacterData(presetName[1], presetColor[1], dbScript.GetActions(dbScript.m_presets[int.Parse(currB.name)]), 0);
+                tMenu.FillOutCharacterData(presetName[1], presetColor[1], dbScript.GetActions(dbScript.m_presets[int.Parse(currB.name)]), 0, 1);
 
                 // Fill out name
                 m_text[1].text = m_cScript.m_name;
@@ -236,9 +261,11 @@ public class PanelScript : MonoBehaviour {
             }
             else
             {
-                tMenu.m_currButton = currB;
+                if (!m_inView)
+                    tMenu.m_currButton = currB;
 
                 m_cScript = PlayerPrefScript.LoadChar(currB.name, m_cScript);
+                tMenu.m_currCharScript = PlayerPrefScript.LoadChar(currB.name, tMenu.m_currCharScript);
 
                 // Fill out name
                 m_text[1].text = m_cScript.m_name;
@@ -251,9 +278,16 @@ public class PanelScript : MonoBehaviour {
                 m_panels[1].GetComponent<PanelScript>().m_cScript = m_cScript;
                 m_panels[1].GetComponent<PanelScript>().PopulatePanel();
 
+                m_cScript.m_exp = 10;
+
                 // Determine if select or remove will be visible
                 for (int i = 0; i < m_buttons.Length; i++)
                 {
+                    if (m_buttons[i].name == "Level up" && m_cScript.m_exp >= 10 && !m_allPanels[(int)TeamMenuScript.menuPans.NEW_ACTION_PANEL].m_inView && !m_allPanels[(int)TeamMenuScript.menuPans.NEW_ACTION_PANEL].m_inView)
+                        m_buttons[i].interactable = true;
+                    else if (m_buttons[i].name == "Level up" && m_cScript.m_exp < 10)
+                        m_buttons[i].interactable = false;
+
                     if (m_buttons[i].name == "Select Button" && m_buttons[i].gameObject.transform.position.x < 1000)
                         m_buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(m_buttons[i].gameObject.transform.position.x + 1000, m_buttons[i].gameObject.transform.position.y, m_buttons[i].gameObject.transform.position.z), m_buttons[i].gameObject.transform.rotation);
                     if (m_buttons[i].name == "Remove Button" && m_buttons[i].gameObject.transform.position.x > 1000)
@@ -304,11 +338,30 @@ public class PanelScript : MonoBehaviour {
             actPanScript.m_cScript = m_cScript;
             m_buttons[(int)butts.ACT_BUTT].onClick.AddListener(() => actPanScript.PopulatePanel());
 
-            m_buttons[(int)butts.PASS_BUTT].onClick.AddListener(() => m_cScript.Pass());
+            Button[] buttons = m_confirmPanel.m_buttons;
+            m_buttons[(int)butts.PASS_BUTT].onClick.AddListener(() => buttons[1].GetComponent<ButtonScript>().ConfirmationButton("Pass"));
 
             PanelScript stsPanScript = mainPanScript.m_panels[(int)BoardScript.pnls.STATUS_PANEL].GetComponent<PanelScript>();
             stsPanScript.m_cScript = m_cScript;
             m_buttons[(int)butts.STATUS_BUTT].onClick.AddListener(() => stsPanScript.PopulatePanel());
+        }
+        else if (name == "New Action Panel")
+        {
+            m_locked = true;
+            for (int i = 0; i < m_buttons.Length - 1; i++) // -1 just so we get only the action buttons
+            {
+                m_buttons[i].name = m_main.GetComponent<TeamMenuScript>().NewRandomAction(m_buttons);
+                m_buttons[i].GetComponentInChildren<Text>().text = DatabaseScript.GetActionData(m_buttons[i].name, DatabaseScript.actions.NAME);
+                m_buttons[i].GetComponent<ButtonScript>().SetTotalEnergy(DatabaseScript.GetActionData(m_buttons[i].name, DatabaseScript.actions.ENERGY));
+
+                m_buttons[i].onClick.RemoveAllListeners();
+                m_buttons[i].onClick.AddListener(() => m_main.GetComponent<TeamMenuScript>().NewActionSelection());
+            }
+        }
+        else if (name == "New Status Panel")
+        {
+            m_locked = true;
+            m_main.GetComponent<TeamMenuScript>().NewRandomStat(m_buttons);
         }
         else if (name == "PresetSelect Panel")
         {
@@ -357,7 +410,7 @@ public class PanelScript : MonoBehaviour {
                         if (EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name == "Save Button")
                         {
                             Button[] childButtons = m_confirmPanel.GetComponentsInChildren<Button>();
-                            button[i * 4 + j].onClick.AddListener(() => childButtons[1].GetComponent<ButtonScript>().ConfirmationButton());
+                            button[i * 4 + j].onClick.AddListener(() => childButtons[1].GetComponent<ButtonScript>().ConfirmationButton("Save"));
                         }
                         else if (EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name == "Load")
                             button[i * 4 + j].onClick.AddListener(() => m_main.GetComponent<TeamMenuScript>().Load());
@@ -370,19 +423,13 @@ public class PanelScript : MonoBehaviour {
             m_text[(int)CharacterScript.sts.HP].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
             m_text[(int)CharacterScript.sts.SPD].text = "SPD: " + m_cScript.m_tempStats[(int)CharacterScript.sts.SPD];
 
-            m_text[(int)CharacterScript.sts.HIT].text = "HIT: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HIT];
-            if (m_cScript.m_stats[(int)CharacterScript.sts.HIT] != 0)
-                m_text[(int)CharacterScript.sts.HIT].text += "%";
+            m_text[(int)CharacterScript.sts.HIT].text = "HIT: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HIT] + "%";
             //CheckIfModded((int)CharacterScript.sts.HIT, m_cScript.m_stats[(int)CharacterScript.sts.HIT], m_cScript.m_tempStats[(int)CharacterScript.sts.HIT]);
 
-            m_text[(int)CharacterScript.sts.EVA].text = "EVA: " + m_cScript.m_tempStats[(int)CharacterScript.sts.EVA];
-            if (m_cScript.m_stats[(int)CharacterScript.sts.EVA] != 0)
-                m_text[(int)CharacterScript.sts.EVA].text += "%";
+            m_text[(int)CharacterScript.sts.EVA].text = "EVA: " + m_cScript.m_tempStats[(int)CharacterScript.sts.EVA] + "%";
             //CheckIfModded((int)CharacterScript.sts.EVA, m_cScript.m_stats[(int)CharacterScript.sts.EVA], m_cScript.m_tempStats[(int)CharacterScript.sts.EVA]);
 
-            m_text[(int)CharacterScript.sts.CRT].text = "CRT: " + m_cScript.m_tempStats[(int)CharacterScript.sts.CRT];
-            if (m_cScript.m_stats[(int)CharacterScript.sts.CRT] != 0)
-                m_text[(int)CharacterScript.sts.CRT].text += "%";
+            m_text[(int)CharacterScript.sts.CRT].text = "CRT: " + m_cScript.m_tempStats[(int)CharacterScript.sts.CRT] + "%";
             //CheckIfModded((int)CharacterScript.sts.CRT, m_cScript.m_stats[(int)CharacterScript.sts.CRT], m_cScript.m_tempStats[(int)CharacterScript.sts.CRT]);
 
             m_text[(int)CharacterScript.sts.DMG].text = "DMG: " + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG];
@@ -420,11 +467,12 @@ public class PanelScript : MonoBehaviour {
 
         }
 
-        if (m_direction == dir.UP)
+        if (m_direction == dir.UP && !m_inView)
         {
             if (m_history.Count > 0 && name != "Confirmation Panel")
                 m_history[m_history.Count - 1].GetComponent<PanelScript>().m_inView = false;
-            m_history.Add(this);
+
+                m_history.Add(this);
         }
 
         if (m_direction != dir.NULL)
@@ -432,8 +480,11 @@ public class PanelScript : MonoBehaviour {
 
         if (name == "Confirmation Panel")
         {
-            transform.SetPositionAndRotation(new Vector3(Input.mousePosition.x, transform.position.y, transform.position.z), transform.rotation);
-            m_boundryDis = (int)Input.mousePosition.y - 350;
+            transform.SetPositionAndRotation(new Vector3(Input.mousePosition.x, 1000, transform.position.z), transform.rotation);
+            if ((int)Input.mousePosition.y > 600)
+                m_boundryDis = (int)Input.mousePosition.y - 320;
+            else
+                m_boundryDis = (int)Input.mousePosition.y - 250;
         }
     }
 
@@ -567,12 +618,12 @@ public class PanelScript : MonoBehaviour {
         {
             if (m_inView)
             {
-                if (recTrans.offsetMax.x > m_boundryDis)
-                    transform.SetPositionAndRotation(new Vector3(transform.position.x - m_slideSpeed, transform.position.y, transform.position.z), transform.rotation);
+                if (recTrans.offsetMax.x < m_boundryDis)
+                    transform.SetPositionAndRotation(new Vector3(transform.position.x + m_slideSpeed, transform.position.y, transform.position.z), transform.rotation);
             }
             else
-                if (recTrans.offsetMax.x < -877)
-                    transform.SetPositionAndRotation(new Vector3(transform.position.x + m_slideSpeed, transform.position.y, transform.position.z), transform.rotation);
+                if (recTrans.offsetMax.x > -877)
+                    transform.SetPositionAndRotation(new Vector3(transform.position.x - m_slideSpeed, transform.position.y, transform.position.z), transform.rotation);
         }
         else if (m_direction == dir.DOWN)
         {
@@ -700,19 +751,30 @@ public class PanelScript : MonoBehaviour {
         return false;
     }
 
-    static public PanelScript GetConfirmationPanel()
-    {
-        return m_confirmPanel;
-    }
-
     static public PanelScript GetRecentHistory()
     {
-        return m_history[m_history.Count - 1];
+        if (m_history.Count > 0)
+            return m_history[m_history.Count - 1];
+
+        return null;
     }
 
-    static public void PopFromHistory()
+    static public void RemoveFromHistory(string _name)
     {
-        m_history[m_history.Count - 1].m_inView = false;
-        m_history.RemoveAt(m_history.Count - 1);
+        if (_name == "")
+        {
+            m_history[m_history.Count - 1].m_inView = false;
+            m_history.RemoveAt(m_history.Count - 1);
+            return;
+        }
+
+        for (int i = 0; i < m_history.Count; i++)
+        {
+            if (m_history[i].name == _name)
+            {
+                m_history[i].m_inView = false;
+                m_history.RemoveAt(i);
+            }           
+        }
     }
 }

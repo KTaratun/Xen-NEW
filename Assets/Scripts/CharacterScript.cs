@@ -34,7 +34,8 @@ public class CharacterScript : ObjectScript {
     public string[] m_accessories;
     public string m_color;
     public bool[] m_effects;
-    public float m_level;
+    public int m_level;
+    public int m_exp;
     public int m_currRadius;
     public bool m_isAlive;
     public bool m_isAI;
@@ -81,6 +82,8 @@ public class CharacterScript : ObjectScript {
         m_stats[(int)sts.HP] = 12;
         m_stats[(int)sts.SPD] = 10;
         m_stats[(int)sts.MOV] = 5;
+
+        m_level = 1;
 
         for (int i = 0; i < m_stats.Length; i++)
             m_tempStats[i] = m_stats[i];
@@ -344,14 +347,13 @@ public class CharacterScript : ObjectScript {
             }
             else if (!m_isFree)
                 mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].GetComponent<Image>().color = Color.yellow;
-                
         }
 
         if (PlayerScript.CheckIfGains(actEng) && !miss || !PlayerScript.CheckIfGains(actEng) && !m_isFree)
             EnergyConversion(actEng);
 
         if (!miss)
-            m_level += (float)actEng.Length / 10;
+            m_exp += actEng.Length;
 
         m_isFree = false;
         m_currRadius = 0;
@@ -762,12 +764,12 @@ public class CharacterScript : ObjectScript {
 
             int extraDMG = Mathf.CeilToInt(_force / 2.0f);
             TextMesh textMesh = _targetScript.m_popupText.GetComponent<TextMesh>();
-            _targetScript.ReceiveDamage(((int.Parse(textMesh.text) + Mathf.CeilToInt(_force / 2.0f)).ToString()), Color.white);
+            _targetScript.ReceiveDamage(((int.Parse(textMesh.text) + extraDMG).ToString()), Color.white);
 
             if (nei.m_holding && nei.m_holding.tag == "Player")
             {
                 CharacterScript neiCharScript = nei.m_holding.GetComponent<CharacterScript>();
-                neiCharScript.ReceiveDamage(Mathf.CeilToInt(_force / 2.0f).ToString(), Color.white);
+                neiCharScript.ReceiveDamage(extraDMG.ToString(), Color.white);
             }
             break;
         }

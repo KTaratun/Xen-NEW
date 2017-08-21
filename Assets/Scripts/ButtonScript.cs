@@ -110,6 +110,7 @@ public class ButtonScript : MonoBehaviour {
             m_energyPanel[0].SetActive(true);
             m_energyPanel[1].SetActive(false);
             m_energyPanel[2].SetActive(false);
+           // m_energyPanel[3].SetActive(false);
             panel = m_energyPanel[0];
         }
         else if (energy.Length == 2)
@@ -117,6 +118,7 @@ public class ButtonScript : MonoBehaviour {
             m_energyPanel[1].SetActive(true);
             m_energyPanel[0].SetActive(false);
             m_energyPanel[2].SetActive(false);
+           // m_energyPanel[3].SetActive(false);
             panel = m_energyPanel[1];
         }
         else if (energy.Length == 3)
@@ -124,9 +126,17 @@ public class ButtonScript : MonoBehaviour {
             m_energyPanel[2].SetActive(true);
             m_energyPanel[0].SetActive(false);
             m_energyPanel[1].SetActive(false);
+            //m_energyPanel[3].SetActive(false);
             panel = m_energyPanel[2];
         }
-
+        //else if (energy.Length == 4)
+        //{
+        //    m_energyPanel[3].SetActive(true);
+        //    m_energyPanel[0].SetActive(false);
+        //    m_energyPanel[1].SetActive(false);
+        //    m_energyPanel[2].SetActive(false);
+        //    panel = m_energyPanel[2];
+        //}
         // Gather engergy symbols into an array
         Image[] orbs = panel.GetComponentsInChildren<Image>();
 
@@ -327,10 +337,10 @@ public class ButtonScript : MonoBehaviour {
         PanelScript.CloseHistory();
     }
 
-    public void ConfirmationButton()
+    public void ConfirmationButton(string _confirm)
     {
-        m_main = PanelScript.GetRecentHistory();
-        m_parent.m_inView = true;
+        if (!m_main || PanelScript.GetRecentHistory() && PanelScript.GetRecentHistory().name != "Confirmation Panel")
+            m_main = PanelScript.GetRecentHistory();
         m_parent.PopulatePanel();
         gameObject.GetComponent<Button>().onClick.RemoveAllListeners();
 
@@ -338,20 +348,78 @@ public class ButtonScript : MonoBehaviour {
         if (m_character)
             charScript = m_character.GetComponent<CharacterScript>();
 
-        if (m_main && m_main.name == "Main Panel")
+        if (_confirm == "Action")
+        {
+            gameObject.GetComponent<Button>().onClick.AddListener(() => charScript.Action());
+        }
+        else if (_confirm == "Cancel New Action")
+        {
+            TeamMenuScript tMenuScript = m_main.m_main.GetComponent<TeamMenuScript>();
+            tMenuScript.m_oldButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+            gameObject.GetComponent<Button>().onClick.AddListener(() => tMenuScript.CloseLevelPanel(TeamMenuScript.menuPans.NEW_ACTION_PANEL));
+        }
+        else if (_confirm == "Move")
         {
             TileScript moverTile = charScript.m_tile.GetComponent<TileScript>();
             if (m_boardScript.m_isForcedMove)
+            {
                 charScript = m_boardScript.m_isForcedMove.GetComponent<CharacterScript>();
+                moverTile = charScript.m_tile.GetComponent<TileScript>();
+            }
 
             gameObject.GetComponent<Button>().onClick.AddListener(() => charScript.Movement(moverTile, m_boardScript.m_selected.GetComponent<TileScript>(), false));
         }
-        else if (m_main && m_main.name == "Action Panel")
+        else if (_confirm == "New Action")
         {
-
-            gameObject.GetComponent<Button>().onClick.AddListener(() => charScript.Action());
+            TeamMenuScript tMenuScript = m_main.m_main.GetComponent<TeamMenuScript>();
+            tMenuScript.m_oldButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+            gameObject.GetComponent<Button>().onClick.AddListener(() => tMenuScript.ReplaceAction());
         }
-        else if (m_main && m_main.name == "Save/Load Panel")
+        else if (_confirm == "New Stats")
+        {
+            TeamMenuScript tMenuScript = m_main.m_main.GetComponent<TeamMenuScript>();
+            PanelScript statPanScript = PanelScript.m_allPanels[(int)TeamMenuScript.menuPans.CHAR_VIEW].m_panels[1].GetComponent<PanelScript>();
+            Button newStat = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+            string[] statSeparated = newStat.name.Split('|');
+
+            for (int i = 0; i < 9; i++)
+            {
+                string[] s = statSeparated[i + 1].Split(':');
+                string[] textSeparated = statPanScript.m_text[i].text.Split(':');
+                int newNumber = m_main.m_cScript.m_stats[i] + int.Parse(s[1]);
+                if (i == 0)
+                    statPanScript.m_text[i].text = textSeparated[0] + ": " + newNumber.ToString() + "/" + newNumber.ToString();
+                else if (i == (int)CharacterScript.sts.HIT || i == (int)CharacterScript.sts.EVA || i == (int)CharacterScript.sts.CRT)
+                    statPanScript.m_text[i].text = textSeparated[0] + ": " + newNumber.ToString() + "%";
+                else
+                    statPanScript.m_text[i].text = textSeparated[0] + ": " + newNumber.ToString();
+
+                if (int.Parse(s[1]) > 0)
+                    statPanScript.m_text[i].color = new Color(0, .7f, .7f, 1);
+                else if (int.Parse(s[1]) < 0)
+                    statPanScript.m_text[i].color = new Color(.9f, .4f, 0, 1);
+                else
+                    statPanScript.m_text[i].color = Color.black;
+            }
+
+            if (tMenuScript.m_statButton)
+                tMenuScript.m_statButton.image.color = Color.white;
+
+            tMenuScript.m_statButton = newStat;
+            newStat.image.color = Color.cyan;
+            gameObject.GetComponent<Button>().onClick.AddListener(() => tMenuScript.AddStatAlteration());
+        }
+        else if (_confirm == "Pass")
+        {
+            charScript = m_main.m_cScript;
+            gameObject.GetComponent<Button>().onClick.AddListener(() => charScript.Pass());
+        }
+        else if (_confirm == "Remove")
+        {
+            TeamMenuScript tMenuScript = m_parent.m_main.GetComponent<TeamMenuScript>();
+            gameObject.GetComponent<Button>().onClick.AddListener(() => tMenuScript.Remove());
+        }
+        else if (_confirm == "Save")
         {
                 TeamMenuScript tMenuScript = m_parent.m_main.GetComponent<TeamMenuScript>();
                 tMenuScript.m_saveButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();

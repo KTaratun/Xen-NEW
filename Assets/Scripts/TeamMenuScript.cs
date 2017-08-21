@@ -6,22 +6,23 @@ using UnityEngine.EventSystems;
 
 public class TeamMenuScript : MonoBehaviour {
 
-    public enum menuPans { CHAR_SLOTS, CHAR_PANEL, CHAR_VIEW, PRESELECT_PANEL, ACTION_VIEW, SAVE_LOAD_PANEL, CONFIRMATION_PANEL, TOT_PANELS }
+    public enum menuPans { CHAR_SLOTS, CHAR_PANEL, CHAR_VIEW, PRESELECT_PANEL, ACTION_VIEW, SAVE_LOAD_PANEL,
+        NEW_ACTION_PANEL, NEW_STATS_PANEL, CONFIRMATION_PANEL, TOT_PANELS }
 
-    public List<PanelScript> m_panels;
     public Button m_currButton;
     public Button m_saveButton;
-    public GameObject m_currCharacter;
+    public Button m_oldButton;
+    public Button m_statButton;
+    public CharacterScript m_currCharScript;
     public GameObject m_character;
 
 	// Use this for initialization
 	void Start ()
     {
-        MenuPanelInit("Canvas");
         TeamInit();
 
         GameObject newChar = Instantiate(m_character);
-        m_currCharacter = newChar;
+        m_currCharScript = newChar.GetComponent<CharacterScript>();
 
         //PlayerPrefs.DeleteAll();
 	}
@@ -31,34 +32,11 @@ public class TeamMenuScript : MonoBehaviour {
 		
 	}
 
-    public void MenuPanelInit(string _canvasName)
-    {
-        string canvasName = _canvasName;
-        Canvas can = GameObject.Find(canvasName).GetComponent<Canvas>();
-        PanelScript[] pans = can.GetComponentsInChildren<PanelScript>();
-
-        for (int i = 0; i < pans.Length; i++)
-        {
-            if (pans[i].transform.parent.name == _canvasName)
-                m_panels.Add(pans[i]);
-        }
-    }
-
-    public bool CheckIfPanelOpen()
-    {
-        for (int i = 0; i < m_panels.Count; i++)
-        {
-            if (m_panels[i].m_inView)
-                return true;
-        }
-        return false;
-    }
-
     public void TeamInit()
     {
         for (int i = 0; i < 4; i++)
         {
-            PanelScript panScript = m_panels[(int)menuPans.CHAR_SLOTS].m_panels[i].GetComponent<PanelScript>();
+            PanelScript panScript = PanelScript.m_allPanels[(int)menuPans.CHAR_SLOTS].m_panels[i].GetComponent<PanelScript>();
             Button[] team = panScript.m_buttons;
             for (int j = 0; j < 6; j++)
             {
@@ -71,7 +49,7 @@ public class TeamMenuScript : MonoBehaviour {
 
                     SetCharSlot(team[j], name, color);
                     team[j].onClick = new Button.ButtonClickedEvent();
-                    team[j].onClick.AddListener(() => m_panels[(int)menuPans.CHAR_VIEW].PopulatePanel());
+                    team[j].onClick.AddListener(() => PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].PopulatePanel());
                 }
             }
         }
@@ -90,40 +68,37 @@ public class TeamMenuScript : MonoBehaviour {
 
     public void CharacterAssignment()
     {
-        if (CheckIfPanelOpen())
+        if (PanelScript.CheckIfPanelOpen())
             return;
 
-        m_panels[(int)menuPans.CHAR_PANEL].PopulatePanel();
+        PanelScript.m_allPanels[(int)menuPans.CHAR_PANEL].PopulatePanel();
         m_currButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
     }
 
     public void NewCharacter()
     {
-        if (!m_panels[(int)menuPans.CHAR_PANEL].m_inView)
+        if (!PanelScript.m_allPanels[(int)menuPans.CHAR_PANEL].m_inView)
             return;
     }
 
     public void RandomCharacter()
     {
-        m_panels[(int)menuPans.CHAR_PANEL].m_inView = false;
+        PanelScript.m_allPanels[(int)menuPans.CHAR_PANEL].m_inView = false;
 
-        CharacterScript cScript = m_currCharacter.GetComponent<CharacterScript>();
-
-        string actions = null;
         int color = Random.Range(0, 4);
 
-        cScript.m_name = RandomName();
+        m_currCharScript.m_name = RandomName();
 
         if (color == 0)
-            cScript.m_color = "G";
+            m_currCharScript.m_color = "G";
         else if (color == 1)
-            cScript.m_color = "R";
+            m_currCharScript.m_color = "R";
         else if (color == 2)
-            cScript.m_color = "W";
+            m_currCharScript.m_color = "W";
         else if (color == 3)
-            cScript.m_color = "B";
+            m_currCharScript.m_color = "B";
 
-        cScript.m_actions = new string[4];
+        m_currCharScript.m_actions = new string[4];
 
         DatabaseScript dbScript = gameObject.GetComponent<DatabaseScript>();
         int prevAct = 0;
@@ -153,19 +128,19 @@ public class TeamMenuScript : MonoBehaviour {
             } while (randAct == prevAct);
 
             prevAct = randAct;
-            cScript.m_actions[i] = dbScript.m_actions[randAct + color * 16];
+            m_currCharScript.m_actions[i] = dbScript.m_actions[randAct + color * 16];
         }
 
         DatabaseScript db = gameObject.GetComponent<DatabaseScript>();
 
-        string[] stat = db.m_stat[Random.Range(0, db.m_stat.Length - 2)].Split('|');
+        string[] stat = db.m_stat[Random.Range(0, db.m_stat.Length)].Split('|');
 
-        cScript.InitializeStats();
-        for (int i = 0; i < cScript.m_stats.Length; i++) // We're not using the 2 rare stats yet
+        m_currCharScript.InitializeStats();
+        for (int i = 0; i < m_currCharScript.m_stats.Length; i++) // We're not using the 2 rare stats yet
         {
             string[] currStat = stat[i+1].Split(':');
-            cScript.m_stats[i] += int.Parse(currStat[1]);
-            cScript.m_tempStats[i] += int.Parse(currStat[1]);
+            m_currCharScript.m_stats[i] += int.Parse(currStat[1]);
+            m_currCharScript.m_tempStats[i] += int.Parse(currStat[1]);
         }
 
         Select();
@@ -260,23 +235,22 @@ public class TeamMenuScript : MonoBehaviour {
     //    }
     //}
 
-    public void FillOutCharacterData(string _name, string _color, string[] _actions, float _level)
+    public void FillOutCharacterData(string _name, string _color, string[] _actions, int _exp, int _level)
     {
-        CharacterScript currCharScript = m_currCharacter.GetComponent<CharacterScript>();
-        currCharScript.m_name = _name;
-        currCharScript.m_color = _color;
-        currCharScript.m_actions = _actions;
-        currCharScript.m_level = _level;
+        m_currCharScript.m_name = _name;
+        m_currCharScript.m_color = _color;
+        m_currCharScript.m_actions = _actions;
+        m_currCharScript.m_exp = _exp;
+        m_currCharScript.m_level = _level;
     }
 
     public void Select()
     {
-        CharacterScript cScript = m_currCharacter.GetComponent<CharacterScript>();
-        PlayerPrefScript.SaveChar(m_currButton.name, cScript);
-        SetCharSlot(m_currButton, cScript.m_name, cScript.m_color);
+        PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
+        SetCharSlot(m_currButton, m_currCharScript.m_name, m_currCharScript.m_color);
 
         m_currButton.onClick = new Button.ButtonClickedEvent();
-        m_currButton.onClick.AddListener(() => m_panels[(int)menuPans.CHAR_VIEW].PopulatePanel());
+        m_currButton.onClick.AddListener(() => PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].PopulatePanel());
 
         PanelScript.CloseHistory();
     }
@@ -293,8 +267,7 @@ public class TeamMenuScript : MonoBehaviour {
             buttScript.m_energyPanel[k].SetActive(false);
 
         // Close panel
-        PanelScript charViewPan = m_panels[(int)menuPans.CHAR_VIEW];
-        charViewPan.m_inView = false;
+        PanelScript.CloseHistory();
 
         // Change text back
         Text t = m_currButton.GetComponentInChildren<Text>();
@@ -320,20 +293,341 @@ public class TeamMenuScript : MonoBehaviour {
             return;
 
         FillOutCharacterData(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",name"), PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",color"),
-            PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",actions").Split(';'), float.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",level")));
+            PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",actions").Split(';'), int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",exp")),
+            int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",level")));
 
         Select();
-        m_panels[(int)menuPans.SAVE_LOAD_PANEL].m_inView = false;
+        PanelScript.m_allPanels[(int)menuPans.SAVE_LOAD_PANEL].m_inView = false;
     }
 
     public void Save()
     {
-        CharacterScript cScript = m_currCharacter.GetComponent<CharacterScript>();
+        CharacterScript cScript = m_currCharScript;
 
         PlayerPrefScript.SaveChar(m_saveButton.name + "SAVE", cScript);
         SetCharSlot(m_saveButton, cScript.m_name, cScript.m_color);
 
         PanelScript.CloseHistory();
+    }
+
+    public void LevelUp()
+    {
+        PanelScript.m_locked = true;
+        m_currCharScript.m_exp -= 10;
+        m_currCharScript.m_level++;
+
+        for (int i = 0; i < PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons.Length; i++)
+        {
+            if (PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "REMOVE" ||
+                PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "SAVE" ||
+                PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "LEVEL UP")
+                PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].interactable = false;
+        }
+
+        PanelScript.m_allPanels[(int)menuPans.NEW_ACTION_PANEL].PopulatePanel();
+
+        if (m_currCharScript.m_level == 3 || m_currCharScript.m_level == 5)
+            PanelScript.m_allPanels[(int)menuPans.NEW_STATS_PANEL].PopulatePanel();
+
+        if (m_currCharScript.m_level < 6)
+        {
+            m_currCharScript.m_stats[(int)CharacterScript.sts.HP] += 2;
+            m_currCharScript.m_tempStats[(int)CharacterScript.sts.HP] += 2;
+            PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
+            PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].PopulatePanel();
+        }
+        else
+            PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
+    }
+
+    public string NewRandomAction(Button[] _buttons)
+    {
+        DatabaseScript db = GetComponent<DatabaseScript>();
+        string newAct = null;
+        bool actOK = true;
+        string color = "";
+
+        for (int i = 0; i < _buttons.Length; i++)
+            _buttons[i].image.color = Color.white;
+
+        // Copy our normal color in order to temporarily alter it
+        for (int i = 0; i < m_currCharScript.m_color.Length; i++)
+            color += m_currCharScript.m_color[i];
+
+        // Add all our level 0 colors to our color
+        for (int i = 0; i < m_currCharScript.m_actions.Length; i++)
+        {
+            if (PlayerScript.CheckIfGains(m_currCharScript.m_actions[i]))
+            {
+                string actEng = DatabaseScript.GetActionData(m_currCharScript.m_actions[i], DatabaseScript.actions.ENERGY);
+                bool newEng = false;
+                for (int j = 0; j < color.Length; j++)
+                {
+                    if (actEng[0] == 'g' && color[j] != 'G' || actEng[0] == 'r' && color[j] != 'R' ||
+                        actEng[0] == 'w' && color[j] != 'W' || actEng[0] == 'b' && color[j] != 'B')
+                        newEng = true;
+                }
+
+                if (newEng)
+                {
+                    if (actEng[0] == 'g')
+                        color += 'G';
+                    else if (actEng[0] == 'r')
+                        color += 'R';
+                    else if (actEng[0] == 'w')
+                        color += 'W';
+                    else if (actEng[0] == 'b')
+                        color += 'B';
+                }
+            }
+        }
+
+        do
+        {
+            actOK = true;
+            int roll = Random.Range(0, 10);
+            newAct = db.m_actions[Random.Range(0, db.m_actions.Length)];
+            string actEng = DatabaseScript.GetActionData(newAct, DatabaseScript.actions.ENERGY);
+
+            // If one of the other new buttons already has this action, skip it
+            for (int i = 0; i < _buttons.Length; i++)
+                if (newAct == _buttons[i].name)
+                    actOK = false;
+
+            // If the character already has this action, skip it
+            for (int i = 0; i < m_currCharScript.m_actions.Length; i++)
+                if (newAct == m_currCharScript.m_actions[i])
+                    actOK = false;
+
+            // If the action is outside your max color range, skip it
+            if (m_currCharScript.m_color.Length == 3 && !PlayerScript.CheckIfGains(actEng))
+                for (int i = 0; i < actEng.Length; i++)
+                {
+                    bool withinColors = false;
+                    for (int j = 0; j < m_currCharScript.m_color.Length; j++)
+                    {
+                        if (actEng[i] == m_currCharScript.m_color[j])
+                            withinColors = true;
+
+                        if (j == m_currCharScript.m_color.Length - 1 && !withinColors)
+                            actOK = false;
+                    }
+                }
+
+            if (actOK)
+            {
+                // There is a random chance that the action will just go through even if it's not their color
+                actOK = false;
+                if (roll == 9 || PlayerScript.CheckIfGains(actEng))
+                    actOK = true;
+                else
+                {
+                    for (int i = 0; i < actEng.Length; i++)
+                    {
+                        actOK = false;
+                        for (int j = 0; j < color.Length; j++)
+                        {
+                            if (actEng[i] == color[j])
+                                actOK = true;
+                        }
+                        if (!actOK)
+                            break;
+                    }
+                }
+            }
+            
+
+        } while (!actOK);
+
+        return newAct;
+    }
+
+    public void NewActionSelection()
+    {
+        PanelScript actPanScript = PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_panels[0].GetComponent<PanelScript>();
+        Button newAct = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+
+        if (m_saveButton)
+            m_saveButton.image.color = Color.white;
+        m_saveButton = newAct;
+        m_saveButton.image.color = Color.cyan;
+
+        for (int i = 0; i < actPanScript.m_panels.Length; i++)
+        {
+            Button[] buttons = actPanScript.m_panels[i].GetComponentsInChildren<Button>();
+            if (PlayerScript.CheckIfGains(DatabaseScript.GetActionData(newAct.name, DatabaseScript.actions.ENERGY)) && i == 0 ||
+                !PlayerScript.CheckIfGains(DatabaseScript.GetActionData(newAct.name, DatabaseScript.actions.ENERGY)) &&
+                DatabaseScript.GetActionData(newAct.name, DatabaseScript.actions.ENERGY).Length == 1 && i == 1 ||
+                !PlayerScript.CheckIfGains(DatabaseScript.GetActionData(newAct.name, DatabaseScript.actions.ENERGY)) &&
+                DatabaseScript.GetActionData(newAct.name, DatabaseScript.actions.ENERGY).Length == 2 && i == 2 ||
+                !PlayerScript.CheckIfGains(DatabaseScript.GetActionData(newAct.name, DatabaseScript.actions.ENERGY)) &&
+                DatabaseScript.GetActionData(newAct.name, DatabaseScript.actions.ENERGY).Length == 3 && i == 3)
+            {
+                ColorActionButtons(buttons, true);
+            }
+            else
+                ColorActionButtons(buttons, false);
+        }
+    }
+
+    private void ColorActionButtons(Button[] _buttons, bool _color)
+    {
+        if (_color)
+        {
+            for (int j = 0; j < _buttons.Length; j++)
+            {
+                if (m_currCharScript.m_actions.Length >= 8 && _buttons[j].GetComponentInChildren<Text>().text == "EMPTY")
+                    continue;
+
+                _buttons[j].interactable = true;
+                _buttons[j].image.color = Color.cyan;
+                _buttons[j].onClick.RemoveAllListeners();
+                Button[] conButtons = PanelScript.m_confirmPanel.m_buttons;
+                _buttons[j].onClick.AddListener(() => conButtons[1].GetComponent<ButtonScript>().ConfirmationButton("New Action"));
+            }
+        }
+        else
+        {
+            for (int j = 0; j < _buttons.Length; j++)
+            {
+                _buttons[j].interactable = false;
+                _buttons[j].image.color = Color.white;
+                _buttons[j].onClick.RemoveAllListeners();
+            }
+        }
+    }
+
+    public void ReplaceAction()
+    {
+        string oldActString = m_oldButton.GetComponentInChildren<Text>().text;
+
+        if (oldActString == "EMPTY")
+        {
+            string[] newActions = new string[m_currCharScript.m_actions.Length + 1];
+
+            for (int i = 0; i < newActions.Length; i++)
+            {
+                if (i != m_currCharScript.m_actions.Length)
+                    newActions[i] = m_currCharScript.m_actions[i];
+                else
+                    newActions[i] = m_saveButton.name;
+            }
+
+            m_currCharScript.m_actions = newActions;
+        }
+        else
+        {
+            for (int i = 0; i < m_currCharScript.m_actions.Length; i++)
+            {
+                if (oldActString == DatabaseScript.GetActionData(m_currCharScript.m_actions[i], DatabaseScript.actions.NAME))
+                    m_currCharScript.m_actions[i] = m_saveButton.name;
+            }
+        }
+
+        m_currCharScript.m_color = PlayerScript.CheckCharColors(m_currCharScript.m_actions);
+        SetCharSlot(m_currButton, m_currCharScript.m_name, m_currCharScript.m_color);
+        PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
+
+        CloseLevelPanel(menuPans.NEW_ACTION_PANEL);
+    }
+
+    public void CloseLevelPanel(menuPans _pan)
+    {
+        EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name = m_currButton.name;
+        if (_pan == menuPans.NEW_ACTION_PANEL)
+        {
+            PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_panels[0].GetComponent<PanelScript>().PopulatePanel();
+            m_saveButton = null;
+        }
+        else if (_pan == menuPans.NEW_STATS_PANEL)
+            PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_panels[1].GetComponent<PanelScript>().PopulatePanel();
+
+        PanelScript.m_allPanels[(int)_pan].m_inView = false;
+        PanelScript.RemoveFromHistory("");
+
+        if (!PanelScript.m_allPanels[(int)menuPans.NEW_ACTION_PANEL].m_inView && !PanelScript.m_allPanels[(int)menuPans.NEW_STATS_PANEL].m_inView)
+        {
+            for (int i = 0; i < PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons.Length; i++)
+            {
+                if (PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "REMOVE" ||
+                    PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "SAVE" ||
+                    PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "LEVEL UP" && m_currCharScript.m_exp >= 10)
+                    PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].interactable = true;
+            }
+
+            PanelScript.m_locked = false;
+        }
+    }
+
+    public void NewRandomStat(Button[] _buttons)
+    {
+        DatabaseScript db = GetComponent<DatabaseScript>();
+
+        // Do this to ensure we don't throw away choices from the last time the panel was opened.
+        for (int i = 0; i < _buttons.Length - 1; i++)
+        {
+            _buttons[i].image.color = Color.white;
+            _buttons[i].GetComponentInChildren<Text>().text = "EMPTY";
+        }
+
+        for (int i = 0; i < _buttons.Length - 1; i++) // -1 just so we get only the action buttons
+        {
+            bool actOK = true;
+            string statAlt = "";
+            string buff = "";
+            string debuff = "";
+
+            do
+            {
+                statAlt = db.m_stat[Random.Range(0, db.m_stat.Length)];
+                string[] stat = statAlt.Split('|');
+
+                actOK = true;
+
+                for (int j = 0; j < m_currCharScript.m_stats.Length; j++)
+                {
+                    string[] s = stat[j + 1].Split(':');
+                    string value = ((CharacterScript.sts)j).ToString();
+                    if (int.Parse(s[1]) > 0)
+                        buff = value + "-";
+                    else if (int.Parse(s[1]) < 0)
+                        debuff = value;
+                }
+
+                for (int j = 0; j < _buttons.Length; j++)
+                {
+                    if (_buttons[j].GetComponentInChildren<Text>().text == buff + debuff)
+                        actOK = false;
+                    break;
+                }
+
+            } while (!actOK);
+
+            Text t = _buttons[i].GetComponentInChildren<Text>();
+            _buttons[i].GetComponentInChildren<Text>().text = buff + debuff;
+            _buttons[i].name = statAlt;
+
+            _buttons[i].onClick.RemoveAllListeners();
+            Button[] conButtons = PanelScript.m_confirmPanel.m_buttons;
+            _buttons[i].onClick.AddListener(() => conButtons[1].GetComponent<ButtonScript>().ConfirmationButton("New Stats"));
+        }
+    }
+
+    public void AddStatAlteration()
+    {
+        PanelScript statPanScript = PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_panels[1].GetComponent<PanelScript>();
+        string[] statSeparated = m_statButton.name.Split('|');
+
+        for (int i = 0; i < 9; i++)
+        {
+            string[] s = statSeparated[i + 1].Split(':');
+            m_currCharScript.m_stats[i] += int.Parse(s[1]);
+            m_currCharScript.m_tempStats[i] += int.Parse(s[1]);
+            statPanScript.m_text[i].color = Color.black;
+        }
+
+        PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
+        CloseLevelPanel(menuPans.NEW_STATS_PANEL);
     }
 
     public void RandomTeam()
@@ -354,7 +648,7 @@ public class TeamMenuScript : MonoBehaviour {
     public void ClearTeam()
     {
         Button button = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
-        PanelScript panScript = m_panels[(int)menuPans.CHAR_SLOTS].m_panels[int.Parse(button.transform.parent.name)].GetComponent<PanelScript>();
+        PanelScript panScript = PanelScript.m_allPanels[(int)menuPans.CHAR_SLOTS].m_panels[int.Parse(button.transform.parent.name)].GetComponent<PanelScript>();
         Button[] team = panScript.m_buttons;
         for (int i = 0; i < 6; i++)
         {
@@ -367,4 +661,5 @@ public class TeamMenuScript : MonoBehaviour {
     {
         Application.LoadLevel("Scene1");
     }
+
 }
