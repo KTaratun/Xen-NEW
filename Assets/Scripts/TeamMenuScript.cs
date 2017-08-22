@@ -663,4 +663,12 @@ public class TeamMenuScript : MonoBehaviour {
         Application.LoadLevel("Scene1");
     }
 
+    public void Rename()
+    {
+        Text text = PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_text[2];
+        m_currCharScript.m_name = text.text;
+        m_currButton.GetComponentInChildren<Text>().text = text.text;
+        PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
+    }
+
 }
