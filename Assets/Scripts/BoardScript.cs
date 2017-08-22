@@ -463,8 +463,10 @@ public class BoardScript : MonoBehaviour {
         // Turn previous character back to original color
         if (m_currPlayer)
         {
-            Renderer oldRenderer = m_currPlayer.GetComponent<Renderer>();
-            oldRenderer.material.color = m_currPlayer.GetComponent<CharacterScript>().m_teamColor;
+            Renderer oldRend = m_currPlayer.transform.GetComponent<Renderer>();
+            oldRend.materials[1].shader = oldRend.materials[0].shader;
+            //Renderer oldRenderer = m_currPlayer.GetComponent<Renderer>();
+            //oldRenderer.material.color = m_currPlayer.GetComponent<CharacterScript>().m_teamColor;
         }
 
         m_currPlayer = m_currRound[0];
@@ -500,8 +502,10 @@ public class BoardScript : MonoBehaviour {
         CameraScript camScript = m_camera.GetComponent<CameraScript>();
         camScript.m_target = m_currPlayer;
 
-        Renderer charRenderer = m_currPlayer.GetComponent<Renderer>();
-        charRenderer.material.color = Color.green;
+        Renderer rend = m_currPlayer.transform.GetComponent<Renderer>();
+        rend.materials[1].shader = Resources.Load<Shader>("Outlined-Silhouette Only (NOT MINE)");
+        //Renderer charRenderer = m_currPlayer.GetComponent<Renderer>();
+        //charRenderer.material.color = Color.green;
     }
 
     public void NewRound()

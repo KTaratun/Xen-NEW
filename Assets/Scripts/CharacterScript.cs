@@ -65,6 +65,8 @@ public class CharacterScript : ObjectScript {
                 meshRends[j].material.color = new Color(meshRends[j].material.color.r, meshRends[j].material.color.g, meshRends[j].material.color.b, 0);
         }
 
+        Renderer rend = transform.GetComponent<Renderer>();
+        rend.materials[1].shader = rend.materials[0].shader;
     }
 
     public void InitializeStats()
