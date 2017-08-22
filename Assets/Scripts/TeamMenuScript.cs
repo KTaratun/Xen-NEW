@@ -19,13 +19,14 @@ public class TeamMenuScript : MonoBehaviour {
 	// Use this for initialization
 	void Start ()
     {
+        PanelScript.MenuPanelInit("Canvas");
         TeamInit();
 
         GameObject newChar = Instantiate(m_character);
         m_currCharScript = newChar.GetComponent<CharacterScript>();
 
         //PlayerPrefs.DeleteAll();
-	}
+    }
 	
 	// Update is called once per frame
 	void Update () {

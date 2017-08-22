@@ -40,9 +40,6 @@ public class PanelScript : MonoBehaviour {
         if (m_history == null)
             m_history = new List<PanelScript>();
 
-        if (m_allPanels == null)
-            MenuPanelInit("Canvas");
-
         m_buttons = GetComponentsInChildren<Button>();
 
         if (m_boundryDis == 0)
@@ -93,7 +90,7 @@ public class PanelScript : MonoBehaviour {
         }
     }
 
-    public void MenuPanelInit(string _canvasName)
+    static public void MenuPanelInit(string _canvasName)
     {
         string canvasName = _canvasName;
         Canvas can = GameObject.Find(canvasName).GetComponent<Canvas>();
@@ -278,7 +275,7 @@ public class PanelScript : MonoBehaviour {
                 m_panels[1].GetComponent<PanelScript>().m_cScript = m_cScript;
                 m_panels[1].GetComponent<PanelScript>().PopulatePanel();
 
-                m_cScript.m_exp = 10;
+                //m_cScript.m_exp = 10;
 
                 // Determine if select or remove will be visible
                 for (int i = 0; i < m_buttons.Length; i++)
@@ -532,6 +529,19 @@ public class PanelScript : MonoBehaviour {
                     currCharActName = currCharAct[1];
                 }
 
+                bool disabled = false;
+                int ind = 0;
+                for (int j = 0; j < m_cScript.m_actions.Length; j++)
+                {
+                    if (name[1] == DatabaseScript.GetActionData(m_cScript.m_actions[j], DatabaseScript.actions.NAME))
+                    {
+                        ind = j;
+                        if (m_cScript.m_isDiabled[j] != 0)
+                            disabled = true;
+                    }
+
+                }
+
                 // ACTION PREVENTION
                 // REFACTOR
                 if (m_cScript.m_effects[(int)StatusScript.effects.WARD] && CharacterScript.CheckIfAttack(name[1]) ||
@@ -539,7 +549,8 @@ public class PanelScript : MonoBehaviour {
                     currCharActName == "Redirect ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) ||
                     currCharActName == "Redirect ATK" && currCharScript != m_cScript && eng[1].Length > 2 ||
                     currCharActName == "Copy ATK" && currCharScript != m_cScript && !CharacterScript.CheckIfAttack(name[1]) ||
-                    currCharActName == "Copy ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) && eng[1].Length > 2)
+                    currCharActName == "Copy ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) && eng[1].Length > 2 ||
+                    disabled)
                     buttons[i].GetComponent<Image>().color = b_isDisallowed;
                 else if (currCharActName == "Redirect ATK" && currCharScript != m_cScript && !CharacterScript.CheckIfAttack(name[1]) && eng[1].Length <= 2 ||
                     currCharActName == "Copy ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) && eng[1].Length <= 2)
@@ -547,6 +558,20 @@ public class PanelScript : MonoBehaviour {
                     buttons[i].GetComponent<Image>().color = b_isFree;
                     buttons[i].onClick.AddListener(() => currCharScript.ActionTargeting());
                     buttons[i].interactable = true;
+                }
+                else if (currCharActName == "Hack ATK" && currCharScript != m_cScript)
+                {
+                    if (!PlayerScript.CheckIfGains(eng[1]) && !disabled)
+                    {
+                        buttons[i].GetComponent<Image>().color = new Color(1, 1, 1, 1);
+                        buttons[i].onClick.AddListener(() => m_cScript.DisableSelectedAction(ind));
+                        buttons[i].interactable = true;
+                    }
+                    else
+                    {
+                        buttons[i].GetComponent<Image>().color = new Color(1, 1, 1, 1);
+                        buttons[i].interactable = false;
+                    }
                 }
                 else
                 {

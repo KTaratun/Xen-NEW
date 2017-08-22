@@ -230,9 +230,9 @@ public class ButtonScript : MonoBehaviour {
         if (m_parent.name == "Status Selector")
         {
             StatusScript statScript = m_main.m_cScript.GetComponents<StatusScript>()[m_main.m_cScript.m_currStatus];
-            if (actName == "Hack ATK")
-                StatusScript.NewStatus(m_boardScript.m_currPlayer, statScript.m_action);
-            if (actName == "Hack ATK" || actName == "Disrupting ATK")
+            //if (actName == "Hack ATK")
+            //    StatusScript.NewStatus(m_boardScript.m_currPlayer, statScript.m_action);
+            if (actName == "Disrupting ATK") // actName == "Hack ATK" || used to be here
                 statScript.DestroyStatus(m_main.m_cScript.transform.root.gameObject);
             else if (actName == "Extension")
             {
@@ -246,9 +246,9 @@ public class ButtonScript : MonoBehaviour {
                         statScript.m_statMod[i]--;
                 }
             }
-            else if (actName == "Modification")
-                for (int i = 0; i < statScript.m_statMod.Length; i++)
-                    m_main.m_cScript.m_stats[i] += statScript.m_statMod[i];
+            //else if (actName == "Modification")
+            //    for (int i = 0; i < statScript.m_statMod.Length; i++)
+            //        m_main.m_cScript.m_stats[i] += statScript.m_statMod[i];
 
             ResumeGame();
         }
@@ -361,13 +361,14 @@ public class ButtonScript : MonoBehaviour {
         else if (_confirm == "Move")
         {
             TileScript moverTile = charScript.m_tile.GetComponent<TileScript>();
+            TileScript selectedTile = m_boardScript.m_selected.GetComponent<TileScript>();
             if (m_boardScript.m_isForcedMove)
             {
                 charScript = m_boardScript.m_isForcedMove.GetComponent<CharacterScript>();
                 moverTile = charScript.m_tile.GetComponent<TileScript>();
             }
 
-            gameObject.GetComponent<Button>().onClick.AddListener(() => charScript.Movement(moverTile, m_boardScript.m_selected.GetComponent<TileScript>(), false));
+            gameObject.GetComponent<Button>().onClick.AddListener(() => charScript.Movement(moverTile, selectedTile, false));
         }
         else if (_confirm == "New Action")
         {

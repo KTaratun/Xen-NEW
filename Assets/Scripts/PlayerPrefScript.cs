@@ -42,6 +42,10 @@ public class PlayerPrefScript : MonoBehaviour {
         _charScript.m_exp = int.Parse(PlayerPrefs.GetString(_key + ",exp"));
         _charScript.m_level = int.Parse(PlayerPrefs.GetString(_key + ",level"));
 
+        _charScript.m_isDiabled = new int[_charScript.m_actions.Length];
+        for (int i = 0; i < _charScript.m_isDiabled.Length; i++)
+            _charScript.m_isDiabled[i] = 0;
+
         // Load in stats
         string[] stats = PlayerPrefs.GetString(_key + ",stats").Split(',');
 

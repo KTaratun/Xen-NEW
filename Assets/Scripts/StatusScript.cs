@@ -56,6 +56,13 @@ public class StatusScript : MonoBehaviour {
 
         switch (actName)
         {
+            case "Shot ATK":
+                m_statMod[(int)CharacterScript.sts.MOV] = -1;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 1;
+                m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
+                m_color = c_debuffColor;
+                break;
             case "Spot":
                 m_statMod[(int)CharacterScript.sts.RNG] = 3;
                 m_mode = mode.TURN_END;
@@ -76,6 +83,13 @@ public class StatusScript : MonoBehaviour {
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Radius Symbol");
                 m_color = c_buffColor;
+                break;
+            case "Smoke ATK":
+                m_statMod[(int)CharacterScript.sts.RNG] = -2;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 1;
+                m_sprite = Resources.Load<Sprite>("Symbols/Range Symbol");
+                m_color = c_debuffColor;
                 break;
             case "Winding ATK":
                 m_statMod[(int)CharacterScript.sts.EVA] = -10;
@@ -211,6 +225,13 @@ public class StatusScript : MonoBehaviour {
                 m_sprite = Resources.Load<Sprite>("Symbols/Energy Symbol");
                 m_color = c_statusColor;
                 break;
+            case "Disorienting ATK":
+                m_charScript.DisableRandomAction();
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 1;
+                m_sprite = Resources.Load<Sprite>("Symbols/Action Symbol");
+                m_color = c_statusColor;
+                break;
             default:
                 break;
         }
@@ -288,6 +309,17 @@ public class StatusScript : MonoBehaviour {
                 break;
             case "Delay ATK":
                 m_charScript.m_effects[(int)effects.DELAY] = false;
+                break;
+            case "Disorienting ATK":
+                List<int> viableActs = new List<int>();
+                for (int i = 0; i < m_charScript.m_isDiabled.Length; i++)
+                    if (m_charScript.m_isDiabled[i] == 1)
+                        viableActs.Add(i);
+         
+                if (viableActs.Count < 1)
+                    return;
+
+                m_charScript.m_isDiabled[viableActs[Random.Range(0, viableActs.Count)]] = 0;
                 break;
             default:
                 break;

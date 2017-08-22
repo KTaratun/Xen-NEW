@@ -34,6 +34,7 @@ public class BoardScript : MonoBehaviour {
     // Use this for initialization
     void Start ()
     {
+        PanelScript.MenuPanelInit("Canvas");
         m_roundCount = 0;
         m_isForcedMove = null;
         m_camIsFrozen = false;
@@ -375,15 +376,21 @@ public class BoardScript : MonoBehaviour {
             string actName = DatabaseScript.GetActionData(currCharScript.m_currAction, DatabaseScript.actions.NAME);
             string actRng = DatabaseScript.GetActionData(currCharScript.m_currAction, DatabaseScript.actions.RNG);
 
-            if (actName == "Piercing ATK" && tarRend.material.color == CharacterScript.c_attack)
+            if (actName == "Piercing ATK" && tarRend.material.color == CharacterScript.c_attack || actName == "Thrust ATK" && tarRend.material.color == CharacterScript.c_attack)
             {
-                selTileScript.FetchTilesWithinRange(int.Parse(actRng) + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD], Color.yellow, true, TileScript.targetRestriction.HORVERT, false);
+                selTileScript.FetchTilesWithinRange(int.Parse(actRng) + currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, true, TileScript.targetRestriction.HORVERT, false);
                 m_oldTile = _target;
                 return;
             }
             else if (actName == "Cross ATK" && tarRend.material.color == CharacterScript.c_attack)
             {
                 selTileScript.FetchTilesWithinRange(int.Parse(actRng) + currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, false, TileScript.targetRestriction.DIAGONAL, false);
+                m_oldTile = _target;
+                return;
+            }
+            else if (actName == "Slash ATK" && tarRend.material.color == CharacterScript.c_attack)
+            {
+                selTileScript.FetchTilesWithinRange(int.Parse(actRng) + currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, false, TileScript.targetRestriction.HORVERT, true);
                 m_oldTile = _target;
                 return;
             }

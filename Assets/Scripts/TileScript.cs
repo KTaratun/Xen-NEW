@@ -96,6 +96,7 @@ public class TileScript : MonoBehaviour {
         // Handle attacks with radius
         GameObject originalTile = gameObject;
         TileScript originalTileScript = this;
+
         if (currCharScript.m_currAction.Length > 0 && _color != CharacterScript.c_move)
         {
             string[] actSeparated = currCharScript.m_currAction.Split('|');
@@ -104,11 +105,10 @@ public class TileScript : MonoBehaviour {
 
             if (int.Parse(range[1]) == 0)
             {
-                originalTile = m_boardScript.m_currTile;
-                originalTileScript = m_boardScript.m_currTile.GetComponent<TileScript>();
                 _range = int.Parse(radius[1]);
                 _targetSelf = false;
-            }
+                originalTile = currCharScript.m_tile;
+            }   originalTileScript = originalTile.GetComponent<TileScript>();
             
             if (int.Parse(radius[1]) > 0)
                 _isBlockable = false;
@@ -117,17 +117,17 @@ public class TileScript : MonoBehaviour {
         // Start with current tile in oddGen
         oddGen.Add(originalTileScript);
 
-        if (_targetSelf)
+        if (_targetSelf || !_targetSelf && this != currCharScript.m_tile.GetComponent<TileScript>())// || !_targetSelf && this != originalTileScript
         {
             Renderer myRend = originalTile.GetComponent<Renderer>();
-            originalTileScript.m_oldColor = myRend.material.color;
-
+            m_oldColor = myRend.material.color;
+            
             myRend.material.color = _color;
-
+            
             if (_color == Color.yellow)
-                originalTileScript.m_targetRadius.Add(gameObject);
+                m_targetRadius.Add(originalTile);
             else
-                originalTileScript.m_radius.Add(gameObject);
+                m_radius.Add(originalTile);
         }
 
         for (int i = 0; i < _range; i++)
@@ -165,7 +165,7 @@ public class TileScript : MonoBehaviour {
                     }
 
                     // if color is movement color and the current tile is holding someone
-                    if (_color == CharacterScript.c_move && tScript.m_holding || !_targetSelf && currNeighbor == originalTile)
+                    if (_color == CharacterScript.c_move && tScript.m_holding || !_targetSelf && tScript == currCharScript.m_tile.GetComponent<TileScript>())
                         continue;
 
                     if (_targetingRestriction == targetRestriction.HORVERT && tScript.m_x != m_x && tScript.m_z != m_z)
@@ -174,37 +174,16 @@ public class TileScript : MonoBehaviour {
                     if (_isBlockable && CheckIfBlocked(currNeighbor))
                         continue;
 
-
                     Renderer tR = currNeighbor.GetComponent<Renderer>();
-                    // REFACTOR: All this code for just piercing attack
-                    if (currCharScript.m_currAction.Length > 0)
+
+                    // If the fetch was yellow but doesn't have radius, then we want to select all tiles in a specific direction ie. Piercing, thrust and diagnal
+                    if (_color == Color.yellow && currCharScript.m_currAction.Length > 0 && tR.material.color == new Color(1, 1, 1, 0))
                     {
-                        string[] actSepareted = currCharScript.m_currAction.Split('|');
-                        string[] name = actSepareted[(int)DatabaseScript.actions.NAME].Split(':');
-
-                        if (currCharScript.m_currAction.Length > 0 && name[1] == "Piercing ATK" && _color == Color.yellow && tScript.m_holding && tScript.m_holding == m_boardScript.m_currPlayer
-                            || currCharScript.m_currAction.Length > 0 && name[1] == "Piercing ATK" && _color == Color.yellow && tR.material.color == new Color(1, 1, 1, 0))
+                        string[] actSeparated = currCharScript.m_currAction.Split('|');
+                        string[] radius = actSeparated[(int)DatabaseScript.actions.RAD].Split(':');
+                        if (int.Parse(radius[1]) == 0)
                             continue;
-                        if (currCharScript.m_currAction.Length > 0 && name[1] == "Piercing ATK" && _color == Color.yellow)
-                        {
-                            bool redNeigbor = false;
-                            for (int j = 0; j < tScript.m_neighbors.Length; j++)
-                            {
-                                if (!tScript.m_neighbors[j])
-                                    continue;
-
-                                Renderer neiRend = tScript.m_neighbors[j].GetComponent<Renderer>();
-                                if (neiRend.material.color == CharacterScript.c_attack || tR.material.color == CharacterScript.c_attack)
-                                {
-                                    redNeigbor = true;
-                                    break;
-                                }
-                            }
-                            if (!redNeigbor)
-                                continue;
-                        }
                     }
-
 
                     if (tR.material.color != _color)
                     {
