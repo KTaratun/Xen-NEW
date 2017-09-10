@@ -62,6 +62,10 @@ public class PlayerPrefScript : MonoBehaviour {
             _charScript.m_tempStats[i] = int.Parse(stats[i]);
         }
 
+        _charScript.m_isAlive = true;
+        _charScript.m_currRadius = 0;
+        _charScript.m_effects = new bool[(int)StatusScript.effects.TOT];
+
         return _charScript;
     }
 }

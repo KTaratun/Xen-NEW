@@ -38,9 +38,8 @@ public class ButtonScript : MonoBehaviour {
             Renderer charRenderer = m_character.GetComponent<Renderer>();
             charRenderer.material.color = Color.cyan;
             PanelScript hudPanScript = charScript.m_boardScript.m_panels[(int)BoardScript.pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
-            hudPanScript.m_text[0].text = charScript.name;
-            hudPanScript.m_text[1].text = "HP: " + charScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + charScript.m_stats[(int)CharacterScript.sts.HP];
-            hudPanScript.m_inView = true;
+            hudPanScript.m_cScript = charScript;
+            hudPanScript.PopulatePanel();
 
             return;
         }
@@ -144,21 +143,21 @@ public class ButtonScript : MonoBehaviour {
         for (int i = 0; i < energy.Length; i++)
         {
             if (energy[i] == 'g')
-                orbs[i+1].color = new Color(.65f, .9f, .6f, 1);
+                orbs[i+1].color = new Color(.7f, 1f, .65f, 1);
             else if (energy[i] == 'r')
-                orbs[i+1].color = new Color(1, .4f, .45f, 1);
+                orbs[i+1].color = new Color(1, .45f, .5f, 1);
             else if (energy[i] == 'w')
-                orbs[i+1].color = new Color(1, 1, 1, 1);
+                orbs[i+1].color = new Color(.85f, .85f, .85f, 1); // (1, 1, 1, 1)
             else if (energy[i] == 'b')
-                orbs[i+1].color = new Color(.65f, .6f, 1, 1);
+                orbs[i+1].color = new Color(.7f, .65f, 1, 1);
             else if (energy[i] == 'G')
-                orbs[i+1].color = new Color(.45f, .7f, .4f, 1);
+                orbs[i+1].color = new Color(.4f, .65f, .35f, 1);
             else if (energy[i] == 'R')
-                orbs[i+1].color = new Color(.9f, .2f, .25f, 1);
+                orbs[i+1].color = new Color(.85f, .15f, .2f, 1);
             else if (energy[i] == 'W')
-                orbs[i+1].color = new Color(.9f, .9f, .9f, 1);
+                orbs[i+1].color = new Color(1, 1, 1, 1); // (.8f, .8f, .8f, 1)
             else if (energy[i] == 'B')
-                orbs[i+1].color = new Color(.45f, .4f, 1, 1);
+                orbs[i+1].color = new Color(.4f, .35f, 1, 1);
         }
     }
 
@@ -256,8 +255,8 @@ public class ButtonScript : MonoBehaviour {
         {
             if (actName == "Prismatic ATK")
                 AddEnergy(2);
-            else if (actName == "Channel")
-                AddEnergy(1);
+            //else if (actName == "Channel")
+            //    AddEnergy(1);
             else if (actName == "Syphon ATK")
                 SubtractEnergy(1, m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy);
             else if (actName == "Deplete ATK")
@@ -358,6 +357,12 @@ public class ButtonScript : MonoBehaviour {
             tMenuScript.m_oldButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
             gameObject.GetComponent<Button>().onClick.AddListener(() => tMenuScript.CloseLevelPanel(TeamMenuScript.menuPans.NEW_ACTION_PANEL));
         }
+        else if (_confirm == "Clear Team")
+        {
+            Button b = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+            TeamMenuScript t = m_parent.m_main.GetComponent<TeamMenuScript>();
+            gameObject.GetComponent<Button>().onClick.AddListener(() => t.ClearTeam(b));
+        }
         else if (_confirm == "Move")
         {
             TileScript moverTile = charScript.m_tile.GetComponent<TileScript>();
@@ -390,8 +395,8 @@ public class ButtonScript : MonoBehaviour {
                 int newNumber = m_main.m_cScript.m_stats[i] + int.Parse(s[1]);
                 if (i == 0)
                     statPanScript.m_text[i].text = textSeparated[0] + ": " + newNumber.ToString() + "/" + newNumber.ToString();
-                else if (i == (int)CharacterScript.sts.HIT || i == (int)CharacterScript.sts.EVA || i == (int)CharacterScript.sts.CRT)
-                    statPanScript.m_text[i].text = textSeparated[0] + ": " + newNumber.ToString() + "%";
+                //else if (i == (int)CharacterScript.sts.HIT || i == (int)CharacterScript.sts.EVA || i == (int)CharacterScript.sts.CRT)
+                //    statPanScript.m_text[i].text = textSeparated[0] + ": " + newNumber.ToString() + "%";
                 else
                     statPanScript.m_text[i].text = textSeparated[0] + ": " + newNumber.ToString();
 
@@ -414,6 +419,12 @@ public class ButtonScript : MonoBehaviour {
         {
             charScript = m_main.m_cScript;
             gameObject.GetComponent<Button>().onClick.AddListener(() => charScript.Pass());
+        }
+        else if (_confirm == "Random Team")
+        {
+            Button b = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+            TeamMenuScript t = m_parent.m_main.GetComponent<TeamMenuScript>();
+            gameObject.GetComponent<Button>().onClick.AddListener(() => t.RandomTeam(b));
         }
         else if (_confirm == "Remove")
         {

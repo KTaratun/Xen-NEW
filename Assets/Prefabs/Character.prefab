@@ -3614,11 +3614,9 @@ MonoBehaviour:
   m_currAction: 
   m_currStatus: 0
   m_actions: []
-  m_stats: 0c0000000a0000000000000000000000000000000000000000000000050000000000000000000000
-  m_tempStats: 0c0000000a0000000000000000000000000000000000000000000000050000000000000000000000
-  m_accessories:
-  - 
-  - 
+  m_stats: 
+  m_tempStats: 
+  m_accessories: []
   m_color: 
   m_effects: 
   m_level: 0
@@ -4024,7 +4022,7 @@ CapsuleCollider:
   m_Radius: 0.15
   m_Height: 0.6
   m_Direction: 1
-  m_Center: {x: 0, y: 0.25, z: 0}
+  m_Center: {x: 0, y: -0, z: 0}
 --- !u!137 &137545963766810248
 SkinnedMeshRenderer:
   m_ObjectHideFlags: 1
@@ -4039,7 +4037,7 @@ SkinnedMeshRenderer:
   m_ReflectionProbeUsage: 1
   m_Materials:
   - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
-  - {fileID: 2100000, guid: 6fd892aa15df8a5419552da125dca15c, type: 2}
+  - {fileID: 2100000, guid: 1136e9f214fd91f4aa5ab5835d2e9f94, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

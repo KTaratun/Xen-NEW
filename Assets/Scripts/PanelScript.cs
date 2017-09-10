@@ -143,7 +143,7 @@ public class PanelScript : MonoBehaviour {
             m_panels[1].GetComponent<Image>().color = new Color(m_cScript.m_teamColor.r + 0.3f, m_cScript.m_teamColor.g + 0.3f, m_cScript.m_teamColor.b + 0.3f, 1);
             int hit = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.HIT));
             int dmg = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.DMG)) + currScript.m_tempStats[(int)CharacterScript.sts.DMG];
-            m_text[0].text = "Hit %: " + (hit + currScript.m_tempStats[(int)CharacterScript.sts.HIT] - m_cScript.m_tempStats[(int)CharacterScript.sts.EVA]).ToString();
+            //m_text[0].text = "Hit %: " + (hit + currScript.m_tempStats[(int)CharacterScript.sts.HIT] - m_cScript.m_tempStats[(int)CharacterScript.sts.EVA]).ToString();
             m_text[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP].ToString() + " -> " + (m_cScript.m_tempStats[(int)CharacterScript.sts.HP] - dmg).ToString();
         }
         else if (name == "ActionViewer Panel")
@@ -158,37 +158,25 @@ public class PanelScript : MonoBehaviour {
             engScript.SetTotalEnergy(currStat[1]);
 
             currStat = actStats[3].Split(':');
-            if ((int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.HIT]) > 0)
-                m_text[2].text = "HIT: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.HIT]) + "%";
+            if ((int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG]) > 0)
+                m_text[2].text = "DMG: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG]);
             else
-                m_text[2].text = "HIT: 0%";
+                m_text[2].text = "DMG: 0";
 
             currStat = actStats[4].Split(':');
-            if ((int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG]) > 0)
-                m_text[3].text = "DMG: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG]);
+            if ((int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG]) > 0)
+                m_text[3].text = "RNG: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG]);
             else
-                m_text[3].text = "DMG: 0";
+                m_text[3].text = "RNG: 0";
 
             currStat = actStats[5].Split(':');
-            if ((int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG]) > 0)
-                m_text[4].text = "RNG: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG]);
+            if ((int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RAD]) > 0)
+                m_text[4].text = "RAD: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RAD]);
             else
-                m_text[4].text = "RNG: 0";
-
-            currStat = actStats[7].Split(':');
-            if ((int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.CRT]) > 0)
-                m_text[5].text = "CRT: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.CRT]) + "%";
-            else
-                m_text[5].text = "CRT: 0%";
-
-            currStat = actStats[8].Split(':');
-            m_text[6].text = currStat[1];
+                m_text[4].text = "RAD: 0";
 
             currStat = actStats[6].Split(':');
-            if ((int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RAD]) > 0)
-                m_text[7].text = "RAD: " + (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RAD]);
-            else
-                m_text[7].text = "RAD: 0";
+            m_text[6].text = currStat[1];
         }
         else if (name == "Character Panel")
         {
@@ -275,7 +263,7 @@ public class PanelScript : MonoBehaviour {
                 m_panels[1].GetComponent<PanelScript>().m_cScript = m_cScript;
                 m_panels[1].GetComponent<PanelScript>().PopulatePanel();
 
-                //m_cScript.m_exp = 10;
+                m_cScript.m_exp = 10;
 
                 // Determine if select or remove will be visible
                 for (int i = 0; i < m_buttons.Length; i++)
@@ -295,8 +283,8 @@ public class PanelScript : MonoBehaviour {
         else if (name == "HUD Panel LEFT" || name == "HUD Panel RIGHT")
         {
             m_panels[0].GetComponent<Image>().color = new Color(m_cScript.m_teamColor.r + 0.3f, m_cScript.m_teamColor.g + 0.3f, m_cScript.m_teamColor.b + 0.3f, 1);
-            m_text[0].text = m_cScript.m_name;
-            m_text[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
+            GetComponentsInChildren<Text>()[0].text = m_cScript.m_name;
+            GetComponentsInChildren<Text>()[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
 
             if (GetComponentInChildren<Button>())
             {
@@ -379,8 +367,7 @@ public class PanelScript : MonoBehaviour {
         else if (name == "Round Panel")
         {
             BoardScript bScript = m_main.GetComponent<BoardScript>();
-            if (m_text != null)
-                m_text[0].text = "Round: " + bScript.m_roundCount;
+            GetComponentInChildren<Text>().text = "Round: " + bScript.m_roundCount;
         }
         else if (name == "Save/Load Panel")
         {
@@ -402,44 +389,31 @@ public class PanelScript : MonoBehaviour {
                         string color = PlayerPrefs.GetString(key);
 
                         m_main.GetComponent<TeamMenuScript>().SetCharSlot(button[i * 4 + j], name, color);
-
-                        button[i * 4 + j].onClick.RemoveAllListeners();
-                        if (EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name == "Save Button")
-                        {
-                            Button[] childButtons = m_confirmPanel.GetComponentsInChildren<Button>();
-                            button[i * 4 + j].onClick.AddListener(() => childButtons[1].GetComponent<ButtonScript>().ConfirmationButton("Save"));
-                        }
-                        else if (EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name == "Load")
-                            button[i * 4 + j].onClick.AddListener(() => m_main.GetComponent<TeamMenuScript>().Load());
                     }
+                    button[i * 4 + j].onClick.RemoveAllListeners();
+                    if (EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name == "Save Button")
+                    {
+                        Button[] childButtons = m_confirmPanel.GetComponentsInChildren<Button>();
+                        button[i * 4 + j].onClick.AddListener(() => childButtons[1].GetComponent<ButtonScript>().ConfirmationButton("Save"));
+                    }
+                    else if (EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name == "Load")
+                        button[i * 4 + j].onClick.AddListener(() => m_main.GetComponent<TeamMenuScript>().Load());
                 }
             }
         }
         else if (name == "Status Panel")
         {
-            m_text[(int)CharacterScript.sts.HP].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
-            m_text[(int)CharacterScript.sts.SPD].text = "SPD: " + m_cScript.m_tempStats[(int)CharacterScript.sts.SPD];
+            if (m_history[m_history.Count -1].name == "CharacterViewer Panel")
+                m_text[0].text = "";
+            else
+                m_text[0].text = m_cScript.m_name;
 
-            m_text[(int)CharacterScript.sts.HIT].text = "HIT: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HIT] + "%";
-            //CheckIfModded((int)CharacterScript.sts.HIT, m_cScript.m_stats[(int)CharacterScript.sts.HIT], m_cScript.m_tempStats[(int)CharacterScript.sts.HIT]);
-
-            m_text[(int)CharacterScript.sts.EVA].text = "EVA: " + m_cScript.m_tempStats[(int)CharacterScript.sts.EVA] + "%";
-            //CheckIfModded((int)CharacterScript.sts.EVA, m_cScript.m_stats[(int)CharacterScript.sts.EVA], m_cScript.m_tempStats[(int)CharacterScript.sts.EVA]);
-
-            m_text[(int)CharacterScript.sts.CRT].text = "CRT: " + m_cScript.m_tempStats[(int)CharacterScript.sts.CRT] + "%";
-            //CheckIfModded((int)CharacterScript.sts.CRT, m_cScript.m_stats[(int)CharacterScript.sts.CRT], m_cScript.m_tempStats[(int)CharacterScript.sts.CRT]);
-
-            m_text[(int)CharacterScript.sts.DMG].text = "DMG: " + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG];
-            //CheckIfModded((int)CharacterScript.sts.DMG, m_cScript.m_stats[(int)CharacterScript.sts.DMG], m_cScript.m_tempStats[(int)CharacterScript.sts.DMG]);
-
-            m_text[(int)CharacterScript.sts.DEF].text = "DEF: " + m_cScript.m_tempStats[(int)CharacterScript.sts.DEF];
-            //CheckIfModded((int)CharacterScript.sts.DEF, m_cScript.m_stats[(int)CharacterScript.sts.DEF], m_cScript.m_tempStats[(int)CharacterScript.sts.DEF]);
-
-            m_text[(int)CharacterScript.sts.MOV].text = "MOV: " + m_cScript.m_tempStats[(int)CharacterScript.sts.MOV];
-            //CheckIfModded((int)CharacterScript.sts.MOV, m_cScript.m_stats[(int)CharacterScript.sts.MOV], m_cScript.m_tempStats[(int)CharacterScript.sts.MOV]);
-
-            m_text[(int)CharacterScript.sts.RNG].text = "RNG: " + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG];
-            //CheckIfModded((int)CharacterScript.sts.RNG, m_cScript.m_stats[(int)CharacterScript.sts.RNG], m_cScript.m_tempStats[(int)CharacterScript.sts.RNG]);
+            m_text[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
+            m_text[2].text = "SPD: " + m_cScript.m_tempStats[(int)CharacterScript.sts.SPD];
+            m_text[3].text = "MOV: " + m_cScript.m_tempStats[(int)CharacterScript.sts.MOV];
+            m_text[4].text = "RNG: " + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG];
+            m_text[5].text = "DMG: " + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG];
+            m_text[6].text = "DEF: " + m_cScript.m_tempStats[(int)CharacterScript.sts.DEF];
 
             if (m_cScript.m_accessories[0] != null)
                 m_text[9].text = "ACC: " + m_cScript.m_accessories[0];

@@ -525,9 +525,14 @@ public class TeamMenuScript : MonoBehaviour {
             }
         }
 
+        int oldColorLen = m_currCharScript.m_color.Length;
         m_currCharScript.m_color = PlayerScript.CheckCharColors(m_currCharScript.m_actions);
+        if (oldColorLen != m_currCharScript.m_color.Length)
+            PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[0].GetComponent<ButtonScript>().SetTotalEnergy(m_currCharScript.m_color);
+
         SetCharSlot(m_currButton, m_currCharScript.m_name, m_currCharScript.m_color);
         PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
+
 
         CloseLevelPanel(menuPans.NEW_ACTION_PANEL);
     }
@@ -631,9 +636,9 @@ public class TeamMenuScript : MonoBehaviour {
         CloseLevelPanel(menuPans.NEW_STATS_PANEL);
     }
 
-    public void RandomTeam()
+    public void RandomTeam(Button _button)
     {
-        PanelScript panScript = EventSystem.current.currentSelectedGameObject.GetComponent<Button>().transform.parent.GetComponent<PanelScript>();
+        PanelScript panScript = _button.transform.parent.GetComponent<PanelScript>();
         Button[] buttons = panScript.m_buttons;
         for (int i = 0; i < 6; i++)
         {
@@ -646,10 +651,9 @@ public class TeamMenuScript : MonoBehaviour {
         // What colors
     }
 
-    public void ClearTeam()
+    public void ClearTeam(Button _button)
     {
-        Button button = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
-        PanelScript panScript = PanelScript.m_allPanels[(int)menuPans.CHAR_SLOTS].m_panels[int.Parse(button.transform.parent.name)].GetComponent<PanelScript>();
+        PanelScript panScript = PanelScript.m_allPanels[(int)menuPans.CHAR_SLOTS].m_panels[int.Parse(_button.transform.parent.name)].GetComponent<PanelScript>();
         Button[] team = panScript.m_buttons;
         for (int i = 0; i < 6; i++)
         {

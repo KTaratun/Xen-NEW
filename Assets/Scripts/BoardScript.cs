@@ -10,7 +10,7 @@ public class BoardScript : MonoBehaviour {
 
     public Camera m_camera; // Why it do that squiggle?
     public int m_roundCount;
-    public int m_environmentalDensity;
+    public int m_environmentalDensity; // This dictates how many environmental objs per tile
     public GameObject[] m_environmentOBJs;
     public List<GameObject> m_obstacles; // The actual array of objects on the board
     public GameObject[] m_panels; // All movable GUI on screen
@@ -19,16 +19,16 @@ public class BoardScript : MonoBehaviour {
     public GameObject m_character; // A reference to the character prefab
     public int m_width; // Width of the board
     public int m_height; // Height of the board
-    public GameObject m_selected; // Currently selected m_tile
-    private GameObject m_highlightedTile;
+    public GameObject m_selected; // Last pressed tile
+    private GameObject m_highlightedTile; // Currently hovered over tile
     public GameObject m_oldTile; // A pointer to the previously hovered over m_tile
     public GameObject m_currTile; // The m_tile of the player who's turn is currently up
     public GameObject m_currPlayer; // A pointer to the player that's turn is currently up
-    public List<GameObject> m_characters; // A list of all players within the game
-    public GameObject[] m_players;
+    public List<GameObject> m_characters; // A list of all characters within the game
+    public GameObject[] m_players; 
     public List<GameObject> m_currRound; // A list of the players who have taken a turn in the current round
-    public GameObject m_isForcedMove;
-    public int m_livingPlayersInRound;
+    public GameObject m_isForcedMove; // This is to keep track of whichever player is turning an action out of order
+    public int m_livingPlayersInRound; // This is mainly for the turn panels. This tells them how far to move when I player finishes their turn.
     public bool m_camIsFrozen;
 
     // Use this for initialization
@@ -53,6 +53,7 @@ public class BoardScript : MonoBehaviour {
         AssignNeighbors();
         EnvironmentInit();
         CharacterInit();
+        NewTurn();
     }
 	
 	// Update is called once per frame
@@ -62,12 +63,6 @@ public class BoardScript : MonoBehaviour {
             OnRightClick();
 
         Hover();
-
-        if (m_currPlayer == null)
-        {
-            NewRound();
-            NewTurn();
-        }
     }
 
     private void EnvironmentInit()
@@ -106,6 +101,7 @@ public class BoardScript : MonoBehaviour {
 
     public void OnRightClick()
     {
+        // If right click while the confirmation panel is up, do nothing but close that specific panel
         if (PanelScript.m_confirmPanel.m_inView)
         {
             PanelScript.RemoveFromHistory("");
@@ -114,7 +110,6 @@ public class BoardScript : MonoBehaviour {
 
         CharacterScript charScript = m_currPlayer.GetComponent<CharacterScript>();
         TileScript currTScript = charScript.m_tile.GetComponent<TileScript>();
-
 
         if (currTScript.m_radius.Count == 0 || m_isForcedMove)
             return;
@@ -216,7 +211,8 @@ public class BoardScript : MonoBehaviour {
                     else if (i == 3)
                         cScript.m_teamColor = Color.magenta;
                     
-                    newChar.GetComponent<Renderer>().material.color = cScript.m_teamColor;
+                    newChar.GetComponent<Renderer>().materials[0].color = cScript.m_teamColor;
+                    newChar.GetComponent<Renderer>().materials[1].color = cScript.m_teamColor;
 
                     cScript.SetPopupSpheres("");
                     m_characters.Add(newChar);
@@ -382,7 +378,7 @@ public class BoardScript : MonoBehaviour {
                 m_oldTile = _target;
                 return;
             }
-            else if (actName == "Cross ATK" && tarRend.material.color == CharacterScript.c_attack)
+            else if (actName == "Cross ATK" && tarRend.material.color == CharacterScript.c_attack || actName == "Dual ATK" && tarRend.material.color == CharacterScript.c_attack)
             {
                 selTileScript.FetchTilesWithinRange(int.Parse(actRng) + currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, false, TileScript.targetRestriction.DIAGONAL, false);
                 m_oldTile = _target;
@@ -504,8 +500,6 @@ public class BoardScript : MonoBehaviour {
 
         Renderer rend = m_currPlayer.transform.GetComponent<Renderer>();
         rend.materials[1].shader = Resources.Load<Shader>("Outlined-Silhouette Only (NOT MINE)");
-        //Renderer charRenderer = m_currPlayer.GetComponent<Renderer>();
-        //charRenderer.material.color = Color.green;
     }
 
     public void NewRound()
@@ -534,7 +528,7 @@ public class BoardScript : MonoBehaviour {
                     numPool += charScript.m_tempStats[(int)CharacterScript.sts.SPD];
             }
 
-            int randNum = Random.Range(0, numPool + 1);
+            int randNum = Random.Range(0, numPool);
             int currNum = 0;
 
             for (int i = 0; i < tempChars.Count; i++)
@@ -547,14 +541,17 @@ public class BoardScript : MonoBehaviour {
 
                 if (randNum < currNum)
                 {
+                    m_currRound.Add(tempChars[i]);
+
                     if (charScript.m_tempStats[(int)CharacterScript.sts.SPD] >= 10)
                         numPool -= 10;
                     else
+                    {
                         numPool -= charScript.m_tempStats[(int)CharacterScript.sts.SPD];
+                        tempChars.RemoveAt(i);
+                    }
 
                     charScript.m_tempStats[(int)CharacterScript.sts.SPD] -= 10;
-                    m_currRound.Add(tempChars[i]);
-                    tempChars.RemoveAt(i);
                     break;
                 }
             }

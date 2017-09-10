@@ -55,8 +55,8 @@ public class TileScript : MonoBehaviour {
             buttons[1].GetComponent<ButtonScript>().ConfirmationButton("Move");
         }
         // If selecting a tile that is holding a character while using an action
-        else if (renderer.material.color == new Color(1, 0, 0, 1) && m_holding && m_holding.tag == "Player" || 
-            renderer.material.color == new Color(0, 1, 0, 1) && m_holding && m_holding.tag == "Player" ||
+        else if (renderer.material.color == Color.red && m_holding && m_holding.tag == "Player" || 
+            renderer.material.color == Color.green && m_holding && m_holding.tag == "Player" ||
             renderer.material.color == Color.yellow) // Otherwise if color is red, perform action code
         {
             Button[] buttons = PanelScript.m_confirmPanel.GetComponentsInChildren<Button>();
@@ -65,8 +65,7 @@ public class TileScript : MonoBehaviour {
         }
         else if (m_holding && m_holding.tag == "Player" && !m_boardScript.m_isForcedMove)
         {
-            Renderer holdingR = m_holding.GetComponent<Renderer>();
-            if (holdingR.material.color == Color.green)
+            if (m_holding == m_boardScript.m_currPlayer)
             {
                 // Assign character to panels
                 PanelScript mainPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
@@ -117,7 +116,7 @@ public class TileScript : MonoBehaviour {
         // Start with current tile in oddGen
         oddGen.Add(originalTileScript);
 
-        if (_targetSelf || !_targetSelf && this != currCharScript.m_tile.GetComponent<TileScript>())// || !_targetSelf && this != originalTileScript
+        if (_targetSelf )//|| !_targetSelf && this != currCharScript.m_tile.GetComponent<TileScript>())// || !_targetSelf && this != originalTileScript
         {
             Renderer myRend = originalTile.GetComponent<Renderer>();
             m_oldColor = myRend.material.color;
@@ -168,6 +167,9 @@ public class TileScript : MonoBehaviour {
                     if (_color == CharacterScript.c_move && tScript.m_holding || !_targetSelf && tScript == currCharScript.m_tile.GetComponent<TileScript>())
                         continue;
 
+                    if (tScript.m_holding && tScript.m_holding.tag == "Player" && tScript.m_holding.GetComponent<CharacterScript>().m_effects[(int)StatusScript.effects.PROTECT])
+                        continue;
+
                     if (_targetingRestriction == targetRestriction.HORVERT && tScript.m_x != m_x && tScript.m_z != m_z)
                         continue;
 
@@ -204,7 +206,7 @@ public class TileScript : MonoBehaviour {
         }
     }
 
-    public bool CheckIfBlocked(GameObject _target)
+    private bool CheckIfBlocked(GameObject _target)
     {
         //float laserWidth = 0.1f;
         float laserMaxLength = Vector3.Distance(transform.position, _target.transform.position);
@@ -247,7 +249,7 @@ public class TileScript : MonoBehaviour {
 
     }
 
-    public GameObject Diagonal(GameObject _neighbor, TileScript _originalTile, int _neiInd)
+    private GameObject Diagonal(GameObject _neighbor, TileScript _originalTile, int _neiInd)
     {
         TileScript currNeighbor = _neighbor.GetComponent<TileScript>();
         // nbors { left, right, top, bottom };
@@ -298,7 +300,7 @@ public class TileScript : MonoBehaviour {
         return false;
     }
 
-    // Reset all tiles to their original color
+    // Reset all tiles to their original color REFACTOR: maybe make this a static class or remove the argument?
     public void ClearRadius(TileScript _tS)
     {
         List<GameObject> radTiles = _tS.m_radius;

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class StatusScript : MonoBehaviour {
 
     public enum mode { TURN_END, ROUND_END }
-    public enum effects { SCARRING, BLEED, BYPASS, HINDER, IMMOBILE, WARD, STUN, DELAY, TOT }
+    public enum effects { SCARRING, BLEED, BYPASS, HINDER, IMMOBILE, WARD, STUN, DELAY, PROTECT, TOT }
 
     static public Color c_buffColor = Color.cyan;
     static public Color c_debuffColor = new Color(1, .7f, 0, 1);
@@ -56,75 +56,12 @@ public class StatusScript : MonoBehaviour {
 
         switch (actName)
         {
-            case "Shot ATK":
-                m_statMod[(int)CharacterScript.sts.MOV] = -1;
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
-                m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
-                m_color = c_debuffColor;
-                break;
-            case "Spot":
-                m_statMod[(int)CharacterScript.sts.RNG] = 3;
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
-                m_sprite = Resources.Load<Sprite>("Symbols/Range Symbol");
-                m_color = c_buffColor;
-                break;
-            case "Passage":
-                m_statMod[(int)CharacterScript.sts.MOV] = 3;
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
-                m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
-                m_color = c_buffColor;
-                break;
-            case "Explosive":
-                m_statMod[(int)CharacterScript.sts.RAD] = 1;
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
-                m_sprite = Resources.Load<Sprite>("Symbols/Radius Symbol");
-                m_color = c_buffColor;
-                break;
-            case "Smoke ATK":
-                m_statMod[(int)CharacterScript.sts.RNG] = -2;
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
-                m_sprite = Resources.Load<Sprite>("Symbols/Range Symbol");
-                m_color = c_debuffColor;
-                break;
-            case "Winding ATK":
-                m_statMod[(int)CharacterScript.sts.EVA] = -10;
-                m_mode = mode.ROUND_END;
-                m_lifeSpan = 2;
-                m_sprite = Resources.Load<Sprite>("Symbols/Evasion Symbol");
-                m_color = c_debuffColor;
-                break;
-            case "Weakening ATK":
-                m_statMod[(int)CharacterScript.sts.DEF] = -1;
-                m_mode = mode.ROUND_END;
-                m_lifeSpan = 2;
-                m_sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
-                m_color = c_debuffColor;
-                break;
-            case "Scarring ATK":
-                m_charScript.m_effects[(int)effects.SCARRING] = true;
-                m_mode = mode.ROUND_END;
-                m_lifeSpan = 2;
-                m_sprite = Resources.Load<Sprite>("Symbols/Life Symbol");
-                m_color = c_statusColor;
-                break;
-            case "Boost":
-                m_statMod[(int)CharacterScript.sts.DMG] = 2;
+            case "Arm ATK":
+                m_statMod[(int)CharacterScript.sts.DMG] = -1;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
-                m_color = c_buffColor;
-                break;
-            case "Aim":
-                m_statMod[(int)CharacterScript.sts.HIT] = 15;
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
-                m_sprite = Resources.Load<Sprite>("Symbols/Hit Symbol");
-                m_color = c_buffColor;
+                m_color = c_debuffColor;
                 break;
             case "Bleed ATK":
                 m_charScript.m_effects[(int)effects.BLEED] = true;
@@ -134,89 +71,19 @@ public class StatusScript : MonoBehaviour {
                 m_sprite = Resources.Load<Sprite>("Symbols/Life Symbol");
                 m_color = c_debuffColor;
                 break;
-            case "Critical":
-                m_statMod[(int)CharacterScript.sts.CRT] = 15;
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
-                m_sprite = Resources.Load<Sprite>("Symbols/Critical Symbol");
-                m_color = c_buffColor;
-                break;
-            case "Hindering ATK":
-                m_charScript.m_effects[(int)effects.HINDER] = true;
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
-                m_sprite = Resources.Load<Sprite>("Symbols/Ability Symbol");
-                m_color = c_statusColor;
-                break;
-            case "Unnerving ATK":
-                m_statMod[(int)CharacterScript.sts.CRT] = -5;
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
-                m_sprite = Resources.Load<Sprite>("Symbols/Critical Symbol");
-                m_color = c_debuffColor;
-                break;
-            case "Defensive ATK":
-                m_statMod[(int)CharacterScript.sts.DMG] = -1;
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
-                m_sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
-                m_color = c_debuffColor;
-                break;
             case "Blinding ATK":
-                m_statMod[(int)CharacterScript.sts.HIT] = -15;
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
-                m_sprite = Resources.Load<Sprite>("Symbols/Hit Symbol");
+                m_statMod[(int)CharacterScript.sts.RNG] = -1;
+                m_mode = mode.ROUND_END;
+                m_lifeSpan = 2;
+                m_sprite = Resources.Load<Sprite>("Symbols/Range Symbol");
                 m_color = c_debuffColor;
                 break;
-            case "Fortifying ATK":
-                m_statMod[(int)CharacterScript.sts.DEF] = 1;
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 2;
-                m_sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
-                m_color = c_buffColor;
-                break;
-            case "Immobilizing ATK":
-                m_charScript.m_effects[(int)effects.IMMOBILE] = true;
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
-                m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
-                m_color = c_statusColor;
-                break;
-            case "Ward ATK":
-                m_charScript.m_effects[(int)effects.WARD] = true;
+            case "Boost":
+                m_statMod[(int)CharacterScript.sts.DMG] = 2;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
-                m_color = c_statusColor;
-                break;
-            case "Bolstering ATK":
-                m_statMod[(int)CharacterScript.sts.EVA] = 15;
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 2;
-                m_sprite = Resources.Load<Sprite>("Symbols/Evasion Symbol");
                 m_color = c_buffColor;
-                break;
-            case "Prepare":
-                m_statMod[(int)CharacterScript.sts.EVA] = 25;
-                m_mode = mode.ROUND_END;
-                m_lifeSpan = 2;
-                m_sprite = Resources.Load<Sprite>("Symbols/Evasion Symbol");
-                m_color = c_buffColor;
-                break;
-            case "Protect":
-                m_statMod[(int)CharacterScript.sts.DEF] = 1;
-                m_mode = mode.ROUND_END;
-                m_lifeSpan = 2;
-                m_sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
-                m_color = c_buffColor;
-                break;
-            case "Stun ATK":
-                m_charScript.m_effects[(int)effects.STUN] = true;
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
-                m_sprite = Resources.Load<Sprite>("Symbols/Action Symbol");
-                m_color = c_statusColor;
                 break;
             case "Delay ATK":
                 m_charScript.m_effects[(int)effects.DELAY] = true;
@@ -233,6 +100,118 @@ public class StatusScript : MonoBehaviour {
                 m_color = c_statusColor;
                 break;
             default:
+                break;
+            case "Explosive":
+                m_statMod[(int)CharacterScript.sts.RAD] = 1;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 1;
+                m_sprite = Resources.Load<Sprite>("Symbols/Radius Symbol");
+                m_color = c_buffColor;
+                break;
+            case "Fortifying ATK":
+                m_statMod[(int)CharacterScript.sts.DEF] = 1;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 2;
+                m_sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
+                m_color = c_buffColor;
+                break;
+            case "Hindering ATK":
+                m_charScript.m_effects[(int)effects.HINDER] = true;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 1;
+                m_sprite = Resources.Load<Sprite>("Symbols/Ability Symbol");
+                m_color = c_statusColor;
+                break;
+            case "Immobilizing ATK":
+                m_charScript.m_effects[(int)effects.IMMOBILE] = true;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 1;
+                m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
+                m_color = c_statusColor;
+                break;
+            case "Leg ATK":
+                m_statMod[(int)CharacterScript.sts.MOV] = -1;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 1;
+                m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
+                m_color = c_debuffColor;
+                break;
+            case "Passage":
+                m_statMod[(int)CharacterScript.sts.MOV] = 3;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 1;
+                m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
+                m_color = c_buffColor;
+                break;
+            case "Scarring ATK":
+                m_charScript.m_effects[(int)effects.SCARRING] = true;
+                m_mode = mode.ROUND_END;
+                m_lifeSpan = 2;
+                m_sprite = Resources.Load<Sprite>("Symbols/Life Symbol");
+                m_color = c_statusColor;
+                break;
+            case "Smoke ATK":
+                m_statMod[(int)CharacterScript.sts.MOV] = 1;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 1;
+                m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
+                m_color = c_buffColor;
+                break;
+            case "Spot":
+                m_statMod[(int)CharacterScript.sts.RNG] = 3;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 1;
+                m_sprite = Resources.Load<Sprite>("Symbols/Range Symbol");
+                m_color = c_buffColor;
+                break;
+            case "Targeting ATK":
+                m_statMod[(int)CharacterScript.sts.RNG] = 1;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 2;
+                m_sprite = Resources.Load<Sprite>("Symbols/RNG Symbol");
+                m_color = c_buffColor;
+                break;
+            case "Prepare":
+                m_statMod[(int)CharacterScript.sts.DEF] = 1;
+                m_mode = mode.ROUND_END;
+                m_lifeSpan = 2;
+                m_sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
+                m_color = c_buffColor;
+                break;
+            case "Protect":
+                m_charScript.m_effects[(int)effects.PROTECT] = true;
+                m_mode = mode.ROUND_END;
+                m_lifeSpan = 2;
+                m_sprite = Resources.Load<Sprite>("Symbols/Hit Symbol");
+                m_color = c_statusColor;
+                break;
+            case "Stun ATK":
+                m_charScript.m_effects[(int)effects.STUN] = true;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 1;
+                m_sprite = Resources.Load<Sprite>("Symbols/Action Symbol");
+                m_color = c_statusColor;
+                break;
+            case "Ward ATK":
+                m_charScript.m_effects[(int)effects.WARD] = true;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 1;
+                m_sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
+                m_color = c_statusColor;
+                break;
+            case "Weakening ATK":
+                m_statMod[(int)CharacterScript.sts.DEF] = -1;
+                m_mode = mode.ROUND_END;
+                m_lifeSpan = 2;
+                m_sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
+                m_color = c_debuffColor;
+                break;
+            case "Winding ATK":
+                m_statMod[(int)CharacterScript.sts.DMG] = 2;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 2;
+                m_sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
+                m_color = c_buffColor;
                 break;
         }
     }
@@ -309,6 +288,9 @@ public class StatusScript : MonoBehaviour {
                 break;
             case "Delay ATK":
                 m_charScript.m_effects[(int)effects.DELAY] = false;
+                break;
+            case "Protect":
+                m_charScript.m_effects[(int)effects.PROTECT] = false;
                 break;
             case "Disorienting ATK":
                 List<int> viableActs = new List<int>();
