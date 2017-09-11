@@ -102,7 +102,7 @@ public class TeamMenuScript : MonoBehaviour {
         m_currCharScript.m_actions = new string[4];
 
         DatabaseScript dbScript = gameObject.GetComponent<DatabaseScript>();
-        int prevAct = 0;
+        int prevAct = -1;
 
         for (int i = 0; i < 4; i++)
         {
@@ -129,7 +129,7 @@ public class TeamMenuScript : MonoBehaviour {
             } while (randAct == prevAct);
 
             prevAct = randAct;
-            m_currCharScript.m_actions[i] = dbScript.m_actions[randAct + color * 16];
+            m_currCharScript.m_actions[i] = dbScript.m_actions[randAct + (color * 16)];
         }
 
         DatabaseScript db = gameObject.GetComponent<DatabaseScript>();
@@ -609,7 +609,6 @@ public class TeamMenuScript : MonoBehaviour {
 
             } while (!actOK);
 
-            Text t = _buttons[i].GetComponentInChildren<Text>();
             _buttons[i].GetComponentInChildren<Text>().text = buff + debuff;
             _buttons[i].name = statAlt;
 
@@ -624,7 +623,7 @@ public class TeamMenuScript : MonoBehaviour {
         PanelScript statPanScript = PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_panels[1].GetComponent<PanelScript>();
         string[] statSeparated = m_statButton.name.Split('|');
 
-        for (int i = 0; i < 9; i++)
+        for (int i = 0; i < m_currCharScript.m_stats.Length; i++)
         {
             string[] s = statSeparated[i + 1].Split(':');
             m_currCharScript.m_stats[i] += int.Parse(s[1]);
@@ -670,9 +669,10 @@ public class TeamMenuScript : MonoBehaviour {
     public void Rename()
     {
         Text text = PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_text[2];
+        Text textPlace = PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_text[1];
         m_currCharScript.m_name = text.text;
         m_currButton.GetComponentInChildren<Text>().text = text.text;
         PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
-    }
 
+    }
 }

@@ -151,11 +151,11 @@ public class StatusScript : MonoBehaviour {
                 m_color = c_statusColor;
                 break;
             case "Smoke ATK":
-                m_statMod[(int)CharacterScript.sts.MOV] = 1;
+                m_statMod[(int)CharacterScript.sts.MOV] = -2;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
-                m_color = c_buffColor;
+                m_color = c_debuffColor;
                 break;
             case "Spot":
                 m_statMod[(int)CharacterScript.sts.RNG] = 3;
@@ -168,7 +168,7 @@ public class StatusScript : MonoBehaviour {
                 m_statMod[(int)CharacterScript.sts.RNG] = 1;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 2;
-                m_sprite = Resources.Load<Sprite>("Symbols/RNG Symbol");
+                m_sprite = Resources.Load<Sprite>("Symbols/Range Symbol");
                 m_color = c_buffColor;
                 break;
             case "Prepare":

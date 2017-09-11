@@ -66,9 +66,11 @@ public class PanelScript : MonoBehaviour {
 	void Update ()
     {
         RectTransform recTrans = GetComponent<RectTransform>();
+        // REFACTOR
         if (Input.GetMouseButtonDown(1) && m_inView && m_direction == dir.UP && recTrans.offsetMax.y < 200 &&
             gameObject.tag != "Selector" && gameObject.name != "Confirmation Panel" && !m_locked ||
-            Input.GetMouseButtonDown(1) && m_history.Count > 0 && GetRecentHistory().name == "Confirmation Panel" && m_locked)
+            Input.GetMouseButtonDown(1) && m_history.Count > 0 && GetRecentHistory().name == "Confirmation Panel" && m_locked ||
+            Input.GetMouseButtonDown(1) && m_history.Count == 1 && GetRecentHistory().name == "Confirmation Panel")
             OnRightClick();
 
         Slide();
@@ -141,9 +143,7 @@ public class PanelScript : MonoBehaviour {
             CharacterScript currScript = bScript.m_currPlayer.GetComponent<CharacterScript>();
             m_panels[0].GetComponent<Image>().color = new Color(currScript.m_teamColor.r + 0.3f, currScript.m_teamColor.g + 0.3f, currScript.m_teamColor.b + 0.3f, 1);
             m_panels[1].GetComponent<Image>().color = new Color(m_cScript.m_teamColor.r + 0.3f, m_cScript.m_teamColor.g + 0.3f, m_cScript.m_teamColor.b + 0.3f, 1);
-            int hit = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.HIT));
-            int dmg = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.DMG)) + currScript.m_tempStats[(int)CharacterScript.sts.DMG];
-            //m_text[0].text = "Hit %: " + (hit + currScript.m_tempStats[(int)CharacterScript.sts.HIT] - m_cScript.m_tempStats[(int)CharacterScript.sts.EVA]).ToString();
+            int dmg = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.DMG)) + currScript.m_tempStats[(int)CharacterScript.sts.DMG] - m_cScript.m_tempStats[(int)CharacterScript.sts.DEF];
             m_text[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP].ToString() + " -> " + (m_cScript.m_tempStats[(int)CharacterScript.sts.HP] - dmg).ToString();
         }
         else if (name == "ActionViewer Panel")
@@ -229,11 +229,11 @@ public class PanelScript : MonoBehaviour {
                 // Fill out energy
                 m_buttons[0].GetComponent<ButtonScript>().SetTotalEnergy(m_cScript.m_color);
                 // Fill out Action Panel
-                m_panels[0].GetComponent<PanelScript>().m_cScript = m_cScript;
-                m_panels[0].GetComponent<PanelScript>().PopulatePanel();
+                actionScript.m_cScript = m_cScript;
+                actionScript.PopulatePanel();
                 // Fill out Status Panel
-                m_panels[1].GetComponent<PanelScript>().m_cScript = m_cScript;
-                m_panels[1].GetComponent<PanelScript>().PopulatePanel();
+                statPan.m_cScript = m_cScript;
+                statPan.PopulatePanel();
 
                 // Determine if select or remove will be visible
                 for (int i = 0; i < m_buttons.Length; i++)
@@ -254,14 +254,15 @@ public class PanelScript : MonoBehaviour {
 
                 // Fill out name
                 m_text[1].text = m_cScript.m_name;
+                GetComponentInChildren<InputField>().text = m_cScript.m_name;
                 // Fill out energy
                 m_buttons[0].GetComponent<ButtonScript>().SetTotalEnergy(m_cScript.m_color);
                 // Fill out Action Panel
-                m_panels[0].GetComponent<PanelScript>().m_cScript = m_cScript;
-                m_panels[0].GetComponent<PanelScript>().PopulatePanel();
+                actionScript.m_cScript = m_cScript;
+                actionScript.PopulatePanel();
                 // Fill out Status Panel
-                m_panels[1].GetComponent<PanelScript>().m_cScript = m_cScript;
-                m_panels[1].GetComponent<PanelScript>().PopulatePanel();
+                statPan.m_cScript = m_cScript;
+                statPan.PopulatePanel();
 
                 m_cScript.m_exp = 10;
 
@@ -403,22 +404,22 @@ public class PanelScript : MonoBehaviour {
         }
         else if (name == "Status Panel")
         {
-            if (m_history[m_history.Count -1].name == "CharacterViewer Panel")
+            if (m_main && m_main.name == "CharacterViewer Panel")
                 m_text[0].text = "";
             else
                 m_text[0].text = m_cScript.m_name;
 
-            m_text[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
+            m_text[1].text = "HP: " + m_cScript.m_stats[(int)CharacterScript.sts.HP]; // m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + 
             m_text[2].text = "SPD: " + m_cScript.m_tempStats[(int)CharacterScript.sts.SPD];
-            m_text[3].text = "MOV: " + m_cScript.m_tempStats[(int)CharacterScript.sts.MOV];
-            m_text[4].text = "RNG: " + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG];
-            m_text[5].text = "DMG: " + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG];
-            m_text[6].text = "DEF: " + m_cScript.m_tempStats[(int)CharacterScript.sts.DEF];
+            m_text[3].text = "DMG: " + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG];
+            m_text[4].text = "DEF: " + m_cScript.m_tempStats[(int)CharacterScript.sts.DEF];
+            m_text[5].text = "MOV: " + m_cScript.m_tempStats[(int)CharacterScript.sts.MOV];
+            m_text[6].text = "RNG: " + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG];
 
             if (m_cScript.m_accessories[0] != null)
-                m_text[9].text = "ACC: " + m_cScript.m_accessories[0];
+                m_text[7].text = "ACC: " + m_cScript.m_accessories[0];
             if (m_cScript.m_accessories[1] != null)
-                m_text[10].text = "ACC: " + m_cScript.m_accessories[1];
+                m_text[8].text = "ACC: " + m_cScript.m_accessories[1];
 
             StatusSymbolSetup();
         }

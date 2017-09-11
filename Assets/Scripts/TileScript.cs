@@ -16,7 +16,7 @@ public class TileScript : MonoBehaviour {
     public int m_z;
     public BoardScript m_boardScript;
     private Color m_oldColor;
-    private LineRenderer m_line;
+    //private LineRenderer m_line;
 
     // Use this for initialization
     void Start()
@@ -24,7 +24,7 @@ public class TileScript : MonoBehaviour {
         m_radius = new List<GameObject>();
         m_oldColor = Color.black;
 
-        m_line = gameObject.AddComponent<LineRenderer>();
+        //m_line = gameObject.AddComponent<LineRenderer>();
     }
 
     // Update is called once per frame
@@ -37,7 +37,6 @@ public class TileScript : MonoBehaviour {
         if (PanelScript.CheckIfPanelOpen() || m_boardScript.m_camIsFrozen)
             return;
 
-        CharacterScript currPlayerScript = m_boardScript.m_currPlayer.GetComponent<CharacterScript>();
         TileScript currTileScript = m_boardScript.m_currTile.GetComponent<TileScript>();
         Renderer renderer = GetComponent<Renderer>();
 
@@ -116,7 +115,7 @@ public class TileScript : MonoBehaviour {
         // Start with current tile in oddGen
         oddGen.Add(originalTileScript);
 
-        if (_targetSelf )//|| !_targetSelf && this != currCharScript.m_tile.GetComponent<TileScript>())// || !_targetSelf && this != originalTileScript
+        if (_targetSelf)//|| !_targetSelf && this != currCharScript.m_tile.GetComponent<TileScript>())// || !_targetSelf && this != originalTileScript
         {
             Renderer myRend = originalTile.GetComponent<Renderer>();
             m_oldColor = myRend.material.color;

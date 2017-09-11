@@ -322,7 +322,7 @@ public class ButtonScript : MonoBehaviour {
     public void ResetEnergySelection()
     {
         string actName = DatabaseScript.GetActionData(m_boardScript.m_currPlayer.GetComponent<CharacterScript>().m_currAction, DatabaseScript.actions.NAME);
-        if (actName == "Syphon ATK")
+        if (actName == "Syphon ATK" || actName == "Deplete ATK")
             for (int i = 0; i < m_parent.m_images.Length; i++)
                 m_parent.m_images[i].GetComponentInChildren<Text>().text = m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy[i].ToString();
         else
@@ -388,15 +388,13 @@ public class ButtonScript : MonoBehaviour {
             Button newStat = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
             string[] statSeparated = newStat.name.Split('|');
 
-            for (int i = 0; i < 9; i++)
+            for (int i = 1; i < 7; i++)
             {
-                string[] s = statSeparated[i + 1].Split(':');
+                string[] s = statSeparated[i].Split(':');
                 string[] textSeparated = statPanScript.m_text[i].text.Split(':');
-                int newNumber = m_main.m_cScript.m_stats[i] + int.Parse(s[1]);
+                int newNumber = m_main.m_cScript.m_stats[i - 1] + int.Parse(s[1]);
                 if (i == 0)
                     statPanScript.m_text[i].text = textSeparated[0] + ": " + newNumber.ToString() + "/" + newNumber.ToString();
-                //else if (i == (int)CharacterScript.sts.HIT || i == (int)CharacterScript.sts.EVA || i == (int)CharacterScript.sts.CRT)
-                //    statPanScript.m_text[i].text = textSeparated[0] + ": " + newNumber.ToString() + "%";
                 else
                     statPanScript.m_text[i].text = textSeparated[0] + ": " + newNumber.ToString();
 

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class DatabaseScript : MonoBehaviour {
 
-    public enum actions { ID, NAME, ENERGY, HIT, DMG, RNG, RAD, CRT, EFFECT, TOT };
+    public enum actions { ID, NAME, ENERGY, DMG, RNG, RAD, EFFECT, TOT };
     public enum presets { ID, NAME, COLORS, ACTIONS, EQUIPMENT, TOT }
 
     public string[] m_actions;

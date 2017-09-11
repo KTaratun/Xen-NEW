@@ -78,9 +78,10 @@ public class CharacterScript : ObjectScript {
         {
             m_stats = new int[(int)sts.TOT];
             m_tempStats = new int[(int)sts.TOT];
-            m_accessories = new string[2];
-            m_accessories[0] = "Ring of DEATH";
         }
+
+        m_accessories = new string[2];
+        m_accessories[0] = "Ring of DEATH";
 
         for (int i = 0; i < m_stats.Length; i++)
             m_stats[i] = 0;
@@ -293,7 +294,7 @@ public class CharacterScript : ObjectScript {
         bool targetSelf = false;
 
         // If the action can target the source
-        if (m_currRadius > 0 && actName != "Slash ATK")
+        if (m_currRadius > 0 && actName != "Slash ATK" || !CheckIfAttack(actName) && actName != "Protect")
             targetSelf = true;
 
         int finalRNG = int.Parse(actRng);
@@ -304,7 +305,7 @@ public class CharacterScript : ObjectScript {
         if (CheckIfAttack(actName))
             tileScript.FetchTilesWithinRange(finalRNG, c_attack, targetSelf, targetingRestriction, isBlockable);
         else
-            tileScript.FetchTilesWithinRange(finalRNG, c_action, true, targetingRestriction, isBlockable);
+            tileScript.FetchTilesWithinRange(finalRNG, c_action, targetSelf, targetingRestriction, isBlockable);
 
         PanelScript actionPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
         actionPanScript.m_inView = false;
@@ -392,14 +393,12 @@ public class CharacterScript : ObjectScript {
     public void Attack(List<GameObject> _targets) // used to be bool
     {
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
-        string actHit = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.HIT);
         string actDmg = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.DMG);
-        string actCrt = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.CRT);
         PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
 
         bool teamBuff = false;
-        if (actName == "Fortifying ATK" || actName == "Bolstering ATK" || actName == "Winding ATK" || 
-            actName == "Devastating ATK" || actName == "Targeting ATK" || actName == "Smoke ATK")
+        if (actName == "Fortifying ATK" || actName == "Cleansing ATK" || actName == "Winding ATK" || 
+            actName == "Devastating ATK" || actName == "Targeting ATK")
             teamBuff = true;
 
         for (int i = 0; i < _targets.Count; i++)
@@ -414,9 +413,8 @@ public class CharacterScript : ObjectScript {
             if (!teamBuff || teamBuff && targetScript.m_player != m_player)
             {
                 if (actName == "Bypass ATK")
-                    finalDMG = (0 + targetScript.m_tempStats[(int)sts.DEF]).ToString();
-
-                if (int.Parse(actDmg) + m_tempStats[(int)sts.DMG] + targetScript.m_tempStats[(int)sts.DEF] >= 0)
+                    finalDMG = (int.Parse(actDmg) + m_tempStats[(int)sts.DMG]).ToString();
+                else if (int.Parse(actDmg) + m_tempStats[(int)sts.DMG] - targetScript.m_tempStats[(int)sts.DEF] >= 0)
                     finalDMG = (int.Parse(actDmg) + m_tempStats[(int)sts.DMG] - targetScript.m_tempStats[(int)sts.DEF]).ToString();
 
                      targetScript.ReceiveDamage(finalDMG, Color.white);
@@ -425,7 +423,10 @@ public class CharacterScript : ObjectScript {
             if (!m_effects[(int)StatusScript.effects.HINDER] && !teamBuff || 
               !m_effects[(int)StatusScript.effects.HINDER] && teamBuff && targetScript.m_player == m_player)
               Ability(_targets[i], actName);
+
         }
+            if (teamBuff)
+                Ability(gameObject, actName);
 
         // REFACTOR
         if (actName == "Redirect ATK" && m_boardScript.m_isForcedMove ||
@@ -435,7 +436,7 @@ public class CharacterScript : ObjectScript {
         {
             mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
             if (mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].GetComponent<Image>().color == Color.yellow)
-                EndTurn(true);
+                mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
         }
 
         if (_targets.Count > 1)
@@ -591,7 +592,7 @@ public class CharacterScript : ObjectScript {
             case "Blast ATK":
                 Knockback(targetScript, m_boardScript.m_selected.GetComponent<TileScript>(), 1);
                 break;
-            case "Cleasing ATK":
+            case "Cleansing ATK":
                 targetScript.HealHealth(2);
                 break;
             case "Break ATK":
@@ -629,7 +630,7 @@ public class CharacterScript : ObjectScript {
                 targetScript.HealHealth(4);
                 break;
             case "Healing ATK":
-                HealHealth(2);
+                HealHealth(1);
                 break;
             case "Lunge ATK":
                 PullTowards(this, targetScript.m_tile.GetComponent<TileScript>());
@@ -771,7 +772,6 @@ public class CharacterScript : ObjectScript {
             }
 
             int extraDMG = Mathf.CeilToInt(_force / 2.0f);
-            TextMesh textMesh = _targetScript.m_popupText.GetComponent<TextMesh>();
             _targetScript.ReceiveDamage(((extraDMG).ToString()), Color.white);
 
             if (nei.m_holding && nei.m_holding.tag == "Player")

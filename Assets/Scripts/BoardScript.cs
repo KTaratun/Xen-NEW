@@ -366,6 +366,8 @@ public class BoardScript : MonoBehaviour {
 
         // TARGET RED TILE
 
+        bool targetSelf = true;
+
         TileScript selTileScript = _target.GetComponent<TileScript>();
         if (currCharScript.m_currAction.Length > 0) // REFACTOR: All this code just for piercing attack...
         {
@@ -390,10 +392,13 @@ public class BoardScript : MonoBehaviour {
                 m_oldTile = _target;
                 return;
             }
+
+            if (actName == "Fortifying ATK" || actName == "Blinding ATK")
+                targetSelf = false;
         }
 
         if (currCharScript.m_currRadius + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0 && tarRend.material.color == CharacterScript.c_attack)
-            selTileScript.FetchTilesWithinRange(currCharScript.m_currRadius + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD], Color.yellow, true, TileScript.targetRestriction.NONE, true);
+            selTileScript.FetchTilesWithinRange(currCharScript.m_currRadius + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD], Color.yellow, targetSelf, TileScript.targetRestriction.NONE, true);
         else
             tarRend.material.color = new Color(tarRend.material.color.r, tarRend.material.color.g, tarRend.material.color.b, tarRend.material.color.a + 0.5f);
 
