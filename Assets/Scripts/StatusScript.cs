@@ -104,7 +104,7 @@ public class StatusScript : MonoBehaviour {
             case "Explosive":
                 m_statMod[(int)CharacterScript.sts.RAD] = 1;
                 m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
+                m_lifeSpan = 2;
                 m_sprite = Resources.Load<Sprite>("Symbols/Radius Symbol");
                 m_color = c_buffColor;
                 break;
@@ -277,7 +277,7 @@ public class StatusScript : MonoBehaviour {
             case "Hindering ATK":
                 m_charScript.m_effects[(int)effects.HINDER] = false;
                 break;
-            case "Immobilize ATK":
+            case "Immobilizing ATK":
                 m_charScript.m_effects[(int)effects.IMMOBILE] = false;
                 break;
             case "Ward ATK":

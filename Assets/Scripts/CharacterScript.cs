@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class CharacterScript : ObjectScript {
 
-    public enum sts { HP, SPD, DMG, DEF, MOV, RNG, RAD, TOT };
+    public enum sts { HP, SPD, DMG, DEF, MOV, RNG, TEC, RAD, TOT };
     enum trn { MOV, ACT };
 
     static public Color c_green = new Color(.45f, .7f, .4f, 1);
@@ -190,7 +190,11 @@ public class CharacterScript : ObjectScript {
                     meshRends[j].material.color.b, meshRends[j].material.color.a - fadeSpeed);
 
                     if (meshRends[j].material.color.a <= 0)
+                    {
+                        m_boardScript.m_camIsFrozen = false;
                         m_popupSpheres[i].SetActive(false);
+                        m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_currPlayer;
+                    }
                 }
             }
         }
@@ -207,8 +211,6 @@ public class CharacterScript : ObjectScript {
                 textMesh.color = Color.white;
                 textMesh.text = "0";
                 m_popupText.SetActive(false);
-                m_boardScript.m_camIsFrozen = false;
-                m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_currPlayer;
             }
         }
     }
@@ -298,7 +300,7 @@ public class CharacterScript : ObjectScript {
             targetSelf = true;
 
         int finalRNG = int.Parse(actRng);
-        if (finalRNG > 1 && finalRNG + m_tempStats[(int)sts.RNG] > 1)
+        //if (finalRNG > 1 && finalRNG + m_tempStats[(int)sts.RNG] > 1)
             finalRNG += m_tempStats[(int)sts.RNG];
 
         // See if it's an attack or not
@@ -358,7 +360,8 @@ public class CharacterScript : ObjectScript {
                 if (!m_effects[(int)StatusScript.effects.HINDER])
                     Ability(gameObject, actName);
 
-            if (mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable == false ||
+            if (mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable == false && 
+                mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].GetComponent<Image>().color != new Color(1, .5f, .5f, 1) ||
                 mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].GetComponent<Image>().color == Color.yellow
                 || m_isFree)
             {
@@ -397,9 +400,12 @@ public class CharacterScript : ObjectScript {
         PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
 
         bool teamBuff = false;
-        if (actName == "Fortifying ATK" || actName == "Cleansing ATK" || actName == "Winding ATK" || 
-            actName == "Devastating ATK" || actName == "Targeting ATK")
+        bool soloBuff = false;
+        if (actName == "Fortifying ATK" || actName == "Cleansing ATK")
             teamBuff = true;
+        else if (actName == "Winding ATK" || actName == "Devastating ATK" || actName == "Targeting ATK" ||
+            actName == "Healing ATK")
+            soloBuff = true;
 
         for (int i = 0; i < _targets.Count; i++)
         {
@@ -420,13 +426,14 @@ public class CharacterScript : ObjectScript {
                      targetScript.ReceiveDamage(finalDMG, Color.white);
             }
 
-            if (!m_effects[(int)StatusScript.effects.HINDER] && !teamBuff || 
-              !m_effects[(int)StatusScript.effects.HINDER] && teamBuff && targetScript.m_player == m_player)
-              Ability(_targets[i], actName);
+            if (!m_effects[(int)StatusScript.effects.HINDER])
+                if (!teamBuff  && !soloBuff || teamBuff && targetScript.m_player == m_player && !soloBuff)
+                    Ability(_targets[i], actName);
 
         }
-            if (teamBuff)
-                Ability(gameObject, actName);
+            if (!m_effects[(int)StatusScript.effects.HINDER])
+                if (teamBuff || soloBuff)
+                    Ability(gameObject, actName);
 
         // REFACTOR
         if (actName == "Redirect ATK" && m_boardScript.m_isForcedMove ||
@@ -588,12 +595,16 @@ public class CharacterScript : ObjectScript {
                 if (targetScript.GetComponents<StatusScript>().Length > 0)
                     SelectorInit(targetScript, BoardScript.pnls.STATUS_SELECTOR);
                 break;
+            case "Cleansing ATK":
+            case "Healing ATK":
+                targetScript.HealHealth(1);
+                break;
+            case "Heal":
+                targetScript.HealHealth(3);
+                break;
             // Unique abilities
             case "Blast ATK":
                 Knockback(targetScript, m_boardScript.m_selected.GetComponent<TileScript>(), 1);
-                break;
-            case "Cleansing ATK":
-                targetScript.HealHealth(2);
                 break;
             case "Break ATK":
                 targetScript.m_stats[(int)sts.DMG]++;
@@ -625,12 +636,6 @@ public class CharacterScript : ObjectScript {
                 break;
             case "Focus":
                 targetScript.m_tempStats[(int)sts.SPD] += 2;
-                break;
-            case "Heal":
-                targetScript.HealHealth(4);
-                break;
-            case "Healing ATK":
-                HealHealth(1);
                 break;
             case "Lunge ATK":
                 PullTowards(this, targetScript.m_tile.GetComponent<TileScript>());

@@ -287,6 +287,36 @@ public class PanelScript : MonoBehaviour {
             GetComponentsInChildren<Text>()[0].text = m_cScript.m_name;
             GetComponentsInChildren<Text>()[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
 
+            if (m_cScript.m_tempStats[(int)CharacterScript.sts.SPD].ToString().Length > 1)
+                GetComponentsInChildren<Text>()[2].text = "   " + m_cScript.m_tempStats[(int)CharacterScript.sts.SPD];
+            else
+                GetComponentsInChildren<Text>()[2].text = "    " + m_cScript.m_tempStats[(int)CharacterScript.sts.SPD];
+
+            if (m_cScript.m_tempStats[(int)CharacterScript.sts.DMG].ToString().Length > 1)
+                GetComponentsInChildren<Text>()[3].text = "   " + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG];
+            else
+                GetComponentsInChildren<Text>()[3].text = "    " + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG];
+
+            if (m_cScript.m_tempStats[(int)CharacterScript.sts.DEF].ToString().Length > 1)
+                GetComponentsInChildren<Text>()[4].text = "   " + m_cScript.m_tempStats[(int)CharacterScript.sts.DEF];
+            else
+                GetComponentsInChildren<Text>()[4].text = "    " + m_cScript.m_tempStats[(int)CharacterScript.sts.DEF];
+
+            if (m_cScript.m_tempStats[(int)CharacterScript.sts.MOV].ToString().Length > 1)
+                GetComponentsInChildren<Text>()[5].text = "   " + m_cScript.m_tempStats[(int)CharacterScript.sts.MOV];
+            else
+                GetComponentsInChildren<Text>()[5].text = "    " + m_cScript.m_tempStats[(int)CharacterScript.sts.MOV];
+
+            if (m_cScript.m_tempStats[(int)CharacterScript.sts.RNG].ToString().Length > 1)
+                GetComponentsInChildren<Text>()[6].text = "   " + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG];
+            else
+                GetComponentsInChildren<Text>()[6].text = "    " + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG];
+
+            if (m_cScript.m_tempStats[(int)CharacterScript.sts.TEC].ToString().Length > 1)
+                GetComponentsInChildren<Text>()[7].text = "   " + m_cScript.m_tempStats[(int)CharacterScript.sts.TEC];
+            else
+                GetComponentsInChildren<Text>()[7].text = "    " + m_cScript.m_tempStats[(int)CharacterScript.sts.TEC];
+
             if (GetComponentInChildren<Button>())
             {
                 Button button = GetComponentInChildren<Button>();
@@ -643,6 +673,9 @@ public class PanelScript : MonoBehaviour {
     {
         BoardScript bScript = m_main.GetComponent<BoardScript>();
         GameObject pan = null;
+        float height = 55.0f; // The differnce in y each panel is 61.2f
+        float start = 260.0f;
+
         int count = 0; // Count is used to determine how much to lower each panel
 
         // Set current panel and count actives
@@ -664,7 +697,7 @@ public class PanelScript : MonoBehaviour {
             for (int i = 0; i < count; i++)
             {
                 m_panels[i].SetActive(true);
-                m_panels[i].transform.SetPositionAndRotation(new Vector3(m_panels[i].transform.position.x, 166 + 61.2f * i, m_panels[i].transform.position.z), m_panels[i].transform.rotation);
+                m_panels[i].transform.SetPositionAndRotation(new Vector3(m_panels[i].transform.position.x, start + height * i, m_panels[i].transform.position.z), m_panels[i].transform.rotation);
                 CharacterScript charScript = bScript.m_currRound[i].GetComponent<CharacterScript>();
                 charScript.m_turnPanel = m_panels[i];
 
@@ -703,9 +736,11 @@ public class PanelScript : MonoBehaviour {
             {
                 pan = m_panels[i];
                 panRect = pan.GetComponent<RectTransform>();
-                float height = 61.2f; // The differnce in y each panel is
+                float original = (start + height * i);
+                float offset = height * (bScript.m_livingPlayersInRound - bScript.m_currRound.Count);
+                float num = original - offset;
 
-                if (pan.activeSelf && panRect.offsetMax.y > 180 + height * i - height * (bScript.m_livingPlayersInRound - bScript.m_currRound.Count))
+                if (pan.activeSelf && pan.transform.position.y > num)
                     pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x, pan.transform.position.y - 10.0f, pan.transform.position.z), pan.transform.rotation);
 
                 if (pan.activeSelf && panRect.offsetMax.x < 45)

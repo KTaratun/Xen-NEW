@@ -235,15 +235,15 @@ public class ButtonScript : MonoBehaviour {
                 statScript.DestroyStatus(m_main.m_cScript.transform.root.gameObject);
             else if (actName == "Extension")
             {
-                statScript.m_lifeSpan++;
+                statScript.m_lifeSpan += 2;
 
-                for (int i = 0; i < statScript.m_statMod.Length; i++)
-                {
-                    if (statScript.m_statMod[i] > 0)
-                        statScript.m_statMod[i]++;
-                    else if (statScript.m_statMod[i] < 0)
-                        statScript.m_statMod[i]--;
-                }
+                //for (int i = 0; i < statScript.m_statMod.Length; i++)
+                //{
+                //    if (statScript.m_statMod[i] > 0)
+                //        statScript.m_statMod[i]++;
+                //    else if (statScript.m_statMod[i] < 0)
+                //        statScript.m_statMod[i]--;
+                //}
             }
             //else if (actName == "Modification")
             //    for (int i = 0; i < statScript.m_statMod.Length; i++)
@@ -260,7 +260,7 @@ public class ButtonScript : MonoBehaviour {
             else if (actName == "Syphon ATK")
                 SubtractEnergy(1, m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy);
             else if (actName == "Deplete ATK")
-                SubtractEnergy(3, m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy);
+                SubtractEnergy(2, m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy);
         }
     }
 
@@ -333,6 +333,7 @@ public class ButtonScript : MonoBehaviour {
     public void ResumeGame()
     {
         m_parent.m_cScript.m_boardScript.m_isForcedMove = null;
+        m_parent.m_cScript.m_boardScript.m_camIsFrozen = false;
         PanelScript.CloseHistory();
     }
 
@@ -350,12 +351,6 @@ public class ButtonScript : MonoBehaviour {
         if (_confirm == "Action")
         {
             gameObject.GetComponent<Button>().onClick.AddListener(() => charScript.Action());
-        }
-        else if (_confirm == "Cancel New Action")
-        {
-            TeamMenuScript tMenuScript = m_main.m_main.GetComponent<TeamMenuScript>();
-            tMenuScript.m_oldButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
-            gameObject.GetComponent<Button>().onClick.AddListener(() => tMenuScript.CloseLevelPanel(TeamMenuScript.menuPans.NEW_ACTION_PANEL));
         }
         else if (_confirm == "Clear Team")
         {
@@ -412,6 +407,18 @@ public class ButtonScript : MonoBehaviour {
             tMenuScript.m_statButton = newStat;
             newStat.image.color = Color.cyan;
             gameObject.GetComponent<Button>().onClick.AddListener(() => tMenuScript.AddStatAlteration());
+        }
+        else if (_confirm == "None Action")
+        {
+            TeamMenuScript tMenuScript = m_main.m_main.GetComponent<TeamMenuScript>();
+            tMenuScript.m_oldButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+            gameObject.GetComponent<Button>().onClick.AddListener(() => tMenuScript.CloseLevelPanel((int)TeamMenuScript.menuPans.NEW_ACTION_PANEL));
+        }
+        else if (_confirm == "None Stats")
+        {
+            TeamMenuScript tMenuScript = m_main.m_main.GetComponent<TeamMenuScript>();
+            tMenuScript.m_statButton = null;
+            gameObject.GetComponent<Button>().onClick.AddListener(() => tMenuScript.CloseLevelPanel((int)TeamMenuScript.menuPans.NEW_STATS_PANEL));
         }
         else if (_confirm == "Pass")
         {

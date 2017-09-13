@@ -534,23 +534,23 @@ public class TeamMenuScript : MonoBehaviour {
         PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
 
 
-        CloseLevelPanel(menuPans.NEW_ACTION_PANEL);
+        CloseLevelPanel((int)menuPans.NEW_ACTION_PANEL);
     }
 
-    public void CloseLevelPanel(menuPans _pan)
+    public void CloseLevelPanel(int _pan)
     {
         EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name = m_currButton.name;
-        if (_pan == menuPans.NEW_ACTION_PANEL)
+        if (_pan == (int)menuPans.NEW_ACTION_PANEL)
         {
             PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_panels[0].GetComponent<PanelScript>().PopulatePanel();
             m_saveButton = null;
         }
-        else if (_pan == menuPans.NEW_STATS_PANEL)
+        else if (_pan == (int)menuPans.NEW_STATS_PANEL)
             PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_panels[1].GetComponent<PanelScript>().PopulatePanel();
-
-        PanelScript.m_allPanels[(int)_pan].m_inView = false;
+        
+        PanelScript.m_allPanels[_pan].m_inView = false;
         PanelScript.RemoveFromHistory("");
-
+        
         if (!PanelScript.m_allPanels[(int)menuPans.NEW_ACTION_PANEL].m_inView && !PanelScript.m_allPanels[(int)menuPans.NEW_STATS_PANEL].m_inView)
         {
             for (int i = 0; i < PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons.Length; i++)
@@ -560,7 +560,7 @@ public class TeamMenuScript : MonoBehaviour {
                     PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "LEVEL UP" && m_currCharScript.m_exp >= 10)
                     PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].interactable = true;
             }
-
+        
             PanelScript.m_locked = false;
         }
     }
@@ -603,8 +603,10 @@ public class TeamMenuScript : MonoBehaviour {
                 for (int j = 0; j < _buttons.Length; j++)
                 {
                     if (_buttons[j].GetComponentInChildren<Text>().text == buff + debuff)
+                    {
                         actOK = false;
-                    break;
+                        break;
+                    }
                 }
 
             } while (!actOK);
@@ -632,7 +634,7 @@ public class TeamMenuScript : MonoBehaviour {
         }
 
         PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
-        CloseLevelPanel(menuPans.NEW_STATS_PANEL);
+        CloseLevelPanel((int)menuPans.NEW_STATS_PANEL);
     }
 
     public void RandomTeam(Button _button)
