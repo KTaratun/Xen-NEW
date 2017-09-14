@@ -74,9 +74,9 @@ public class TileScript : MonoBehaviour {
             else
             {
                 // Assign character to panels
-                PanelScript stsPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.STATUS_PANEL].GetComponent<PanelScript>();
-                stsPanScript.m_cScript = m_holding.GetComponent<CharacterScript>();
-                stsPanScript.PopulatePanel();
+                PanelScript charViewPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.CHARACTER_VIEWER_PANEL].GetComponent<PanelScript>();
+                charViewPanScript.m_cScript = m_holding.GetComponent<CharacterScript>();
+                charViewPanScript.PopulatePanel();
             }
         }
     }
@@ -166,8 +166,8 @@ public class TileScript : MonoBehaviour {
                     if (_color == CharacterScript.c_move && tScript.m_holding || !_targetSelf && tScript == currCharScript.m_tile.GetComponent<TileScript>())
                         continue;
 
-                    if (tScript.m_holding && tScript.m_holding.tag == "Player" && tScript.m_holding.GetComponent<CharacterScript>().m_effects[(int)StatusScript.effects.PROTECT])
-                        continue;
+                    //if (tScript.m_holding && tScript.m_holding.tag == "Player" && tScript.m_holding.GetComponent<CharacterScript>().m_effects[(int)StatusScript.effects.PROTECT])
+                    //    continue;
 
                     if (_targetingRestriction == targetRestriction.HORVERT && tScript.m_x != m_x && tScript.m_z != m_z)
                         continue;

@@ -225,6 +225,7 @@ public class ButtonScript : MonoBehaviour {
     public void SelectorButton()
     {
         string actName = DatabaseScript.GetActionData(m_boardScript.m_currPlayer.GetComponent<CharacterScript>().m_currAction, DatabaseScript.actions.NAME);
+        CharacterScript charScript = m_boardScript.m_currPlayer.GetComponent<CharacterScript>();
 
         if (m_parent.name == "Status Selector")
         {
@@ -235,7 +236,7 @@ public class ButtonScript : MonoBehaviour {
                 statScript.DestroyStatus(m_main.m_cScript.transform.root.gameObject);
             else if (actName == "Extension")
             {
-                statScript.m_lifeSpan += 2;
+                statScript.m_lifeSpan += 2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC];
 
                 //for (int i = 0; i < statScript.m_statMod.Length; i++)
                 //{
@@ -253,14 +254,11 @@ public class ButtonScript : MonoBehaviour {
         }
         else if (m_parent.name == "Energy Selector")
         {
+
             if (actName == "Prismatic ATK")
-                AddEnergy(2);
-            //else if (actName == "Channel")
-            //    AddEnergy(1);
-            else if (actName == "Syphon ATK")
-                SubtractEnergy(1, m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy);
-            else if (actName == "Deplete ATK")
-                SubtractEnergy(2, m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy);
+                    AddEnergy(2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
+            else if (actName == "Deplete ATK" || actName == "Syphon ATK")
+                SubtractEnergy(2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC], m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy);
         }
     }
 
@@ -300,20 +298,29 @@ public class ButtonScript : MonoBehaviour {
         string actName = DatabaseScript.GetActionData(m_boardScript.m_currPlayer.GetComponent<CharacterScript>().m_currAction, DatabaseScript.actions.NAME);
         CharacterScript charScript = m_boardScript.m_currPlayer.GetComponent<CharacterScript>();
         PlayerScript playScript = charScript.m_player.GetComponent<PlayerScript>();
+        int added = 0;
 
-        if (actName == "Syphon ATK" | actName == "Deplete ATK")
+        if (actName == "Syphon ATK" || actName == "Deplete ATK")
         {
             for (int i = 0; i < m_parent.m_images.Length; i++)
             {
                 if (actName == "Syphon ATK")
                     playScript.m_energy[i] += m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy[i] - int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
 
+                added += int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
                 m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy[i] = int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
             }
         }
         else
             for (int i = 0; i < m_parent.m_images.Length; i++)
+            {
+                added += int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
                 playScript.m_energy[i] += int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+            }
+
+        if (added > 2)
+            if (actName == "Prismatic ATK" || actName == "Syphon ATK" || actName == "Deplete ATK")
+                charScript.ReceiveDamage((added - 2).ToString(), Color.white);
 
         playScript.SetEnergyPanel();
         ResumeGame();
@@ -383,7 +390,7 @@ public class ButtonScript : MonoBehaviour {
             Button newStat = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
             string[] statSeparated = newStat.name.Split('|');
 
-            for (int i = 1; i < 7; i++)
+            for (int i = 1; i < 8; i++)
             {
                 string[] s = statSeparated[i].Split(':');
                 string[] textSeparated = statPanScript.m_text[i].text.Split(':');

@@ -90,6 +90,16 @@ public class PanelScript : MonoBehaviour {
             if (m_history.Count > 0)
                 m_history[m_history.Count - 1].m_inView = true;
         }
+
+        if (m_main && m_main.name == "Board" && name == "Action Panel")
+        {
+            BoardScript bScript = m_main.GetComponent<BoardScript>();
+            CharacterScript cScript = bScript.m_currPlayer.GetComponent<CharacterScript>();
+            string actName = DatabaseScript.GetActionData(cScript.m_currAction, DatabaseScript.actions.NAME);
+
+            if (actName == "Copy ATK" || actName == "Redirect ATK")
+                m_allPanels[(int)BoardScript.pnls.MAIN_PANEL].m_buttons[(int)butts.ACT_BUTT].interactable = false;
+        }
     }
 
     static public void MenuPanelInit(string _canvasName)
@@ -143,8 +153,18 @@ public class PanelScript : MonoBehaviour {
             CharacterScript currScript = bScript.m_currPlayer.GetComponent<CharacterScript>();
             m_panels[0].GetComponent<Image>().color = new Color(currScript.m_teamColor.r + 0.3f, currScript.m_teamColor.g + 0.3f, currScript.m_teamColor.b + 0.3f, 1);
             m_panels[1].GetComponent<Image>().color = new Color(m_cScript.m_teamColor.r + 0.3f, m_cScript.m_teamColor.g + 0.3f, m_cScript.m_teamColor.b + 0.3f, 1);
-            int dmg = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.DMG)) + currScript.m_tempStats[(int)CharacterScript.sts.DMG] - m_cScript.m_tempStats[(int)CharacterScript.sts.DEF];
-            m_text[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP].ToString() + " -> " + (m_cScript.m_tempStats[(int)CharacterScript.sts.HP] - dmg).ToString();
+
+            int def = m_cScript.m_tempStats[(int)CharacterScript.sts.DEF];
+
+            if (DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.NAME) == "Bypass ATK")
+            {
+                def -= 2 + currScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                if (def < 0)
+                    def = 0;
+            }
+
+            int dmg = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.DMG)) + currScript.m_tempStats[(int)CharacterScript.sts.DMG] - def;
+            m_text[0].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP].ToString() + " -> " + (m_cScript.m_tempStats[(int)CharacterScript.sts.HP] - dmg).ToString();
         }
         else if (name == "ActionViewer Panel")
         {
@@ -194,92 +214,78 @@ public class PanelScript : MonoBehaviour {
             // If another panel is open, don't open character viewer for already loaded character
 
             Button currB = null;
-            TeamMenuScript tMenu = m_main.GetComponent<TeamMenuScript>();
-
-            if (EventSystem.current.currentSelectedGameObject)
-                currB = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
-            else
-                currB = tMenu.m_currButton;
-
             int res = 0;
 
-            //if (CheckIfPanelOpen())
-            //    return;
-
-            m_cScript = tMenu.m_currCharScript;
             PanelScript actionScript = m_panels[0].GetComponent<PanelScript>();
             PanelScript statPan = m_panels[1].GetComponent<PanelScript>();
-
-            m_cScript.InitializeStats();
             actionScript.m_cScript = m_cScript;
 
-            res = 0;
-            if (int.TryParse(currB.name, out res)) // If last pressed button is an int, it's a preset character panel button. Character slot buttons names are in the x,x format
+            if (m_main.name == "Menu")
             {
-                DatabaseScript dbScript = m_main.GetComponent<DatabaseScript>();
+                TeamMenuScript tMenu = m_main.GetComponent<TeamMenuScript>();
+                m_cScript = tMenu.m_currCharScript;
+                m_cScript.InitializeStats();
 
-                string[] presetDataSeparated = dbScript.m_presets[int.Parse(currB.name)].Split('|');
-                string[] presetName = presetDataSeparated[(int)DatabaseScript.presets.NAME].Split(':');
-                string[] presetColor = presetDataSeparated[(int)DatabaseScript.presets.COLORS].Split(':');
+                if (EventSystem.current.currentSelectedGameObject)
+                    currB = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+                else
+                    currB = tMenu.m_currButton;
 
-                tMenu.FillOutCharacterData(presetName[1], presetColor[1], dbScript.GetActions(dbScript.m_presets[int.Parse(currB.name)]), 0, 1);
-
-                // Fill out name
-                m_text[1].text = m_cScript.m_name;
-                // Fill out energy
-                m_buttons[0].GetComponent<ButtonScript>().SetTotalEnergy(m_cScript.m_color);
-                // Fill out Action Panel
-                actionScript.m_cScript = m_cScript;
-                actionScript.PopulatePanel();
-                // Fill out Status Panel
-                statPan.m_cScript = m_cScript;
-                statPan.PopulatePanel();
-
-                // Determine if select or remove will be visible
-                for (int i = 0; i < m_buttons.Length; i++)
+                if (int.TryParse(currB.name, out res)) // If last pressed button is an int, it's a preset character panel button. Character slot buttons names are in the x,x format
                 {
-                    if (m_buttons[i].name == "Select Button" && m_buttons[i].gameObject.transform.position.x > 1000)
-                        m_buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(m_buttons[i].gameObject.transform.position.x - 1000, m_buttons[i].gameObject.transform.position.y, m_buttons[i].gameObject.transform.position.z), m_buttons[i].gameObject.transform.rotation);
-                    if (m_buttons[i].name == "Remove Button" && m_buttons[i].gameObject.transform.position.x < 1000)
-                        m_buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(m_buttons[i].gameObject.transform.position.x + 1000, m_buttons[i].gameObject.transform.position.y, m_buttons[i].gameObject.transform.position.z), m_buttons[i].gameObject.transform.rotation);
+                    DatabaseScript dbScript = m_main.GetComponent<DatabaseScript>();
+
+                    string[] presetDataSeparated = dbScript.m_presets[int.Parse(currB.name)].Split('|');
+                    string[] presetName = presetDataSeparated[(int)DatabaseScript.presets.NAME].Split(':');
+                    string[] presetColor = presetDataSeparated[(int)DatabaseScript.presets.COLORS].Split(':');
+
+                    tMenu.FillOutCharacterData(presetName[1], presetColor[1], dbScript.GetActions(dbScript.m_presets[int.Parse(currB.name)]), "", 0, 1);
+
+                    // Determine if select or remove will be visible
+                    for (int i = 0; i < m_buttons.Length; i++)
+                    {
+                        if (m_buttons[i].name == "Select Button" && m_buttons[i].gameObject.transform.position.x > 1000)
+                            m_buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(m_buttons[i].gameObject.transform.position.x - 1000, m_buttons[i].gameObject.transform.position.y, m_buttons[i].gameObject.transform.position.z), m_buttons[i].gameObject.transform.rotation);
+                        if (m_buttons[i].name == "Remove Button" && m_buttons[i].gameObject.transform.position.x < 1000)
+                            m_buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(m_buttons[i].gameObject.transform.position.x + 1000, m_buttons[i].gameObject.transform.position.y, m_buttons[i].gameObject.transform.position.z), m_buttons[i].gameObject.transform.rotation);
+                    }
+                }
+                else
+                {
+                    if (!m_inView)
+                        tMenu.m_currButton = currB;
+
+                    m_cScript = PlayerPrefScript.LoadChar(currB.name, m_cScript);
+                    tMenu.m_currCharScript = PlayerPrefScript.LoadChar(currB.name, tMenu.m_currCharScript);
+
+                    m_cScript.m_exp = 10;
+                    // Determine if select or remove will be visible
+                    for (int i = 0; i < m_buttons.Length; i++)
+                    {
+                        if (m_buttons[i].name == "Level up" && m_cScript.m_exp >= 10 && !m_allPanels[(int)TeamMenuScript.menuPans.NEW_ACTION_PANEL].m_inView && !m_allPanels[(int)TeamMenuScript.menuPans.NEW_ACTION_PANEL].m_inView)
+                            m_buttons[i].interactable = true;
+                        else if (m_buttons[i].name == "Level up" && m_cScript.m_exp < 10)
+                            m_buttons[i].interactable = false;
+
+                        if (m_buttons[i].name == "Select Button" && m_buttons[i].gameObject.transform.position.x < 1000)
+                            m_buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(m_buttons[i].gameObject.transform.position.x + 1000, m_buttons[i].gameObject.transform.position.y, m_buttons[i].gameObject.transform.position.z), m_buttons[i].gameObject.transform.rotation);
+                        if (m_buttons[i].name == "Remove Button" && m_buttons[i].gameObject.transform.position.x > 1000)
+                            m_buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(m_buttons[i].gameObject.transform.position.x - 1000, m_buttons[i].gameObject.transform.position.y, m_buttons[i].gameObject.transform.position.z), m_buttons[i].gameObject.transform.rotation);
+                    }
                 }
             }
-            else
-            {
-                if (!m_inView)
-                    tMenu.m_currButton = currB;
+            else if (m_main.name == "Board")
+                m_cScript = m_main.GetComponent<BoardScript>().m_selected.GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>();
 
-                m_cScript = PlayerPrefScript.LoadChar(currB.name, m_cScript);
-                tMenu.m_currCharScript = PlayerPrefScript.LoadChar(currB.name, tMenu.m_currCharScript);
-
-                // Fill out name
-                m_text[1].text = m_cScript.m_name;
-                GetComponentInChildren<InputField>().text = m_cScript.m_name;
-                // Fill out energy
-                m_buttons[0].GetComponent<ButtonScript>().SetTotalEnergy(m_cScript.m_color);
-                // Fill out Action Panel
-                actionScript.m_cScript = m_cScript;
-                actionScript.PopulatePanel();
-                // Fill out Status Panel
-                statPan.m_cScript = m_cScript;
-                statPan.PopulatePanel();
-
-                m_cScript.m_exp = 10;
-
-                // Determine if select or remove will be visible
-                for (int i = 0; i < m_buttons.Length; i++)
-                {
-                    if (m_buttons[i].name == "Level up" && m_cScript.m_exp >= 10 && !m_allPanels[(int)TeamMenuScript.menuPans.NEW_ACTION_PANEL].m_inView && !m_allPanels[(int)TeamMenuScript.menuPans.NEW_ACTION_PANEL].m_inView)
-                        m_buttons[i].interactable = true;
-                    else if (m_buttons[i].name == "Level up" && m_cScript.m_exp < 10)
-                        m_buttons[i].interactable = false;
-
-                    if (m_buttons[i].name == "Select Button" && m_buttons[i].gameObject.transform.position.x < 1000)
-                        m_buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(m_buttons[i].gameObject.transform.position.x + 1000, m_buttons[i].gameObject.transform.position.y, m_buttons[i].gameObject.transform.position.z), m_buttons[i].gameObject.transform.rotation);
-                    if (m_buttons[i].name == "Remove Button" && m_buttons[i].gameObject.transform.position.x > 1000)
-                        m_buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(m_buttons[i].gameObject.transform.position.x - 1000, m_buttons[i].gameObject.transform.position.y, m_buttons[i].gameObject.transform.position.z), m_buttons[i].gameObject.transform.rotation);
-                }
-            }
+            // Fill out name
+            m_text[1].text = m_cScript.m_name;
+            GetComponentInChildren<InputField>().text = m_cScript.m_name;
+            // Fill out Action Panel
+            actionScript.m_cScript = m_cScript;
+            actionScript.PopulatePanel();
+            // Fill out Status Panel
+            statPan.m_cScript = m_cScript;
+            statPan.PopulatePanel();
         }
         else if (name == "HUD Panel LEFT" || name == "HUD Panel RIGHT")
         {
@@ -439,18 +445,20 @@ public class PanelScript : MonoBehaviour {
             else
                 m_text[0].text = m_cScript.m_name;
 
-            m_text[1].text = "HP: " + m_cScript.m_stats[(int)CharacterScript.sts.HP]; // m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + 
+            m_text[1].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP] + "/" + m_cScript.m_stats[(int)CharacterScript.sts.HP];
             m_text[2].text = "SPD: " + m_cScript.m_tempStats[(int)CharacterScript.sts.SPD];
             m_text[3].text = "DMG: " + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG];
             m_text[4].text = "DEF: " + m_cScript.m_tempStats[(int)CharacterScript.sts.DEF];
             m_text[5].text = "MOV: " + m_cScript.m_tempStats[(int)CharacterScript.sts.MOV];
             m_text[6].text = "RNG: " + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG];
+            m_text[7].text = "TEC: " + m_cScript.m_tempStats[(int)CharacterScript.sts.TEC];
 
             if (m_cScript.m_accessories[0] != null)
-                m_text[7].text = "ACC: " + m_cScript.m_accessories[0];
+                m_text[8].text = "ACC: " + m_cScript.m_accessories[0];
             if (m_cScript.m_accessories[1] != null)
-                m_text[8].text = "ACC: " + m_cScript.m_accessories[1];
+                m_text[9].text = "ACC: " + m_cScript.m_accessories[1];
 
+            m_buttons[0].GetComponent<ButtonScript>().SetTotalEnergy(m_cScript.m_color);
             StatusSymbolSetup();
         }
         else if (name == "Status Selector")
@@ -554,11 +562,12 @@ public class PanelScript : MonoBehaviour {
                     currCharActName == "Redirect ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) ||
                     currCharActName == "Redirect ATK" && currCharScript != m_cScript && eng[1].Length > 2 ||
                     currCharActName == "Copy ATK" && currCharScript != m_cScript && !CharacterScript.CheckIfAttack(name[1]) ||
-                    currCharActName == "Copy ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) && eng[1].Length > 2 ||
+                    currCharActName == "Copy ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) && CharacterScript.CheckActionLevel(eng[1]) > currCharScript.m_tempStats[(int)CharacterScript.sts.TEC] ||
+                    m_cScript.m_effects[(int)StatusScript.effects.HINDER] && !CharacterScript.CheckIfAttack(name[1]) ||
                     disabled)
                     buttons[i].GetComponent<Image>().color = b_isDisallowed;
                 else if (currCharActName == "Redirect ATK" && currCharScript != m_cScript && !CharacterScript.CheckIfAttack(name[1]) && eng[1].Length <= 2 ||
-                    currCharActName == "Copy ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) && eng[1].Length <= 2)
+                    currCharActName == "Copy ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) && CharacterScript.CheckActionLevel(eng[1]) <= currCharScript.m_tempStats[(int)CharacterScript.sts.TEC])
                 {
                     buttons[i].GetComponent<Image>().color = b_isFree;
                     buttons[i].onClick.AddListener(() => currCharScript.ActionTargeting());

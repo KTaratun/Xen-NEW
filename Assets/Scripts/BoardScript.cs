@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class BoardScript : MonoBehaviour {
 
     public enum pnls { MAIN_PANEL, ACTION_PANEL, STATUS_PANEL, HUD_LEFT_PANEL, HUD_RIGHT_PANEL, ROUND_PANEL,
-        AUXILIARY_PANEL, STATUS_SELECTOR, ENERGY_SELECTOR, ACTION_PREVIEW, TOTAL_PANEL }
+        AUXILIARY_PANEL, STATUS_SELECTOR, ENERGY_SELECTOR, ACTION_PREVIEW, CHARACTER_VIEWER_PANEL, TOTAL_PANEL }
 
     public Camera m_camera; // Why it do that squiggle?
     public int m_roundCount;
@@ -367,26 +367,27 @@ public class BoardScript : MonoBehaviour {
         // TARGET RED TILE
 
         bool targetSelf = true;
+        int rad = currCharScript.m_currRadius + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD];
 
         TileScript selTileScript = _target.GetComponent<TileScript>();
-        if (currCharScript.m_currAction.Length > 0) // REFACTOR: All this code just for piercing attack...
+        if (currCharScript.m_currAction.Length > 0 && tarRend.material.color == CharacterScript.c_attack) // REFACTOR: All this code just for piercing attack...
         {
             string actName = DatabaseScript.GetActionData(currCharScript.m_currAction, DatabaseScript.actions.NAME);
             string actRng = DatabaseScript.GetActionData(currCharScript.m_currAction, DatabaseScript.actions.RNG);
 
-            if (actName == "Piercing ATK" && tarRend.material.color == CharacterScript.c_attack || actName == "Thrust ATK" && tarRend.material.color == CharacterScript.c_attack)
+            if (actName == "Piercing ATK" || actName == "Thrust ATK")
             {
                 selTileScript.FetchTilesWithinRange(int.Parse(actRng) + currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, true, TileScript.targetRestriction.HORVERT, false);
                 m_oldTile = _target;
                 return;
             }
-            else if (actName == "Cross ATK" && tarRend.material.color == CharacterScript.c_attack || actName == "Dual ATK" && tarRend.material.color == CharacterScript.c_attack)
+            else if (actName == "Cross ATK" || actName == "Dual ATK")
             {
                 selTileScript.FetchTilesWithinRange(int.Parse(actRng) + currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, false, TileScript.targetRestriction.DIAGONAL, false);
                 m_oldTile = _target;
                 return;
             }
-            else if (actName == "Slash ATK" && tarRend.material.color == CharacterScript.c_attack)
+            else if (actName == "Slash ATK")
             {
                 selTileScript.FetchTilesWithinRange(int.Parse(actRng) + currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, false, TileScript.targetRestriction.HORVERT, true);
                 m_oldTile = _target;
@@ -395,10 +396,13 @@ public class BoardScript : MonoBehaviour {
 
             if (actName == "Fortifying ATK" || actName == "Blinding ATK")
                 targetSelf = false;
+
+            if (actName == "Magnet ATK")
+                rad += currCharScript.m_tempStats[(int)CharacterScript.sts.TEC];
         }
 
         if (currCharScript.m_currRadius + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0 && tarRend.material.color == CharacterScript.c_attack)
-            selTileScript.FetchTilesWithinRange(currCharScript.m_currRadius + currCharScript.m_tempStats[(int)CharacterScript.sts.RAD], Color.yellow, targetSelf, TileScript.targetRestriction.NONE, true);
+            selTileScript.FetchTilesWithinRange(rad, Color.yellow, targetSelf, TileScript.targetRestriction.NONE, true);
         else
             tarRend.material.color = new Color(tarRend.material.color.r, tarRend.material.color.g, tarRend.material.color.b, tarRend.material.color.a + 0.5f);
 

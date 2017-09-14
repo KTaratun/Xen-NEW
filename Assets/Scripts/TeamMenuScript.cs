@@ -236,11 +236,31 @@ public class TeamMenuScript : MonoBehaviour {
     //    }
     //}
 
-    public void FillOutCharacterData(string _name, string _color, string[] _actions, int _exp, int _level)
+    public void FillOutCharacterData(string _name, string _color, string[] _actions, string _stats, int _exp, int _level)
     {
         m_currCharScript.m_name = _name;
         m_currCharScript.m_color = _color;
         m_currCharScript.m_actions = _actions;
+
+        if (_stats.Length > 0)
+        {
+            // Load in stats
+            string[] stats = _stats.Split(',');
+
+            if (m_currCharScript.m_stats.Length == 0)
+            {
+                m_currCharScript.m_stats = new int[(int)CharacterScript.sts.TOT];
+                m_currCharScript.m_tempStats = new int[(int)CharacterScript.sts.TOT];
+                m_currCharScript.InitializeStats();
+            }
+
+            for (int i = 0; i < stats.Length; i++)
+            {
+                m_currCharScript.m_stats[i] = int.Parse(stats[i]);
+                m_currCharScript.m_tempStats[i] = int.Parse(stats[i]);
+            }
+        }
+
         m_currCharScript.m_exp = _exp;
         m_currCharScript.m_level = _level;
     }
@@ -294,8 +314,8 @@ public class TeamMenuScript : MonoBehaviour {
             return;
 
         FillOutCharacterData(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",name"), PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",color"),
-            PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",actions").Split(';'), int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",exp")),
-            int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",level")));
+            PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",actions").Split(';'), PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",stats"),
+            int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",exp")), int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",level")));
 
         Select();
         PanelScript.m_allPanels[(int)menuPans.SAVE_LOAD_PANEL].m_inView = false;
@@ -319,10 +339,11 @@ public class TeamMenuScript : MonoBehaviour {
 
         for (int i = 0; i < PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons.Length; i++)
         {
-            if (PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "REMOVE" ||
-                PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "SAVE" ||
-                PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "LEVEL UP")
-                PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].interactable = false;
+            if (PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>())
+                if (PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "REMOVE" ||
+                    PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "SAVE" ||
+                    PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "LEVEL UP")
+                    PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].interactable = false;
         }
 
         PanelScript.m_allPanels[(int)menuPans.NEW_ACTION_PANEL].PopulatePanel();
@@ -555,10 +576,11 @@ public class TeamMenuScript : MonoBehaviour {
         {
             for (int i = 0; i < PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons.Length; i++)
             {
-                if (PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "REMOVE" ||
-                    PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "SAVE" ||
-                    PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "LEVEL UP" && m_currCharScript.m_exp >= 10)
-                    PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].interactable = true;
+                if (PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>())
+                    if (PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "REMOVE" ||
+                        PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "SAVE" ||
+                        PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "LEVEL UP" && m_currCharScript.m_exp >= 10)
+                        PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].interactable = true;
             }
         
             PanelScript.m_locked = false;
