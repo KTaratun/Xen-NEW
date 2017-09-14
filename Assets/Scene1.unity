@@ -2311,7 +2311,7 @@ Prefab:
         type: 2}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: b335b575f8941864fa05c5ffa3730bc1, type: 2}
+      objectReference: {fileID: 2100000, guid: dee43133f2358374f9c57a0b4da68831, type: 2}
     - target: {fileID: 1464832591278664, guid: 8a7e3622ac875614aa46a1a4da817145, type: 2}
       propertyPath: m_Name
       value: Board
@@ -33889,7 +33889,7 @@ MeshRenderer:
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
   m_Materials:
-  - {fileID: 2100000, guid: b335b575f8941864fa05c5ffa3730bc1, type: 2}
+  - {fileID: 2100000, guid: dee43133f2358374f9c57a0b4da68831, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
