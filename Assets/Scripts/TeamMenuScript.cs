@@ -144,6 +144,9 @@ public class TeamMenuScript : MonoBehaviour {
             m_currCharScript.m_tempStats[i] += int.Parse(currStat[1]);
         }
 
+        int gender = Random.Range(0, 2);
+        m_currCharScript.m_gender = gender;
+
         Select();
 
         // Choose the number of random characters
@@ -236,11 +239,12 @@ public class TeamMenuScript : MonoBehaviour {
     //    }
     //}
 
-    public void FillOutCharacterData(string _name, string _color, string[] _actions, string _stats, int _exp, int _level)
+    public void FillOutCharacterData(string _name, string _color, string[] _actions, string _stats, int _exp, int _level, int _gender)
     {
         m_currCharScript.m_name = _name;
         m_currCharScript.m_color = _color;
         m_currCharScript.m_actions = _actions;
+        m_currCharScript.m_gender = _gender;
 
         if (_stats.Length > 0)
         {
@@ -315,7 +319,8 @@ public class TeamMenuScript : MonoBehaviour {
 
         FillOutCharacterData(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",name"), PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",color"),
             PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",actions").Split(';'), PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",stats"),
-            int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",exp")), int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",level")));
+            int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",exp")), int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",level")),
+            int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",gender")));
 
         Select();
         PanelScript.m_allPanels[(int)menuPans.SAVE_LOAD_PANEL].m_inView = false;
@@ -692,8 +697,7 @@ public class TeamMenuScript : MonoBehaviour {
 
     public void Rename()
     {
-        Text text = PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_text[2];
-        Text textPlace = PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_text[1];
+        Text text = PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_text[36];
         m_currCharScript.m_name = text.text;
         m_currButton.GetComponentInChildren<Text>().text = text.text;
         PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);

@@ -17,7 +17,7 @@ public class CharacterScript : ObjectScript {
     static public Color c_action = new Color(0, 1, 0, 0.5f);
     static public Color c_move = new Color(0, 0, 1, 0.5f);
 
-    public GameObject m_turnPanel;
+    public List<GameObject> m_turnPanels;
     public GameObject m_healthBar;
     public GameObject m_popupText;
     public GameObject[] m_popupSpheres;
@@ -41,11 +41,12 @@ public class CharacterScript : ObjectScript {
     public bool m_isAI;
     public bool m_isFree;
     public int[] m_isDiabled;
+    public int m_gender;
 
-	// Use this for initialization
-	void Start ()
+    // Use this for initialization
+    void Start ()
     {
-        m_anim = GetComponent<Animator>();
+        m_anim = GetComponentInChildren<Animator>();
         m_popupText.SetActive(false);
         m_isFree = false;
 
@@ -67,7 +68,7 @@ public class CharacterScript : ObjectScript {
 
         if (m_boardScript && m_boardScript.m_currPlayer != gameObject)
         {
-            Renderer rend = transform.GetComponent<Renderer>();
+            Renderer rend = transform.GetComponentInChildren<Renderer>();
             rend.materials[1].shader = rend.materials[0].shader;
         }
     }
@@ -111,7 +112,7 @@ public class CharacterScript : ObjectScript {
 
     private void MovementUpdate()
     {
-        if (m_tile && transform.position != m_tile.transform.position && m_isAlive)
+        if (m_tile && transform.position != m_tile.transform.position)
         {
             // Determine how much the character will be moving this update
             float charAcceleration = 0.02f;
@@ -121,6 +122,8 @@ public class CharacterScript : ObjectScript {
             m_boardScript.m_camera.GetComponent<CameraScript>().m_target = gameObject;
 
             float snapDistance = 0.007f;
+            if (!m_isAlive)
+                charAcceleration = 0;
             if (Vector3.Distance(transform.position, m_tile.transform.position) < snapDistance)
             {
                 transform.SetPositionAndRotation(m_tile.transform.position, transform.rotation);
@@ -513,13 +516,12 @@ public class CharacterScript : ObjectScript {
     public void Dead()
     {
         m_tempStats[(int)sts.HP] = 0;
-        if (m_turnPanel)
-            m_turnPanel.GetComponent<Image>().color = new Color(1, .5f, .5f, 1);
+        for (int i = 0; i < m_turnPanels.Count; i++)
+            m_turnPanels[i].GetComponent<Image>().color = new Color(1, .5f, .5f, 1);
+
         m_isAlive = false;
 
         StatusScript.DestroyAll(gameObject);
-
-        transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y - 0.2f, transform.position.z), transform.rotation);
         GetComponent<Renderer>().material.color = new Color(.5f, .5f, .5f, 1);
     }
 
@@ -530,11 +532,11 @@ public class CharacterScript : ObjectScript {
 
         HealHealth(_hp);
 
-        if (m_turnPanel)
-            m_turnPanel.GetComponent<Image>().color = m_teamColor;
+        for (int i = 0; i < m_turnPanels.Count; i++)
+            m_turnPanels[i].GetComponent<Image>().color = m_teamColor;
+
         m_isAlive = true;
 
-        transform.SetPositionAndRotation(m_tile.transform.position, transform.rotation);
         GetComponent<Renderer>().material.color = Color.white;
 
     }
@@ -754,7 +756,7 @@ public class CharacterScript : ObjectScript {
     private void Knockback(CharacterScript _targetScript, TileScript _away, int _force)
     {
         TileScript targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
-        TileScript nei = _targetScript.m_tile.GetComponent<TileScript>();
+        TileScript nei = null;
     
         while (_force > 0)
         {
@@ -802,11 +804,13 @@ public class CharacterScript : ObjectScript {
                     continue;
                 }
             }
+            else
+                nei = null;           
 
             int extraDMG = Mathf.CeilToInt(_force / 2.0f);
             _targetScript.ReceiveDamage(((extraDMG).ToString()), Color.white);
 
-            if (nei.m_holding && nei.m_holding.tag == "Player")
+            if (nei && nei.m_holding && nei.m_holding.tag == "Player")
             {
                 CharacterScript neiCharScript = nei.m_holding.GetComponent<CharacterScript>();
                 neiCharScript.ReceiveDamage(extraDMG.ToString(), Color.white);

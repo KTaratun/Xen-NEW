@@ -35,7 +35,7 @@ public class ButtonScript : MonoBehaviour {
             //Image turnPanImage = charScript.turnPanel.GetComponent<Image>();
             //turnPanImage.color = Color.cyan;
             
-            Renderer charRenderer = m_character.GetComponent<Renderer>();
+            Renderer charRenderer = m_character.GetComponentInChildren<Renderer>();
             charRenderer.material.color = Color.cyan;
             PanelScript hudPanScript = charScript.m_boardScript.m_panels[(int)BoardScript.pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
             hudPanScript.m_cScript = charScript;
@@ -82,7 +82,7 @@ public class ButtonScript : MonoBehaviour {
 
             //Image turnPanImage = charScript.turnPanel.GetComponent<Image>();
             //turnPanImage.color = Color.cyan;
-            Renderer charRenderer = m_character.GetComponent<Renderer>();
+            Renderer charRenderer = m_character.GetComponentInChildren<Renderer>();
             charRenderer.material.color = charScript.m_teamColor;
             PanelScript hudPanScript = charScript.m_boardScript.m_panels[(int)BoardScript.pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
             hudPanScript.m_inView = false;

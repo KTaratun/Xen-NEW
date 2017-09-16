@@ -16,7 +16,7 @@ public class BoardScript : MonoBehaviour {
     public GameObject[] m_panels; // All movable GUI on screen
     public GameObject[] m_tiles; // All m_tiles on the board
     public GameObject m_tile; // A reference to the m_tile prefab
-    public GameObject m_character; // A reference to the character prefab
+    public GameObject[] m_character; // A reference to the character prefab
     public int m_width; // Width of the board
     public int m_height; // Height of the board
     public GameObject m_selected; // Last pressed tile
@@ -30,10 +30,12 @@ public class BoardScript : MonoBehaviour {
     public GameObject m_isForcedMove; // This is to keep track of whichever player is turning an action out of order
     public int m_livingPlayersInRound; // This is mainly for the turn panels. This tells them how far to move when I player finishes their turn.
     public bool m_camIsFrozen;
+    public bool m_newTurn;
 
     // Use this for initialization
     void Start ()
     {
+        m_newTurn = false;
         PanelScript.MenuPanelInit("Canvas");
         m_roundCount = 0;
         m_isForcedMove = null;
@@ -197,7 +199,8 @@ public class BoardScript : MonoBehaviour {
                 if (name.Length > 0)
                 {
                     // Set up character
-                    GameObject newChar = Instantiate(m_character);
+                    GameObject newChar = Instantiate(m_character[int.Parse(PlayerPrefs.GetString(key + ",gender"))]);
+                    newChar.name = name;
                     CharacterScript cScript = newChar.GetComponent<CharacterScript>();
 
                     cScript = PlayerPrefScript.LoadChar(key, cScript);
@@ -210,9 +213,9 @@ public class BoardScript : MonoBehaviour {
                         cScript.m_teamColor = new Color(.8f, 1, 0, 1);
                     else if (i == 3)
                         cScript.m_teamColor = Color.magenta;
-                    
-                    newChar.GetComponent<Renderer>().materials[0].color = cScript.m_teamColor;
-                    newChar.GetComponent<Renderer>().materials[1].color = cScript.m_teamColor;
+
+                    newChar.GetComponentInChildren<Renderer>().materials[0].color = cScript.m_teamColor;
+                    newChar.GetComponentInChildren<Renderer>().materials[1].color = cScript.m_teamColor;
 
                     cScript.SetPopupSpheres("");
                     m_characters.Add(newChar);
@@ -415,10 +418,13 @@ public class BoardScript : MonoBehaviour {
         if (_character && _character != m_currPlayer)
         {
             // Change color of turn panel to indicate where the character is in the turn order
-            if (charScript.m_turnPanel)
+            if (charScript.m_turnPanels.Count > 0)
             {
-                Image turnPanImage = charScript.m_turnPanel.GetComponent<Image>();
-                turnPanImage.color = Color.cyan;
+                for (int i = 0; i < charScript.m_turnPanels.Count; i++)
+                {
+                    Image turnPanImage = charScript.m_turnPanels[i].GetComponent<Image>();
+                    turnPanImage.color = Color.cyan;
+                }
             }
 
             // Reveal right HUD with highlighted character's data
@@ -446,9 +452,10 @@ public class BoardScript : MonoBehaviour {
         if (m_highlightedTileScript.m_holding.GetComponent<CharacterScript>())
         {
             CharacterScript colScript = m_highlightedTileScript.m_holding.GetComponent<CharacterScript>();
-            if (colScript.m_turnPanel)
+
+            for (int i = 0; i < colScript.m_turnPanels.Count; i++)
             {
-                Image turnPanImage = colScript.m_turnPanel.GetComponent<Image>();
+                Image turnPanImage = colScript.m_turnPanels[i].GetComponent<Image>();
                 if (colScript.m_effects[(int)StatusScript.effects.STUN] || !colScript.m_isAlive)
                     turnPanImage.color = new Color(1, .5f, .5f, 1);
                 else
@@ -468,10 +475,11 @@ public class BoardScript : MonoBehaviour {
         // Turn previous character back to original color
         if (m_currPlayer)
         {
-            Renderer oldRend = m_currPlayer.transform.GetComponent<Renderer>();
+            Renderer oldRend = m_currPlayer.transform.GetComponentInChildren<Renderer>();
             oldRend.materials[1].shader = oldRend.materials[0].shader;
             //Renderer oldRenderer = m_currPlayer.GetComponent<Renderer>();
             //oldRenderer.material.color = m_currPlayer.GetComponent<CharacterScript>().m_teamColor;
+            m_newTurn = true;
         }
 
         m_currPlayer = m_currRound[0];
@@ -479,7 +487,9 @@ public class BoardScript : MonoBehaviour {
 
         if (charScript.m_effects[(int)StatusScript.effects.STUN] || !charScript.m_isAlive)
         {
-            charScript.m_turnPanel = null;
+            for (int i = 0; i < charScript.m_turnPanels.Count; i++)
+                charScript.m_turnPanels[i] = null;
+
             StatusScript.UpdateStatus(m_currPlayer, StatusScript.mode.TURN_END);
             m_currRound.Remove(m_currPlayer);
 
@@ -492,7 +502,8 @@ public class BoardScript : MonoBehaviour {
 
         m_currTile = charScript.m_tile;
 
-        charScript.m_turnPanel = null;
+        if (charScript.m_turnPanels.Count > 0)
+            charScript.m_turnPanels.RemoveAt(0);
 
         PanelScript HUDLeftScript = m_panels[(int)pnls.HUD_LEFT_PANEL].GetComponent<PanelScript>();
         HUDLeftScript.m_cScript = m_currPlayer.GetComponent<CharacterScript>();
@@ -502,12 +513,12 @@ public class BoardScript : MonoBehaviour {
         if (playScript)
             playScript.SetEnergyPanel();
  
-        m_currRound.Remove(m_currPlayer);
+        m_currRound.RemoveAt(0);
 
         CameraScript camScript = m_camera.GetComponent<CameraScript>();
         camScript.m_target = m_currPlayer;
 
-        Renderer rend = m_currPlayer.transform.GetComponent<Renderer>();
+        Renderer rend = m_currPlayer.transform.GetComponentInChildren<Renderer>();
         rend.materials[1].shader = Resources.Load<Shader>("Outlined-Silhouette Only (NOT MINE)");
     }
 

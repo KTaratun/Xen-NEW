@@ -292,6 +292,9 @@ public class TileScript : MonoBehaviour {
     {
         for (int i = 0; i < _tile.m_neighbors.Length; i++)
         {
+            if (!_tile.m_neighbors[i])
+                continue;
+
             TileScript nei = _tile.m_neighbors[i].GetComponent<TileScript>();
             if (!nei.m_holding)
                 return true;
