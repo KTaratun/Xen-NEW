@@ -407,6 +407,8 @@ public class CharacterScript : ObjectScript {
     {
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
         string actDmg = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.DMG);
+        string actRng = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RNG);
+        string actRad = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RAD);
         PanelScript mainPanelScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
 
         // ATTACK MODS
@@ -475,6 +477,13 @@ public class CharacterScript : ObjectScript {
             m_boardScript.m_camera.GetComponent<CameraScript>().m_target = _targets[0];
 
         m_boardScript.m_camIsFrozen = true;
+
+        if (int.Parse(actRad) + m_tempStats[(int)sts.RAD] > 0)
+            m_anim.Play("Throw", -1, 0);
+        else if (int.Parse(actRng) + m_tempStats[(int)sts.RNG] > 1)
+            m_anim.Play("Ranged", -1, 0);
+        else
+            m_anim.Play("Melee", -1, 0);
     }
 
     static public bool CheckIfAttack(string _action)

@@ -32263,6 +32263,7 @@ MonoBehaviour:
   m_isForcedMove: {fileID: 0}
   m_livingPlayersInRound: 0
   m_camIsFrozen: 0
+  m_newTurn: 0
 --- !u!114 &1512219751
 MonoBehaviour:
   m_ObjectHideFlags: 0

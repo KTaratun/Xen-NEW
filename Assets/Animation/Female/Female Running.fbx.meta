@@ -1,6 +1,6 @@
 fileFormatVersion: 2
-guid: 6dc89587005bd6146b1a86ae437b22b1
-timeCreated: 1505518129
+guid: 31fc7ba20065bc8418dedbe5398212b3
+timeCreated: 1505535075
 licenseType: Free
 ModelImporter:
   serializedVersion: 19
@@ -31,8 +31,8 @@ ModelImporter:
     100046: mixamorig:Spine
     100048: mixamorig:Spine1
     100050: mixamorig:Spine2
-    100052: //RootNode
-    100054: polySurface16
+    100052: polySurface16
+    100054: //RootNode
     400000: default
     400002: mixamorig:Head
     400004: mixamorig:HeadTop_End
@@ -59,8 +59,8 @@ ModelImporter:
     400046: mixamorig:Spine
     400048: mixamorig:Spine1
     400050: mixamorig:Spine2
-    400052: //RootNode
-    400054: polySurface16
+    400052: polySurface16
+    400054: //RootNode
     2300000: default
     3300000: default
     4300000: default
