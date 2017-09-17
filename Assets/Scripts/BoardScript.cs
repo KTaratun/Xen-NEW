@@ -5,15 +5,15 @@ using UnityEngine.UI;
 
 public class BoardScript : MonoBehaviour {
 
-    public enum pnls { MAIN_PANEL, ACTION_PANEL, STATUS_PANEL, HUD_LEFT_PANEL, HUD_RIGHT_PANEL, ROUND_PANEL,
-        AUXILIARY_PANEL, STATUS_SELECTOR, ENERGY_SELECTOR, ACTION_PREVIEW, CHARACTER_VIEWER_PANEL, TOTAL_PANEL }
+    public enum pnls { MAIN_PANEL, ACTION_PANEL, AUXILIARY_PANEL, STATUS_PANEL, HUD_LEFT_PANEL, HUD_RIGHT_PANEL, TURN_PANEL,
+        ROUND_PANEL, ENERGY_PANEL, STATUS_VIEWER_PANEL, STATUS_SELECTOR, ENERGY_SELECTOR, ACTION_PREVIEW,
+        ACTION_VIEWER_PANEL, CHARACTER_VIEWER_PANEL, TOTAL_PANEL }
 
     public Camera m_camera; // Why it do that squiggle?
     public int m_roundCount;
     public int m_environmentalDensity; // This dictates how many environmental objs per tile
     public GameObject[] m_environmentOBJs;
     public List<GameObject> m_obstacles; // The actual array of objects on the board
-    public GameObject[] m_panels; // All movable GUI on screen
     public GameObject[] m_tiles; // All m_tiles on the board
     public GameObject m_tile; // A reference to the m_tile prefab
     public GameObject[] m_character; // A reference to the character prefab
@@ -116,13 +116,13 @@ public class BoardScript : MonoBehaviour {
         if (currTScript.m_radius.Count == 0 || m_isForcedMove)
             return;
 
-        PanelScript actPreviewScript = m_panels[(int)pnls.ACTION_PREVIEW].GetComponent<PanelScript>();
+        PanelScript actPreviewScript = PanelScript.GetPanel("ActionPreview");
         actPreviewScript.m_inView = false;
 
         Renderer sRend = currTScript.m_radius[0].GetComponent<Renderer>();
         if (sRend.material.color == CharacterScript.c_attack || sRend.material.color == Color.yellow || sRend.material.color == CharacterScript.c_action)
         {
-            PanelScript actPan = m_panels[(int)pnls.ACTION_PANEL].GetComponent<PanelScript>();
+            PanelScript actPan = PanelScript.GetPanel("Action Panel");
             actPan.m_inView = true;
         }
         //else if (sRend.material.color == CharacterScript.c_move)
@@ -267,7 +267,7 @@ public class BoardScript : MonoBehaviour {
 
     public void Hover()
     {
-        if (PanelScript.m_confirmPanel.m_inView)
+        if (PanelScript.m_confirmPanel.m_inView || m_camIsFrozen)
             return;
         else if (!m_currPlayer || PanelScript.CheckIfPanelOpen())
         {
@@ -330,7 +330,7 @@ public class BoardScript : MonoBehaviour {
         if (character && tile.GetComponent<Renderer>().material.color == new Color(1, 0, 0, 1) ||
             character && tile.GetComponent<Renderer>().material.color == Color.yellow)
         {
-            PanelScript actPreviewScript = m_panels[(int)pnls.ACTION_PREVIEW].GetComponent<PanelScript>();
+            PanelScript actPreviewScript = PanelScript.GetPanel("ActionPreview");
             actPreviewScript.m_cScript = charScript;
             actPreviewScript.PopulatePanel();
         }
@@ -428,7 +428,7 @@ public class BoardScript : MonoBehaviour {
             }
 
             // Reveal right HUD with highlighted character's data
-            PanelScript hudPanScript = m_panels[(int)pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
+            PanelScript hudPanScript = PanelScript.GetPanel("HUD Panel RIGHT");
             hudPanScript.m_cScript = charScript;
             hudPanScript.PopulatePanel();
 
@@ -444,8 +444,8 @@ public class BoardScript : MonoBehaviour {
 
     private void DeselectHighlightedTile()
     {
-        PanelScript hudPanScript = m_panels[(int)pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
-        PanelScript actPreviewScript = m_panels[(int)pnls.ACTION_PREVIEW].GetComponent<PanelScript>();
+        PanelScript hudPanScript = PanelScript.GetPanel("HUD Panel RIGHT");
+        PanelScript actPreviewScript = PanelScript.GetPanel("ActionPreview");
 
         TileScript m_highlightedTileScript = m_highlightedTile.GetComponent<TileScript>();
 
@@ -469,9 +469,6 @@ public class BoardScript : MonoBehaviour {
 
     public void NewTurn()
     {
-        if (m_currRound.Count == 0)
-            NewRound();
-
         // Turn previous character back to original color
         if (m_currPlayer)
         {
@@ -479,10 +476,16 @@ public class BoardScript : MonoBehaviour {
             oldRend.materials[1].shader = oldRend.materials[0].shader;
             //Renderer oldRenderer = m_currPlayer.GetComponent<Renderer>();
             //oldRenderer.material.color = m_currPlayer.GetComponent<CharacterScript>().m_teamColor;
-            m_newTurn = true;
         }
 
+        if (m_currRound.Count == 0)
+            NewRound();
+        else
+            m_newTurn = true;
+
         m_currPlayer = m_currRound[0];
+        m_currRound.RemoveAt(0);
+
         CharacterScript charScript = m_currPlayer.GetComponent<CharacterScript>();
 
         if (charScript.m_effects[(int)StatusScript.effects.STUN] || !charScript.m_isAlive)
@@ -505,15 +508,13 @@ public class BoardScript : MonoBehaviour {
         if (charScript.m_turnPanels.Count > 0)
             charScript.m_turnPanels.RemoveAt(0);
 
-        PanelScript HUDLeftScript = m_panels[(int)pnls.HUD_LEFT_PANEL].GetComponent<PanelScript>();
+        PanelScript HUDLeftScript = PanelScript.GetPanel("HUD Panel LEFT");
         HUDLeftScript.m_cScript = m_currPlayer.GetComponent<CharacterScript>();
         HUDLeftScript.PopulatePanel();
 
         PlayerScript playScript = charScript.m_player.GetComponent<PlayerScript>();
         if (playScript)
             playScript.SetEnergyPanel();
- 
-        m_currRound.RemoveAt(0);
 
         CameraScript camScript = m_camera.GetComponent<CameraScript>();
         camScript.m_target = m_currPlayer;
@@ -525,6 +526,7 @@ public class BoardScript : MonoBehaviour {
     public void NewRound()
     {
         List<GameObject> tempChars = new List<GameObject>();
+        m_currPlayer = null;
 
         m_livingPlayersInRound = 0;
         for (int i = 0; i < m_characters.Count; i++)
@@ -588,7 +590,9 @@ public class BoardScript : MonoBehaviour {
 
         m_livingPlayersInRound = m_currRound.Count;
         m_roundCount++;
-        PanelScript roundPanScript = m_panels[(int)pnls.ROUND_PANEL].GetComponent<PanelScript>();
+        PanelScript roundPanScript = PanelScript.GetPanel("Round Panel");
         roundPanScript.PopulatePanel();
+
+        PanelScript.GetPanel("Turn Panel").NewTurnOrder();
     }
 }

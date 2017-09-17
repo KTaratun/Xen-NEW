@@ -1,6 +1,6 @@
 fileFormatVersion: 2
-guid: 7d74da96c6bea4640a0ede8077d6078e
-timeCreated: 1505635451
+guid: 38ed292ec5fc5ad44bfb4d65bacd684e
+timeCreated: 1505584218
 licenseType: Free
 ModelImporter:
   serializedVersion: 19
@@ -31,7 +31,7 @@ ModelImporter:
     100046: mixamorig:Spine
     100048: mixamorig:Spine1
     100050: mixamorig:Spine2
-    100052: polySurface16
+    100052: polySurface13
     100054: //RootNode
     400000: default
     400002: mixamorig:Head
@@ -59,15 +59,15 @@ ModelImporter:
     400046: mixamorig:Spine
     400048: mixamorig:Spine1
     400050: mixamorig:Spine2
-    400052: polySurface16
+    400052: polySurface13
     400054: //RootNode
     2300000: default
     3300000: default
     4300000: default
-    4300002: polySurface16
+    4300002: polySurface13
     7400000: mixamo.com
     9500000: //RootNode
-    13700000: polySurface16
+    13700000: polySurface13
   materials:
     importMaterials: 1
     materialName: 0

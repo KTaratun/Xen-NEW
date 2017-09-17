@@ -67,14 +67,14 @@ public class TileScript : MonoBehaviour {
             if (m_holding == m_boardScript.m_currPlayer)
             {
                 // Assign character to panels
-                PanelScript mainPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.MAIN_PANEL].GetComponent<PanelScript>();
+                PanelScript mainPanScript = PanelScript.GetPanel("Main Panel");
                 mainPanScript.m_cScript = m_holding.GetComponent<CharacterScript>();
                 mainPanScript.PopulatePanel();
             }
             else
             {
                 // Assign character to panels
-                PanelScript charViewPanScript = m_boardScript.m_panels[(int)BoardScript.pnls.CHARACTER_VIEWER_PANEL].GetComponent<PanelScript>();
+                PanelScript charViewPanScript = PanelScript.GetPanel("CharacterViewer Panel");
                 charViewPanScript.m_cScript = m_holding.GetComponent<CharacterScript>();
                 charViewPanScript.PopulatePanel();
             }

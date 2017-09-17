@@ -32230,18 +32230,6 @@ MonoBehaviour:
   - {fileID: 1230478045263714, guid: 546327cc83c3f11499bcd138db57233f, type: 2}
   - {fileID: 1615538172956454, guid: 7ebacf542d2122f41984dec06aa934f3, type: 2}
   m_obstacles: []
-  m_panels:
-  - {fileID: 1270872295}
-  - {fileID: 545066517}
-  - {fileID: 169895530}
-  - {fileID: 1330249407}
-  - {fileID: 2146951926}
-  - {fileID: 1801275577}
-  - {fileID: 1602674031}
-  - {fileID: 179682803}
-  - {fileID: 1420022997}
-  - {fileID: 183463195}
-  - {fileID: 982355441}
   m_tiles: []
   m_tile: {fileID: 1782535043158714, guid: 5c85ab1a0780ebb429c0c6953bad95d9, type: 2}
   m_character:

@@ -365,14 +365,14 @@ public class PanelScript : MonoBehaviour {
                 m_buttons[(int)butts.MOV_BUTT].GetComponent<Image>().color = new Color(1, .5f, .5f, 1);
                 m_buttons[(int)butts.MOV_BUTT].interactable = false;
             }
-            PanelScript actPanScript = mainPanScript.m_panels[(int)BoardScript.pnls.ACTION_PANEL].GetComponent<PanelScript>();
+            PanelScript actPanScript = GetPanel("Action Panel");
             actPanScript.m_cScript = m_cScript;
             m_buttons[(int)butts.ACT_BUTT].onClick.AddListener(() => actPanScript.PopulatePanel());
 
             Button[] buttons = m_confirmPanel.m_buttons;
             m_buttons[(int)butts.PASS_BUTT].onClick.AddListener(() => buttons[1].GetComponent<ButtonScript>().ConfirmationButton("Pass"));
 
-            PanelScript stsPanScript = mainPanScript.m_panels[(int)BoardScript.pnls.STATUS_PANEL].GetComponent<PanelScript>();
+            PanelScript stsPanScript = PanelScript.GetPanel("Status Panel");
             stsPanScript.m_cScript = m_cScript;
             m_buttons[(int)butts.STATUS_BUTT].onClick.AddListener(() => stsPanScript.PopulatePanel());
         }
@@ -700,41 +700,17 @@ public class PanelScript : MonoBehaviour {
         float height = 55.0f; // The differnce in y each panel is 61.2f
         float start = 205.0f;
 
-        int count = 0; // Count is used to determine how much to lower each panel
-
         // Set current panel and count actives
         for (int i = 0; i < 8; i++)
-        {
-            if (m_panels[i].activeSelf)
-            {
+            if (m_panels[i].activeSelf && pan == null)
                 if (pan == null)
+                {
                     pan = m_panels[i];
-                count++;
-            }
-        }
+                    break;
+                }
 
-        // If there are no actives, reset panels
-        if (!pan)
-        {
-            if (bScript.m_currRound.Count == 0)
-                return;
-
-            count = bScript.m_currRound.Count;
-            if (count > 8)
-            {
-                count = 8;
-                m_panels[8].SetActive(true);
-                Text t = m_panels[8].GetComponentInChildren<Text>();
-                t.text = "x" + (bScript.m_currRound.Count - 8).ToString();
-            }
-
-            for (int i = 0; i < count; i++)
-            {
-                m_panels[i].transform.SetPositionAndRotation(new Vector3(m_panels[i].transform.position.x, start + height * i, m_panels[i].transform.position.z), m_panels[i].transform.rotation);
-                TurnPanelInit(i, bScript.m_currRound[i].GetComponent<CharacterScript>());
-            }
-            pan = m_panels[0];
-        }
+        if (pan == null)
+            return;
 
         RectTransform panRect = pan.GetComponent<RectTransform>();
         CharacterScript c = pan.GetComponentInChildren<ButtonScript>().m_character.GetComponent<CharacterScript>();
@@ -824,6 +800,30 @@ public class PanelScript : MonoBehaviour {
         }
     }
 
+    public void NewTurnOrder()
+    {
+        BoardScript bScript = m_main.GetComponent<BoardScript>();
+        float height = 55.0f; // The differnce in y each panel is 61.2f
+        float start = 205.0f;
+        int roundCountModded = bScript.m_currRound.Count - 1;
+
+        if (roundCountModded == 0)
+            return;
+
+        if (roundCountModded > 8)
+        {
+            m_panels[8].SetActive(true);
+            Text t = m_panels[8].GetComponentInChildren<Text>();
+            t.text = "x" + (roundCountModded - 8).ToString();
+        }
+
+        for (int i = 0; i < roundCountModded; i++)
+        {
+            m_panels[i].transform.SetPositionAndRotation(new Vector3(m_panels[i].transform.position.x, start + height * i, m_panels[i].transform.position.z), m_panels[i].transform.rotation);
+            TurnPanelInit(i, bScript.m_currRound[i + 1].GetComponent<CharacterScript>()); // +1 because we are avoiding the first index
+        }
+    }
+
     // Maybe move
     private void StatusSymbolSetup()
     {
@@ -886,5 +886,14 @@ public class PanelScript : MonoBehaviour {
                 m_history.RemoveAt(i);
             }           
         }
+    }
+
+    static public PanelScript GetPanel(string _name)
+    {
+        for (int i = 0; i < m_allPanels.Count; i++)
+            if (m_allPanels[i].name == _name)
+                return m_allPanels[i].GetComponent<PanelScript>();
+
+        return null;
     }
 }

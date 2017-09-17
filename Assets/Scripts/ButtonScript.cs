@@ -37,7 +37,7 @@ public class ButtonScript : MonoBehaviour {
             
             Renderer charRenderer = m_character.GetComponentInChildren<Renderer>();
             charRenderer.material.color = Color.cyan;
-            PanelScript hudPanScript = charScript.m_boardScript.m_panels[(int)BoardScript.pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
+            PanelScript hudPanScript = PanelScript.GetPanel("HUD Panel RIGHT");
             hudPanScript.m_cScript = charScript;
             hudPanScript.PopulatePanel();
 
@@ -84,7 +84,7 @@ public class ButtonScript : MonoBehaviour {
             //turnPanImage.color = Color.cyan;
             Renderer charRenderer = m_character.GetComponentInChildren<Renderer>();
             charRenderer.material.color = charScript.m_teamColor;
-            PanelScript hudPanScript = charScript.m_boardScript.m_panels[(int)BoardScript.pnls.HUD_RIGHT_PANEL].GetComponent<PanelScript>();
+            PanelScript hudPanScript = PanelScript.GetPanel("HUD Panel RIGHT");
             hudPanScript.m_inView = false;
             
             return;
@@ -357,7 +357,7 @@ public class ButtonScript : MonoBehaviour {
 
         if (_confirm == "Action")
         {
-            gameObject.GetComponent<Button>().onClick.AddListener(() => charScript.Action());
+            gameObject.GetComponent<Button>().onClick.AddListener(() => charScript.ActionAnimation());
         }
         else if (_confirm == "Clear Team")
         {
