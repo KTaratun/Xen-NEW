@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ObjectScript : MonoBehaviour {
 
-    public GameObject m_tile;
+    public TileScript m_tile;
     public BoardScript m_boardScript;
     public int m_width;
     public TileScript.nbors m_facing;

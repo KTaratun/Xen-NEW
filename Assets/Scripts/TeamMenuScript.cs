@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 public class TeamMenuScript : MonoBehaviour {
-
-    public enum menuPans { CHAR_SLOTS, CHAR_PANEL, CHAR_VIEW, PRESELECT_PANEL, ACTION_VIEW, SAVE_LOAD_PANEL,
-        NEW_ACTION_PANEL, NEW_STATS_PANEL, CONFIRMATION_PANEL, TOT_PANELS }
 
     public Button m_currButton;
     public Button m_saveButton;
@@ -15,10 +13,13 @@ public class TeamMenuScript : MonoBehaviour {
     public Button m_statButton;
     public CharacterScript m_currCharScript;
     public GameObject m_character;
+    public AudioSource m_audio;
 
 	// Use this for initialization
 	void Start ()
     {
+        m_audio = gameObject.AddComponent<AudioSource>();
+
         PanelScript.MenuPanelInit("Canvas");
         TeamInit();
 
@@ -37,7 +38,7 @@ public class TeamMenuScript : MonoBehaviour {
     {
         for (int i = 0; i < 4; i++)
         {
-            PanelScript panScript = PanelScript.m_allPanels[(int)menuPans.CHAR_SLOTS].m_panels[i].GetComponent<PanelScript>();
+            PanelScript panScript = PanelScript.GetPanel("CharacterSlots").m_panels[i].GetComponent<PanelScript>();
             Button[] team = panScript.m_buttons;
             for (int j = 0; j < 6; j++)
             {
@@ -50,7 +51,7 @@ public class TeamMenuScript : MonoBehaviour {
 
                     SetCharSlot(team[j], name, color);
                     team[j].onClick = new Button.ButtonClickedEvent();
-                    team[j].onClick.AddListener(() => PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].PopulatePanel());
+                    team[j].onClick.AddListener(() => PanelScript.GetPanel("CharacterViewer Panel").PopulatePanel());
                 }
             }
         }
@@ -72,20 +73,18 @@ public class TeamMenuScript : MonoBehaviour {
         if (PanelScript.CheckIfPanelOpen())
             return;
 
-        PanelScript.m_allPanels[(int)menuPans.CHAR_PANEL].PopulatePanel();
+        PanelScript.GetPanel("Character Panel").PopulatePanel();
         m_currButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
     }
 
     public void NewCharacter()
     {
-        if (!PanelScript.m_allPanels[(int)menuPans.CHAR_PANEL].m_inView)
+        if (!PanelScript.GetPanel("Character Panel").m_inView)
             return;
     }
 
     public void RandomCharacter()
     {
-        PanelScript.m_allPanels[(int)menuPans.CHAR_PANEL].m_inView = false;
-
         int color = Random.Range(0, 4);
 
         m_currCharScript.m_name = RandomName();
@@ -275,7 +274,7 @@ public class TeamMenuScript : MonoBehaviour {
         SetCharSlot(m_currButton, m_currCharScript.m_name, m_currCharScript.m_color);
 
         m_currButton.onClick = new Button.ButtonClickedEvent();
-        m_currButton.onClick.AddListener(() => PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].PopulatePanel());
+        m_currButton.onClick.AddListener(() => PanelScript.GetPanel("CharacterViewer Panel").PopulatePanel());
 
         PanelScript.CloseHistory();
     }
@@ -308,6 +307,12 @@ public class TeamMenuScript : MonoBehaviour {
 
         m_currButton.onClick = new Button.ButtonClickedEvent();
         m_currButton.onClick.AddListener(() => CharacterAssignment());
+
+        if (!m_audio.isPlaying)
+        {
+            m_audio.volume = 0.5f;
+            m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Remove Character Sound 1"));
+        }
     }
 
     public void Load()
@@ -323,7 +328,7 @@ public class TeamMenuScript : MonoBehaviour {
             int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",gender")));
 
         Select();
-        PanelScript.m_allPanels[(int)menuPans.SAVE_LOAD_PANEL].m_inView = false;
+        PanelScript.GetPanel("Save/Load Panel").m_inView = false;
     }
 
     public void Save()
@@ -342,29 +347,32 @@ public class TeamMenuScript : MonoBehaviour {
         m_currCharScript.m_exp -= 10;
         m_currCharScript.m_level++;
 
-        for (int i = 0; i < PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons.Length; i++)
+        for (int i = 0; i < PanelScript.GetPanel("CharacterViewer Panel").m_buttons.Length; i++)
         {
-            if (PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>())
-                if (PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "REMOVE" ||
-                    PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "SAVE" ||
-                    PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "LEVEL UP")
-                    PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].interactable = false;
+            if (PanelScript.GetPanel("CharacterViewer Panel").m_buttons[i].GetComponentInChildren<Text>())
+                if (PanelScript.GetPanel("CharacterViewer Panel").m_buttons[i].GetComponentInChildren<Text>().text == "REMOVE" ||
+                    PanelScript.GetPanel("CharacterViewer Panel").m_buttons[i].GetComponentInChildren<Text>().text == "SAVE" ||
+                    PanelScript.GetPanel("CharacterViewer Panel").m_buttons[i].GetComponentInChildren<Text>().text == "LEVEL UP")
+                    PanelScript.GetPanel("CharacterViewer Panel").m_buttons[i].interactable = false;
         }
 
-        PanelScript.m_allPanels[(int)menuPans.NEW_ACTION_PANEL].PopulatePanel();
+        PanelScript.GetPanel("New Action Panel").PopulatePanel();
 
         if (m_currCharScript.m_level == 3 || m_currCharScript.m_level == 5)
-            PanelScript.m_allPanels[(int)menuPans.NEW_STATS_PANEL].PopulatePanel();
+            PanelScript.GetPanel("New Status Panel").PopulatePanel();
 
         if (m_currCharScript.m_level < 6)
         {
             m_currCharScript.m_stats[(int)CharacterScript.sts.HP] += 2;
             m_currCharScript.m_tempStats[(int)CharacterScript.sts.HP] += 2;
             PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
-            PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].PopulatePanel();
+            PanelScript.GetPanel("CharacterViewer Panel").PopulatePanel();
         }
         else
             PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
+
+        m_audio.volume = 0.7f;
+        m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Save Game Sound 1"));
     }
 
     public string NewRandomAction(Button[] _buttons)
@@ -471,7 +479,7 @@ public class TeamMenuScript : MonoBehaviour {
 
     public void NewActionSelection()
     {
-        PanelScript actPanScript = PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_panels[0].GetComponent<PanelScript>();
+        PanelScript actPanScript = PanelScript.GetPanel("CharacterViewer Panel").m_panels[0].GetComponent<PanelScript>();
         Button newAct = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
 
         if (m_saveButton)
@@ -551,41 +559,46 @@ public class TeamMenuScript : MonoBehaviour {
             }
         }
 
+        m_currCharScript.SortActions();
+
         int oldColorLen = m_currCharScript.m_color.Length;
         m_currCharScript.m_color = PlayerScript.CheckCharColors(m_currCharScript.m_actions);
         if (oldColorLen != m_currCharScript.m_color.Length)
-            PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[0].GetComponent<ButtonScript>().SetTotalEnergy(m_currCharScript.m_color);
+            PanelScript.GetPanel("CharacterViewer Panel").m_panels[1].GetComponent<PanelScript>().m_buttons[0].GetComponent<ButtonScript>().SetTotalEnergy(m_currCharScript.m_color);
 
         SetCharSlot(m_currButton, m_currCharScript.m_name, m_currCharScript.m_color);
         PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
 
 
-        CloseLevelPanel((int)menuPans.NEW_ACTION_PANEL);
+        CloseLevelPanel(0);
     }
 
     public void CloseLevelPanel(int _pan)
     {
         EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name = m_currButton.name;
-        if (_pan == (int)menuPans.NEW_ACTION_PANEL)
+        if (_pan == 0)
         {
-            PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_panels[0].GetComponent<PanelScript>().PopulatePanel();
+            PanelScript.GetPanel("CharacterViewer Panel").m_panels[0].GetComponent<PanelScript>().PopulatePanel();
+            PanelScript.GetPanel("New Action Panel").m_inView = false;
             m_saveButton = null;
         }
-        else if (_pan == (int)menuPans.NEW_STATS_PANEL)
-            PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_panels[1].GetComponent<PanelScript>().PopulatePanel();
-        
-        PanelScript.m_allPanels[_pan].m_inView = false;
+        else if (_pan == 1)
+        {
+            PanelScript.GetPanel("CharacterViewer Panel").m_panels[1].GetComponent<PanelScript>().PopulatePanel();
+            PanelScript.GetPanel("New Status Panel").m_inView = false;
+        }
+
         PanelScript.RemoveFromHistory("");
         
-        if (!PanelScript.m_allPanels[(int)menuPans.NEW_ACTION_PANEL].m_inView && !PanelScript.m_allPanels[(int)menuPans.NEW_STATS_PANEL].m_inView)
+        if (!PanelScript.GetPanel("New Action Panel").m_inView && !PanelScript.GetPanel("New Status Panel").m_inView)
         {
-            for (int i = 0; i < PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons.Length; i++)
+            for (int i = 0; i < PanelScript.GetPanel("CharacterViewer Panel").m_buttons.Length; i++)
             {
-                if (PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>())
-                    if (PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "REMOVE" ||
-                        PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "SAVE" ||
-                        PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].GetComponentInChildren<Text>().text == "LEVEL UP" && m_currCharScript.m_exp >= 10)
-                        PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_buttons[i].interactable = true;
+                if (PanelScript.GetPanel("CharacterViewer Panel").m_buttons[i].GetComponentInChildren<Text>())
+                    if (PanelScript.GetPanel("CharacterViewer Panel").m_buttons[i].GetComponentInChildren<Text>().text == "REMOVE" ||
+                        PanelScript.GetPanel("CharacterViewer Panel").m_buttons[i].GetComponentInChildren<Text>().text == "SAVE" ||
+                        PanelScript.GetPanel("CharacterViewer Panel").m_buttons[i].GetComponentInChildren<Text>().text == "LEVEL UP" && m_currCharScript.m_exp >= 10)
+                        PanelScript.GetPanel("CharacterViewer Panel").m_buttons[i].interactable = true;
             }
         
             PanelScript.m_locked = false;
@@ -649,7 +662,7 @@ public class TeamMenuScript : MonoBehaviour {
 
     public void AddStatAlteration()
     {
-        PanelScript statPanScript = PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_panels[1].GetComponent<PanelScript>();
+        PanelScript statPanScript = PanelScript.GetPanel("CharacterViewer Panel").m_panels[1].GetComponent<PanelScript>();
         string[] statSeparated = m_statButton.name.Split('|');
 
         for (int i = 0; i < m_currCharScript.m_stats.Length; i++)
@@ -661,7 +674,7 @@ public class TeamMenuScript : MonoBehaviour {
         }
 
         PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
-        CloseLevelPanel((int)menuPans.NEW_STATS_PANEL);
+        CloseLevelPanel(1);
     }
 
     public void RandomTeam(Button _button)
@@ -681,7 +694,7 @@ public class TeamMenuScript : MonoBehaviour {
 
     public void ClearTeam(Button _button)
     {
-        PanelScript panScript = PanelScript.m_allPanels[(int)menuPans.CHAR_SLOTS].m_panels[int.Parse(_button.transform.parent.name)].GetComponent<PanelScript>();
+        PanelScript panScript = PanelScript.GetPanel("CharacterSlots").m_panels[int.Parse(_button.transform.parent.name)].GetComponent<PanelScript>();
         Button[] team = panScript.m_buttons;
         for (int i = 0; i < 6; i++)
         {
@@ -692,15 +705,55 @@ public class TeamMenuScript : MonoBehaviour {
 
     public void StartGame()
     {
-        Application.LoadLevel("Scene1");
+        CheckIfCompControlled();
+        SceneManager.LoadScene("Scene1");
     }
 
     public void Rename()
     {
-        Text text = PanelScript.m_allPanels[(int)menuPans.CHAR_VIEW].m_text[36];
+        Text text = PanelScript.GetPanel("CharaterViewer Panel").m_text[36];
         m_currCharScript.m_name = text.text;
         m_currButton.GetComponentInChildren<Text>().text = text.text;
         PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
 
+    }
+
+    public void ComputerControlled()
+    {
+        Button me = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+
+        if (me.image.color == Color.white)
+            me.image.color = Color.cyan;
+        else
+            me.image.color = Color.white;
+    }
+
+    private void CheckIfCompControlled()
+    {
+        PanelScript charSlots = PanelScript.GetPanel("CharacterSlots");
+
+        for (int h = 0; h < charSlots.m_panels.Length; h++)
+        {
+            PanelScript currSlot = charSlots.m_panels[h].GetComponent<PanelScript>();
+
+            Button[] buttons = currSlot.m_buttons;
+            for (int i = 0; i < 6; i++)
+            {
+                m_currButton = buttons[i];
+                string name = PlayerPrefs.GetString(m_currButton.name + ",name");
+
+                if (name.Length == 0)
+                    continue;
+
+                PlayerPrefScript.LoadChar(m_currButton.name, m_currCharScript);
+
+                if (currSlot.m_buttons[currSlot.m_buttons.Length - 1].image.color == Color.white)
+                    m_currCharScript.m_isAI = false;
+                else
+                    m_currCharScript.m_isAI = true;
+
+                Select();
+            }
+        }
     }
 }

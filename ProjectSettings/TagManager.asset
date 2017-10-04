@@ -9,6 +9,7 @@ TagManager:
   - Status Image
   - Environment
   - Selector
+  - Action Button
   layers:
   - Default
   - TransparentFX

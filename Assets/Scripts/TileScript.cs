@@ -9,19 +9,22 @@ public class TileScript : MonoBehaviour {
     public enum targetRestriction { NONE, HORVERT, DIAGONAL};
 
     public GameObject m_holding;
-    public GameObject[] m_neighbors;
-    public List<GameObject> m_radius;
-    public List<GameObject> m_targetRadius;
+    public TileScript[] m_neighbors;
+    public List<TileScript> m_radius;
+    public List<TileScript> m_targetRadius;
     public int m_x;
     public int m_z;
     public BoardScript m_boardScript;
     private Color m_oldColor;
+    private bool m_traversed;
+    private int m_depth;
     //private LineRenderer m_line;
 
     // Use this for initialization
     void Start()
     {
-        m_radius = new List<GameObject>();
+        m_traversed = false;
+        m_radius = new List<TileScript>();
         m_oldColor = Color.black;
 
         //m_line = gameObject.AddComponent<LineRenderer>();
@@ -44,13 +47,27 @@ public class TileScript : MonoBehaviour {
         if (m_holding && currTileScript.m_radius.Count > 0 && renderer.material.color == new Color(1, 1, 1, 0.5f))
             return;
 
-        m_boardScript.m_selected = gameObject;
+        if (m_boardScript.m_selected != this)
+        {
+            if (m_holding && m_holding.tag == "Player" && m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player")
+            {
+                m_boardScript.HighlightCharacter(m_holding.GetComponent<CharacterScript>());
+                Color temp = gameObject.GetComponent<Renderer>().material.color;
+                gameObject.GetComponent<Renderer>().material.color = m_boardScript.m_selected.GetComponent<Renderer>().material.color;
+                gameObject.GetComponent<TileScript>().m_oldColor = temp;
+                m_boardScript.m_selected.GetComponent<Renderer>().material.color = temp;
+                m_boardScript.m_oldTile = this;
+            }
+            m_boardScript.m_selected = this;
+        }
+        else
+            m_boardScript.m_selected = null;
 
         // If selecting a tile while moving
         if (renderer.material.color == Color.blue) // If tile is blue when clicked, perform movement code
         {
             Button[] buttons = PanelScript.m_confirmPanel.GetComponentsInChildren<Button>();
-            buttons[1].GetComponent<ButtonScript>().m_character = m_boardScript.m_currPlayer;
+            buttons[1].GetComponent<ButtonScript>().m_cScript = m_boardScript.m_currCharScript;
             buttons[1].GetComponent<ButtonScript>().ConfirmationButton("Move");
         }
         // If selecting a tile that is holding a character while using an action
@@ -59,25 +76,37 @@ public class TileScript : MonoBehaviour {
             renderer.material.color == Color.yellow) // Otherwise if color is red, perform action code
         {
             Button[] buttons = PanelScript.m_confirmPanel.GetComponentsInChildren<Button>();
-            buttons[1].GetComponent<ButtonScript>().m_character = m_boardScript.m_currPlayer;
+            buttons[1].GetComponent<ButtonScript>().m_cScript = m_boardScript.m_currCharScript;
             buttons[1].GetComponent<ButtonScript>().ConfirmationButton("Action");
         }
         else if (m_holding && m_holding.tag == "Player" && !m_boardScript.m_isForcedMove)
         {
-            if (m_holding == m_boardScript.m_currPlayer)
+            if (m_boardScript.m_selected != this)
+                return;
+
+            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_holding;
+
+            if (m_holding == m_boardScript.m_currCharScript.gameObject)
             {
-                // Assign character to panels
-                PanelScript mainPanScript = PanelScript.GetPanel("Main Panel");
-                mainPanScript.m_cScript = m_holding.GetComponent<CharacterScript>();
-                mainPanScript.PopulatePanel();
+                PanelScript statusPanel = PanelScript.GetPanel("Status Panel");
+                statusPanel.m_cScript = m_holding.GetComponent<CharacterScript>();
+                statusPanel.PopulatePanel();
             }
-            else
-            {
-                // Assign character to panels
-                PanelScript charViewPanScript = PanelScript.GetPanel("CharacterViewer Panel");
-                charViewPanScript.m_cScript = m_holding.GetComponent<CharacterScript>();
-                charViewPanScript.PopulatePanel();
-            }
+
+            //if (m_holding == m_boardScript.m_currPlayer)
+            //{
+            //    // Assign character to panels
+            //    PanelScript mainPanScript = PanelScript.GetPanel("Main Panel");
+            //    mainPanScript.m_cScript = m_holding.GetComponent<CharacterScript>();
+            //    mainPanScript.PopulatePanel();
+            //}
+            //else
+            //{
+            //    // Assign character to panels
+            //    PanelScript charViewPanScript = PanelScript.GetPanel("CharacterViewer Panel");
+            //    charViewPanScript.m_cScript = m_holding.GetComponent<CharacterScript>();
+            //    charViewPanScript.PopulatePanel();
+            //}
         }
     }
 
@@ -89,10 +118,12 @@ public class TileScript : MonoBehaviour {
         List<TileScript> oddGen = new List<TileScript>();
         List<TileScript> evenGen = new List<TileScript>();
 
-        CharacterScript currCharScript = m_boardScript.m_currPlayer.GetComponent<CharacterScript>();
+        CharacterScript currCharScript = m_boardScript.m_currCharScript;
+        CharacterScript ownerCharScript = currCharScript;
+        if (m_holding && m_holding.tag == "Player")
+            ownerCharScript = m_holding.GetComponent<CharacterScript>();
 
         // Handle attacks with radius
-        GameObject originalTile = gameObject;
         TileScript originalTileScript = this;
 
         if (currCharScript.m_currAction.Length > 0 && _color != CharacterScript.c_move)
@@ -105,8 +136,7 @@ public class TileScript : MonoBehaviour {
             {
                 _range = int.Parse(radius[1]);
                 _targetSelf = false;
-                originalTile = currCharScript.m_tile;
-            }   originalTileScript = originalTile.GetComponent<TileScript>();
+            }   originalTileScript = currCharScript.m_tile;
             
             if (int.Parse(radius[1]) > 0)
                 _isBlockable = false;
@@ -115,17 +145,17 @@ public class TileScript : MonoBehaviour {
         // Start with current tile in oddGen
         oddGen.Add(originalTileScript);
 
-        if (_targetSelf)//|| !_targetSelf && this != currCharScript.m_tile.GetComponent<TileScript>())// || !_targetSelf && this != originalTileScript
+        if (_targetSelf || !_targetSelf && originalTileScript != ownerCharScript.m_tile.GetComponent<TileScript>())//|| !_targetSelf && this != currCharScript.m_tile.GetComponent<TileScript>())// || !_targetSelf && this != originalTileScript
         {
-            Renderer myRend = originalTile.GetComponent<Renderer>();
+            Renderer myRend = originalTileScript.gameObject.GetComponent<Renderer>();
             m_oldColor = myRend.material.color;
             
             myRend.material.color = _color;
             
             if (_color == Color.yellow)
-                m_targetRadius.Add(originalTile);
+                m_targetRadius.Add(originalTileScript);
             else
-                m_radius.Add(originalTile);
+                m_radius.Add(originalTileScript);
         }
 
         for (int i = 0; i < _range; i++)
@@ -146,7 +176,7 @@ public class TileScript : MonoBehaviour {
             {
                 for (int k = 0; k < 4; k++)
                 {
-                    GameObject currNeighbor = workingList[0].m_neighbors[k];
+                    TileScript currNeighbor = workingList[0].m_neighbors[k];
 
                     if (!currNeighbor)
                         continue;
@@ -163,7 +193,7 @@ public class TileScript : MonoBehaviour {
                     }
 
                     // if color is movement color and the current tile is holding someone
-                    if (_color == CharacterScript.c_move && tScript.m_holding || !_targetSelf && tScript == currCharScript.m_tile.GetComponent<TileScript>())
+                    if (_color == CharacterScript.c_move && tScript.m_holding || !_targetSelf && tScript == ownerCharScript.m_tile.GetComponent<TileScript>())
                         continue;
 
                     //if (tScript.m_holding && tScript.m_holding.tag == "Player" && tScript.m_holding.GetComponent<CharacterScript>().m_effects[(int)StatusScript.effects.PROTECT])
@@ -205,10 +235,10 @@ public class TileScript : MonoBehaviour {
         }
     }
 
-    private bool CheckIfBlocked(GameObject _target)
+    private bool CheckIfBlocked(TileScript _target)
     {
         //float laserWidth = 0.1f;
-        float laserMaxLength = Vector3.Distance(transform.position, _target.transform.position);
+        float laserMaxLength = Vector3.Distance(transform.position, _target.gameObject.transform.position);
         //
         //Vector3[] initLaserPositions = new Vector3[2] { Vector3.zero, Vector3.zero };
         //m_line.SetPositions(initLaserPositions);
@@ -217,20 +247,19 @@ public class TileScript : MonoBehaviour {
         // REFACTOR: Don't instantiate during run time as much as possible
         Vector3 pos = transform.position;
         Quaternion rot = transform.rotation;
-        transform.LookAt(_target.transform);
+        transform.LookAt(_target.gameObject.transform);
 
         Ray ray = new Ray(transform.position, transform.forward);
 
         transform.SetPositionAndRotation(pos, rot);
 
         RaycastHit raycastHit;
-        Vector3 endPosition = _target.transform.position;
+        Vector3 endPosition = _target.gameObject.transform.position;
 
         if (Physics.Raycast(ray, out raycastHit, laserMaxLength))
         {
             //endPosition = raycastHit.point;
-            TileScript tarTileScript = _target.GetComponent<TileScript>();
-            if (tarTileScript.m_holding && raycastHit.collider.gameObject == tarTileScript.m_holding)
+            if (_target.m_holding && raycastHit.collider.gameObject == _target.m_holding)
                 return false;
             else
             {
@@ -248,9 +277,9 @@ public class TileScript : MonoBehaviour {
 
     }
 
-    private GameObject Diagonal(GameObject _neighbor, TileScript _originalTile, int _neiInd)
+    private TileScript Diagonal(TileScript _neighbor, TileScript _originalTile, int _neiInd)
     {
-        TileScript currNeighbor = _neighbor.GetComponent<TileScript>();
+        TileScript currNeighbor = _neighbor;
         // nbors { left, right, top, bottom };
         if (_neiInd == (int)nbors.left && currNeighbor.m_neighbors[(int)nbors.top])
         {
@@ -305,7 +334,7 @@ public class TileScript : MonoBehaviour {
     // Reset all tiles to their original color REFACTOR: maybe make this a static class or remove the argument?
     public void ClearRadius(TileScript _tS)
     {
-        List<GameObject> radTiles = _tS.m_radius;
+        List<TileScript> radTiles = _tS.m_radius;
 
         if (_tS.m_targetRadius.Count > 0)
             radTiles = _tS.m_targetRadius;
@@ -324,5 +353,63 @@ public class TileScript : MonoBehaviour {
             }
         }
         radTiles.Clear();
+    }
+
+    static public int CaclulateDistance(TileScript _targetOne, TileScript _targetTwo)
+    {
+        return Mathf.Abs(_targetOne.m_x - _targetTwo.m_x) + Mathf.Abs(_targetOne.m_z - _targetTwo.m_z);
+    }
+
+    public void AITilePlanning()
+    {
+        TileScript currTileScript = this;
+        CharacterScript currCharScript = m_holding.GetComponent<CharacterScript>();
+        m_depth = 0;
+
+        List<TileScript> branches = new List<TileScript>();
+        List<TileScript> visited = new List<TileScript>();
+        TileScript closest = null;
+
+        branches.Add(currTileScript);
+        visited.Add(currTileScript);
+
+        while (branches.Count > 0)
+        {
+            currTileScript = branches[0];
+            branches.RemoveAt(0);
+            int newDepth = currTileScript.m_depth + 1;
+
+            //if (!currCharScript.CheckAllActionsRange())
+
+
+                //if (CaclulateDistance(currTileScript, _targetTile) < 2)
+                //{
+                //    closest = currTileScript;
+                //    break;
+                //}
+                //else if (newDepth > _maxDis)
+                //{
+                //    if (!closest || CaclulateDistance(currTileScript, _targetTile) < CaclulateDistance(closest, _targetTile))
+                //        closest = currTileScript;
+                //    continue;
+                //}
+
+            for (int i = 0; i < 4; i++)
+            {
+                if (currTileScript.m_neighbors[i] && !currTileScript.m_neighbors[i].GetComponent<TileScript>().m_traversed &&
+                    !currTileScript.m_neighbors[i].GetComponent<TileScript>().m_holding)
+                {
+                    currTileScript.m_neighbors[i].GetComponent<TileScript>().m_depth = newDepth;
+                    branches.Add(currTileScript.m_neighbors[i].GetComponent<TileScript>());
+                    visited.Add(currTileScript.m_neighbors[i].GetComponent<TileScript>());
+                    currTileScript.m_neighbors[i].GetComponent<TileScript>().m_traversed = true;
+                }
+            }
+        }
+
+        for (int i = 0; i < visited.Count; i++)
+            visited[i].m_traversed = false;
+
+        m_holding.GetComponent<CharacterScript>().Movement(this, closest, true);
     }
 }

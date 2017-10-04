@@ -23,6 +23,7 @@ public class PlayerPrefScript : MonoBehaviour {
         PlayerPrefs.SetString(_key + ",exp", _charScript.m_exp.ToString());
         PlayerPrefs.SetString(_key + ",level", _charScript.m_level.ToString());
         PlayerPrefs.SetString(_key + ",gender", _charScript.m_gender.ToString());
+        PlayerPrefs.SetString(_key + ",AI", _charScript.m_isAI.ToString());
 
         // Write out stats
         string stats = null;
@@ -43,6 +44,8 @@ public class PlayerPrefScript : MonoBehaviour {
         _charScript.m_exp = int.Parse(PlayerPrefs.GetString(_key + ",exp"));
         _charScript.m_level = int.Parse(PlayerPrefs.GetString(_key + ",level"));
         _charScript.m_gender = int.Parse(PlayerPrefs.GetString(_key + ",gender"));
+        string d = PlayerPrefs.GetString(_key + ",AI");
+        _charScript.m_isAI = bool.Parse(PlayerPrefs.GetString(_key + ",AI"));
 
         _charScript.m_isDiabled = new int[_charScript.m_actions.Length];
         for (int i = 0; i < _charScript.m_isDiabled.Length; i++)

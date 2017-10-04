@@ -7,7 +7,8 @@ public class CharacterScript : ObjectScript {
 
     public enum weaps { SWORD, HGUN };
     public enum sts { HP, SPD, DMG, DEF, MOV, RNG, TEC, RAD, TOT };
-    enum trn { MOV, ACT };
+    public enum trn { MOV, ACT };
+    public enum HUDPan { CHAR_PORT, ACT_PAN, MOV_PASS, ENG_PAN };
 
     static public Color c_green = new Color(.45f, .7f, .4f, 1);
     static public Color c_red = new Color(.8f, .1f, .15f, 1);
@@ -44,11 +45,20 @@ public class CharacterScript : ObjectScript {
     public int[] m_isDiabled;
     public int m_gender;
     public GameObject[] m_weapons;
+    public List<GameObject> m_targets;
+    public AudioSource m_audio;
+    public int[] m_hasActed;
 
     // Use this for initialization
     void Start ()
     {
-        m_anim = GetComponentInChildren<Animator>();
+        if (m_hasActed.Length == 0)
+            m_hasActed = new int[2];
+
+        m_audio = gameObject.AddComponent<AudioSource>();
+
+        if (!m_anim)
+            m_anim = GetComponentInChildren<Animator>();
         m_popupText.SetActive(false);
         m_isFree = false;
 
@@ -68,7 +78,7 @@ public class CharacterScript : ObjectScript {
                 meshRends[j].material.color = new Color(meshRends[j].material.color.r, meshRends[j].material.color.g, meshRends[j].material.color.b, 0);
         }
 
-        if (m_boardScript && m_boardScript.m_currPlayer != gameObject)
+        if (m_boardScript && m_boardScript.m_currCharScript != this)
         {
             Renderer rend = transform.GetComponentInChildren<Renderer>();
             rend.materials[1].shader = rend.materials[0].shader;
@@ -132,7 +142,21 @@ public class CharacterScript : ObjectScript {
                 m_boardScript.m_camIsFrozen = false;
                 CameraScript cam = m_boardScript.m_camera.GetComponent<CameraScript>();
                 cam.m_target = null;
-                m_anim.Play("Idle", -1, 0);
+                m_anim.Play("Idle Melee", -1, 0);
+
+                m_boardScript.m_currButton = null;
+
+                if (m_isAI && m_currAction.Length > 0)
+                {
+                    if (TileScript.CaclulateDistance(m_tile.GetComponent<TileScript>(), m_targets[0].GetComponent<CharacterScript>().m_tile.GetComponent<TileScript>()) > 1)
+                        m_anim.Play("Ranged", -1, 0);
+                    else
+                        m_anim.Play("Melee", -1, 0);
+
+                    Action();
+                    PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
+                    PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
+                }
             }
         }
     }
@@ -141,14 +165,13 @@ public class CharacterScript : ObjectScript {
     {
         PanelScript mainPanelScript = PanelScript.GetPanel("Main Panel");
 
-        if (_isForced && !m_boardScript.m_camIsFrozen || m_boardScript.m_currPlayer == gameObject && mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable == false
-                && mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable == false && !m_boardScript.m_isForcedMove && !m_boardScript.m_camIsFrozen)
+        if (m_boardScript.m_currCharScript == this && m_hasActed[(int)trn.MOV] + m_hasActed[(int)trn.ACT] > 3 && !m_boardScript.m_isForcedMove && !m_boardScript.m_camIsFrozen || 
+            m_boardScript.m_currCharScript == this && m_hasActed[(int)trn.MOV] + m_hasActed[(int)trn.ACT] > 3 && m_isAI && !m_boardScript.m_camIsFrozen)
         {
-            mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = true;
-            mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = true;
-            mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].GetComponent<Image>().color = Color.white;
-            mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].GetComponent<Image>().color = Color.white;
+            PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[(int)trn.MOV].interactable = true;
             StatusScript.UpdateStatus(gameObject, StatusScript.mode.TURN_END);
+            m_hasActed[(int)trn.MOV] = 0;
+            m_hasActed[(int)trn.ACT] = 0;
             m_boardScript.NewTurn();
         }
     }
@@ -156,13 +179,13 @@ public class CharacterScript : ObjectScript {
     private void UpdateOverheadItems()
     {
         // Update Health bar
-        if (m_healthBar.activeSelf && m_isAlive)
+        if (m_healthBar.activeSelf)
         {
             Transform outline = m_healthBar.transform.parent;
 
             outline.LookAt(2 * outline.position - m_boardScript.m_camera.transform.position);
             m_healthBar.transform.LookAt(2 * m_healthBar.transform.position - m_boardScript.m_camera.transform.position);
-            float ratio = ((float)m_stats[(int)sts.HP] - (float)m_tempStats[(int)sts.HP]) / (float)m_stats[(int)sts.HP];
+            float ratio = (float)(m_stats[(int)sts.HP] - (float)m_tempStats[(int)sts.HP]) / (float)m_stats[(int)sts.HP];
 
             Renderer hpRend = m_healthBar.GetComponent<Renderer>();
             hpRend.material.color = new Color(ratio + 0.2f, 1 - ratio + 0.2f, 0.2f, 1);
@@ -198,7 +221,7 @@ public class CharacterScript : ObjectScript {
                     {
                         m_boardScript.m_camIsFrozen = false;
                         m_popupSpheres[i].SetActive(false);
-                        m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_currPlayer;
+                        m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_currCharScript.gameObject;
                     }
                 }
             }
@@ -237,27 +260,30 @@ public class CharacterScript : ObjectScript {
 
         TileScript tileScript = m_tile.GetComponent<TileScript>();
         tileScript.FetchTilesWithinRange(move, new Color (0, 0, 1, 0.5f), false, TileScript.targetRestriction.NONE, false);
-        PanelScript mainPanScript = PanelScript.GetPanel("Main Panel");
-        mainPanScript.m_inView = false;
+        if (PanelScript.m_history.Count > 0)
+            PanelScript.RemoveFromHistory("");
+        //PanelScript mainPanScript = PanelScript.GetPanel("Main Panel");
+        //mainPanScript.m_inView = false;
     }
 
     public void Movement(TileScript selectedScript, TileScript newScript, bool _isForced)
     {
         newScript.m_holding = selectedScript.m_holding;
         selectedScript.m_holding = null;
-        m_tile = newScript.gameObject;
+        m_boardScript.m_selected = null;
+        m_tile = newScript;
         m_boardScript.m_camIsFrozen = true;
-        m_anim.Play("Running", -1, 0);
+        m_anim.Play("Running Melee", -1, 0);
 
-        if (gameObject == m_boardScript.m_currPlayer)
+        if (this == m_boardScript.m_currCharScript)
             m_boardScript.m_currTile = m_tile;
         if (m_boardScript.m_isForcedMove == null && !_isForced)
         {
-            PanelScript mainPanelScript = PanelScript.GetPanel("Main Panel");
-            mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
+            m_hasActed[(int)trn.MOV] += 2;
+            PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[(int)trn.MOV].interactable = false;
+            m_boardScript.m_currButton.GetComponent<Image>().color = Color.white;
 
-            if (mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].GetComponent<Image>().color == Color.yellow)
-                mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
+            PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)HUDPan.ACT_PAN].GetComponent<PanelScript>().PopulatePanel();
         }
 
         PanelScript.CloseHistory();
@@ -322,8 +348,8 @@ public class CharacterScript : ObjectScript {
         else
             tileScript.FetchTilesWithinRange(finalRNG, c_action, targetSelf, targetingRestriction, isBlockable);
 
-        PanelScript actionPanScript = PanelScript.GetPanel("Action Panel");
-        actionPanScript.m_inView = false;
+        //PanelScript actionPanScript = PanelScript.GetPanel("Action Panel");
+        //actionPanScript.m_inView = false;
     }
 
     public void ActionAnimation()
@@ -333,30 +359,20 @@ public class CharacterScript : ObjectScript {
         string actRng = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RNG);
         string actRad = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RAD);
 
-        if (int.Parse(actRad) + m_tempStats[(int)sts.RAD] > 0)
-            m_anim.Play("Throw", -1, 0);
-        else if (int.Parse(actRng) + m_tempStats[(int)sts.RNG] > 1)
-            m_anim.Play("Ranged", -1, 0);
-        else
-            m_anim.Play("Melee", -1, 0);
-
-        m_boardScript.m_camIsFrozen = true;
-        PanelScript.GetPanel("ActionPreview").m_inView = false;
-        PanelScript.CloseHistory();
-    }
-
-    public void Action()
-    {
-        TileScript selectedTileScript = m_boardScript.m_selected.GetComponent<TileScript>();
-        List<GameObject> targets = new List<GameObject>();
         Renderer r = m_boardScript.m_selected.GetComponent<Renderer>();
-        TextMesh textMesh = m_popupText.GetComponent<TextMesh>();
-        textMesh.text = "0";
+        TileScript selectedTileScript = m_boardScript.m_selected.GetComponent<TileScript>();
 
         if (r.material.color == Color.red
             || r.material.color == Color.green) // single
         {
-            targets.Add(selectedTileScript.m_holding);
+            if (r.material.color == Color.green)
+                m_anim.Play("Ability", -1, 0);
+            else if (int.Parse(actRng) + m_tempStats[(int)sts.RNG] > 1)
+                m_anim.Play("Ranged", -1, 0);
+            else
+                m_anim.Play("Melee", -1, 0);
+
+            m_targets.Add(selectedTileScript.m_holding);
         }
         else if (r.material.color == Color.yellow) // multi
         {
@@ -364,36 +380,46 @@ public class CharacterScript : ObjectScript {
             {
                 TileScript tarTile = selectedTileScript.m_targetRadius[i].GetComponent<TileScript>();
                 if (tarTile.m_holding && tarTile.m_holding.tag == "Player")
-                    targets.Add(tarTile.m_holding);
+                    m_targets.Add(tarTile.m_holding);
             }
+            m_anim.Play("Throw", -1, 0);
         }
 
+        m_boardScript.m_camIsFrozen = true;
+        PanelScript.GetPanel("ActionPreview").m_inView = false;
+        PanelScript.CloseHistory();
+
+        m_currRadius = 0;
+
+        if (m_targets.Count > 0)
+        {
+            if (selectedTileScript.m_targetRadius.Count > 0)
+                selectedTileScript.ClearRadius(selectedTileScript);
+
+            if (!m_boardScript.m_isForcedMove)
+                m_tile.GetComponent<TileScript>().ClearRadius(m_tile.GetComponent<TileScript>());
+        }
+    }
+
+    public void Action()
+    {
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
         string actEng = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.ENERGY);
-        PanelScript mainPanelScript = PanelScript.GetPanel("Main Panel");
 
-        if (CheckIfAttack(actName)) // See if it's an attack
-            Attack(targets);
+        if (CheckIfAttack(actName) && m_targets.Count > 0) // See if it's an attack
+            Attack();
         else // If it's not an attack
         {
-            if (targets.Count > 0)
+            if (m_targets.Count > 0)
             {
-                for (int i = 0; i < targets.Count; i++)
-                    Ability(targets[i], actName);
+                for (int i = 0; i < m_targets.Count; i++)
+                    Ability(m_targets[i], actName);
             }
-            else    // && !targets[0].GetComponent<CharacterScript>().m_effects[(int)StatusScript.effects.REFLECT])
+            else    // && !m_targets[0].GetComponent<CharacterScript>().m_effects[(int)StatusScript.effects.REFLECT])
                 Ability(gameObject, actName);
 
-            if (mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable == false && 
-                mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].GetComponent<Image>().color != new Color(1, .5f, .5f, 1) ||
-                mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].GetComponent<Image>().color == Color.yellow
-                || m_isFree)
-            {
-                mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
-                mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
-            }
-            else if (!m_isFree)
-                mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].GetComponent<Image>().color = Color.yellow;
+            if (!m_isFree)
+                m_hasActed[(int)trn.ACT] += 2;
         }
 
         if (PlayerScript.CheckIfGains(actEng) || !PlayerScript.CheckIfGains(actEng) && !m_isFree)
@@ -402,26 +428,21 @@ public class CharacterScript : ObjectScript {
         m_exp += actEng.Length;
 
         m_isFree = false;
-        m_currRadius = 0;
+        m_targets.Clear();
 
-        if (targets.Count > 0)
-        {
-            if (selectedTileScript.m_targetRadius.Count > 0)
-                selectedTileScript.ClearRadius(selectedTileScript);
-        
-            if (!m_boardScript.m_isForcedMove)
-                m_tile.GetComponent<TileScript>().ClearRadius(m_tile.GetComponent<TileScript>());
-        }
+        UpdateStatusImages();
+
+        PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)HUDPan.ACT_PAN].GetComponent<PanelScript>().PopulatePanel();
+        PanelScript.GetPanel("ActionViewer Panel").m_inView = false;
+        m_boardScript.m_selected = null;
     }
 
-    public void Attack(List<GameObject> _targets) // used to be bool
+    public void Attack() // used to be bool
     {
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
         string actDmg = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.DMG);
-        PanelScript mainPanelScript = PanelScript.GetPanel("Main Panel");
 
         // ATTACK MODS
-
         bool teamBuff = false;
         bool soloBuff = false;
         if (actName == "Fortifying ATK")// || actName == "Cleansing ATK")
@@ -430,9 +451,9 @@ public class CharacterScript : ObjectScript {
             actName == "Healing ATK")
             soloBuff = true;
 
-        for (int i = 0; i < _targets.Count; i++)
+        for (int i = 0; i < m_targets.Count; i++)
         {
-            CharacterScript targetScript = _targets[i].GetComponent<CharacterScript>();
+            CharacterScript targetScript = m_targets[i].GetComponent<CharacterScript>();
 
             if (targetScript.m_isAlive == false)
                 continue;
@@ -462,7 +483,7 @@ public class CharacterScript : ObjectScript {
 
             if (!m_effects[(int)StatusScript.effects.HINDER] && !targetScript.m_effects[(int)StatusScript.effects.REFLECT])
                 if (!teamBuff  && !soloBuff || teamBuff && targetScript.m_player == m_player && !soloBuff)
-                    Ability(_targets[i], actName);
+                    Ability(m_targets[i], actName);
 
         }
             if (!m_effects[(int)StatusScript.effects.HINDER])
@@ -474,16 +495,12 @@ public class CharacterScript : ObjectScript {
             actName == "Copy ATK" && m_boardScript.m_isForcedMove)
             m_boardScript.m_isForcedMove = null;
         else
-        {
-            mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
-            if (mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].GetComponent<Image>().color == Color.yellow)
-                mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
-        }
+            m_hasActed[(int)trn.ACT] += 3;
 
-        if (_targets.Count > 1)
-            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_selected;
+        if (m_targets.Count > 1)
+            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_selected.gameObject;
         else
-            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = _targets[0];
+            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_targets[0];
     }
 
     static public bool CheckIfAttack(string _action)
@@ -510,12 +527,12 @@ public class CharacterScript : ObjectScript {
         }
 
         int res = 0;
-        if (int.TryParse(_dmg, out res))
+        if (int.TryParse(_dmg, out res) && int.Parse(_dmg) > -1)
             textMesh.text = (int.Parse(textMesh.text) + int.Parse(_dmg)).ToString();
         else
             textMesh.text = _dmg;
 
-        if (gameObject == m_boardScript.m_currPlayer)
+        if (this == m_boardScript.m_currCharScript)
         {
             PanelScript actPanScript = PanelScript.GetPanel("HUD Panel LEFT");
             actPanScript.PopulatePanel();
@@ -531,7 +548,9 @@ public class CharacterScript : ObjectScript {
         m_isAlive = false;
 
         StatusScript.DestroyAll(gameObject);
-        GetComponentInChildren<Renderer>().material.color = new Color(.5f, .5f, .5f, 1);
+        //GetComponentInChildren<Renderer>().material.color = new Color(.5f, .5f, .5f, 1);
+        m_anim.Play("Death", -1, 0);
+        
     }
 
     public void Revive(int _hp)
@@ -546,7 +565,7 @@ public class CharacterScript : ObjectScript {
 
         m_isAlive = true;
 
-        GetComponentInChildren<Renderer>().material.color = Color.white;
+        //GetComponentInChildren<Renderer>().material.color = Color.white;
 
     }
 
@@ -569,7 +588,7 @@ public class CharacterScript : ObjectScript {
 
         textMesh.text = _hp.ToString();
 
-        if (gameObject == m_boardScript.m_currPlayer)
+        if (this == m_boardScript.m_currCharScript)
         {
             PanelScript actPanScript = PanelScript.GetPanel("HUD Panel LEFT");
             actPanScript.PopulatePanel();
@@ -640,7 +659,7 @@ public class CharacterScript : ObjectScript {
                 break;
             // Unique abilities
             case "Blast ATK":
-                Knockback(targetScript, m_boardScript.m_selected.GetComponent<TileScript>(), 1);
+                Knockback(targetScript, m_boardScript.m_selected.GetComponent<TileScript>(), 2 + m_tempStats[(int)sts.TEC]);
                 break;
             case "Break ATK":
                 targetScript.m_stats[(int)sts.DMG]++;
@@ -676,13 +695,13 @@ public class CharacterScript : ObjectScript {
                     targetScript.m_tempStats[(int)sts.SPD] += 2 + m_tempStats[(int)sts.TEC];
                 break;
             case "Lunge ATK":
-                PullTowards(this, targetScript.m_tile.GetComponent<TileScript>());
+                PullTowards(this, targetScript.m_tile.GetComponent<TileScript>(), 100);
                 break;
             case "Magnet ATK":
-                PullTowards(targetScript, m_boardScript.m_selected.GetComponent<TileScript>());
+                PullTowards(targetScript, m_boardScript.m_selected.GetComponent<TileScript>(), 100);
                 break;
             case "Pull ATK":
-                PullTowards(targetScript, tileScript);
+                PullTowards(targetScript, tileScript, 100);
                 break;
             case "Push ATK":
                 if (TileScript.CheckForEmptyNeighbor(targetTile))
@@ -711,52 +730,48 @@ public class CharacterScript : ObjectScript {
         }
     }
 
-    private void PullTowards(CharacterScript _targetScript, TileScript _towards)
+    private void PullTowards(CharacterScript _targetScript, TileScript _towards, int _maxDis)
     {
         TileScript targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
         TileScript nei;
 
-        while (true)
+        while (_maxDis > 0)
         {
-            if (targetTileScript.m_x < _towards.m_x && targetTileScript.m_neighbors[(int)TileScript.nbors.right])
+            if (targetTileScript.m_x < _towards.m_x && targetTileScript.m_neighbors[(int)TileScript.nbors.right] && 
+                !targetTileScript.m_neighbors[(int)TileScript.nbors.right].GetComponent<TileScript>().m_holding)
             {
                 nei = targetTileScript.m_neighbors[(int)TileScript.nbors.right].GetComponent<TileScript>();
-                if (!nei.m_holding)
-                {
-                    _targetScript.Movement(targetTileScript, nei, true);
-                    targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
-                    continue;
-                }
+                _targetScript.Movement(targetTileScript, nei, true);
+                targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
+                _maxDis--;
+                continue;
             }
-            else if (targetTileScript.m_x > _towards.m_x && targetTileScript.m_neighbors[(int)TileScript.nbors.left])
+            else if (targetTileScript.m_x > _towards.m_x && targetTileScript.m_neighbors[(int)TileScript.nbors.left] &&
+                !targetTileScript.m_neighbors[(int)TileScript.nbors.left].GetComponent<TileScript>().m_holding)
             {
                 nei = targetTileScript.m_neighbors[(int)TileScript.nbors.left].GetComponent<TileScript>();
-                if (!nei.m_holding)
-                {
-                    _targetScript.Movement(targetTileScript, nei, true);
-                    targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
-                    continue;
-                }
+                _targetScript.Movement(targetTileScript, nei, true);
+                targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
+                _maxDis--;
+                continue;
             }
-            else if (targetTileScript.m_z < _towards.m_z && targetTileScript.m_neighbors[(int)TileScript.nbors.top])
+            else if (targetTileScript.m_z < _towards.m_z && targetTileScript.m_neighbors[(int)TileScript.nbors.top] &&
+                !targetTileScript.m_neighbors[(int)TileScript.nbors.top].GetComponent<TileScript>().m_holding)
             {
                 nei = targetTileScript.m_neighbors[(int)TileScript.nbors.top].GetComponent<TileScript>();
-                if (!nei.m_holding)
-                {
-                    _targetScript.Movement(targetTileScript, nei, true);
-                    targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
-                    continue;
-                }
+                _targetScript.Movement(targetTileScript, nei, true);
+                targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
+                _maxDis--;
+                continue;
             }
-            else if (targetTileScript.m_z > _towards.m_z && targetTileScript.m_neighbors[(int)TileScript.nbors.bottom])
+            else if (targetTileScript.m_z > _towards.m_z && targetTileScript.m_neighbors[(int)TileScript.nbors.bottom] &&
+                !targetTileScript.m_neighbors[(int)TileScript.nbors.bottom].GetComponent<TileScript>().m_holding)
             {
                 nei = targetTileScript.m_neighbors[(int)TileScript.nbors.bottom].GetComponent<TileScript>();
-                if (!nei.m_holding)
-                {
-                    _targetScript.Movement(targetTileScript, nei, true);
-                    targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
-                    continue;
-                }
+                _targetScript.Movement(targetTileScript, nei, true);
+                targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
+                _maxDis--;
+                continue;
             }
             break;
         }
@@ -917,13 +932,14 @@ public class CharacterScript : ObjectScript {
         }
     }
 
-    public void Pass()
-    {
-        PanelScript mainPanelScript = PanelScript.GetPanel("Main Panel");
-        mainPanelScript.m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
-        mainPanelScript.m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
-        PanelScript.CloseHistory();
-    }
+    //public void Pass()
+    //{
+    //    //PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
+    //    //PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
+    //    m_hasActed[(int)trn.MOV] = true;
+    //    m_hasActed[(int)trn.ACT] = true;
+    //    PanelScript.CloseHistory();
+    //}
 
     // Maybe move  REFACTOR: This looks odd
     public void SelectorInit(CharacterScript _targetScript, BoardScript.pnls _selector)
@@ -978,11 +994,8 @@ public class CharacterScript : ObjectScript {
     // The only reason why this exists is because statusscript needs a way to get to HUD LEFT
     public void UpdateStatusImages()
     {
-        if (gameObject == m_boardScript.m_currPlayer)
-        {
-            PanelScript panScript = PanelScript.GetPanel("HUD Panel LEFT");
-            panScript.PopulatePanel();
-        }
+        if (this == m_boardScript.m_currCharScript)
+            PanelScript.GetPanel("HUD Panel LEFT").PopulatePanel();
     }
 
     public void DisableRandomAction()
@@ -1014,5 +1027,254 @@ public class CharacterScript : ObjectScript {
             return 0;
 
         return _action.Length;
+    }
+
+    public void AITurn()
+    {
+        if (!m_anim)
+            m_anim = GetComponentInChildren<Animator>();
+
+        m_tile.GetComponent<TileScript>().AITilePlanning();
+
+        //bool actted = false;
+        //
+        //for (int h = 0; h < 4; h++)
+        //{
+        //    for (int i = 0; i < m_actions.Length; i++)
+        //    {
+        //        string[] actsSeparated = m_actions[i].Split('|');
+        //        string[] eng = actsSeparated[(int)DatabaseScript.actions.ENERGY].Split(':');
+        //
+        //        if (h == 3 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]))
+        //        {
+        //            if (eng[1][0] == 'g' || eng[1][0] == 'r' || eng[1][0] == 'w' || eng[1][0] == 'b')
+        //                actted = AIExploreOption(m_actions[i]);
+        //        }
+        //        else if (h == 2 && eng[1].Length == 1 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
+        //            actted = AIExploreOption(m_actions[i]);
+        //        else if (h == 1 && eng[1].Length == 2 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
+        //            actted = AIExploreOption(m_actions[i]);
+        //        else if (h == 0 && eng[1].Length == 3 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
+        //            actted = AIExploreOption(m_actions[i]);
+        //
+        //        if (actted)
+        //            break;
+        //    }
+        //    if (actted)
+        //        break;
+        //}
+        //
+        //if (!actted)
+        //{
+        //    CharacterScript closest = null;
+        //    TileScript tile = m_tile.GetComponent<TileScript>();
+        //    for (int i = 0; i < m_boardScript.m_characters.Count; i++)
+        //    {
+        //        CharacterScript targetScript = m_boardScript.m_characters[i].GetComponent<CharacterScript>();
+        //        if (targetScript.m_player == m_player)
+        //            continue;
+        //
+        //        TileScript tarTile = targetScript.m_tile.GetComponent<TileScript>();
+        //        if (closest == null || TileScript.CaclulateDistance(tile, tarTile) < TileScript.CaclulateDistance(tile, closest.m_tile.GetComponent<TileScript>()))
+        //            closest = targetScript;
+        //    }
+        //
+        //    tile.AITilePlanning(closest.m_tile.GetComponent<TileScript>(), m_tempStats[(int)sts.MOV]);
+        //    //PullTowards(this, closest.m_tile.GetComponent<TileScript>(), m_tempStats[(int)sts.MOV]);
+        //
+        //    PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
+        //    PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
+        //}
+
+        //for (int i = 0; i < selectedTileScript.m_Radius.Count; i++)
+        //{
+        //    TileScript tarTile = selectedTileScript.m_targetRadius[i].GetComponent<TileScript>();
+        //    if (tarTile.m_holding && tarTile.m_holding.tag == "Player")
+        //        m_targets.Add(tarTile.m_holding);
+        //}
+        //
+        //for (int i = 0; i < selectedTileScript.m_targetRadius.Count; i++)
+        //{
+        //    TileScript tarTile = selectedTileScript.m_targetRadius[i].GetComponent<TileScript>();
+        //    if (tarTile.m_holding && tarTile.m_holding.tag == "Player")
+        //        m_targets.Add(tarTile.m_holding);
+        //}
+    }
+
+    //private bool AIExploreOption(string _action)
+    //{
+    //    m_currAction = _action;
+    //
+    //    string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
+    //    string actRng = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RNG);
+    //    string actRad = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RAD);
+    //
+    //    TileScript tileScript = m_tile.GetComponent<TileScript>();
+    //
+    //    for (int i = 0; i < m_boardScript.m_characters.Count; i++)
+    //    {
+    //        CharacterScript targetScript = m_boardScript.m_characters[i].GetComponent<CharacterScript>();
+    //        if (targetScript.m_player == m_player && CheckIfAttack(actName) ||
+    //            targetScript.m_player != m_player && !CheckIfAttack(actName))
+    //            continue;
+    //
+    //        if (TileScript.CaclulateDistance(m_tile.GetComponent<TileScript>(), targetScript.m_tile.GetComponent<TileScript>()) <= int.Parse(actRng) + m_tempStats[(int)sts.RNG])
+    //        {
+    //            //if (r.material.color == Color.green)
+    //            //    m_anim.Play("Ability", -1, 0);
+    //            if (TileScript.CaclulateDistance(m_tile.GetComponent<TileScript>(), targetScript.m_tile.GetComponent<TileScript>()) > 1)
+    //                m_anim.Play("Ranged", -1, 0);
+    //            else
+    //                m_anim.Play("Melee", -1, 0);
+    //
+    //            m_targets.Add(targetScript.gameObject);
+    //            Action();
+    //            PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
+    //            PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
+    //        }
+    //        else if (PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable == true &&
+    //            TileScript.CaclulateDistance(m_tile.GetComponent<TileScript>(), targetScript.m_tile.GetComponent<TileScript>()) <= int.Parse(actRng) + m_tempStats[(int)sts.RNG] + m_tempStats[(int)sts.MOV])
+    //        {
+    //            int dif = TileScript.CaclulateDistance(m_tile.GetComponent<TileScript>(), targetScript.m_tile.GetComponent<TileScript>()) - int.Parse(actRng) + m_tempStats[(int)sts.RNG];
+    //            tileScript.AITilePlanning(targetScript.m_tile.GetComponent<TileScript>(), dif);
+    //            //PullTowards(this, targetScript.m_tile.GetComponent<TileScript>(), dif);
+    //            PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
+    //        }
+    //        else
+    //            return false;
+    //
+    //        return true;
+    //    }
+    //
+    //    return false;
+    //    //ActionTargeting();
+    //    //
+    //    //for (int i = 0; i < tileScript.m_radius.Count; i++)
+    //    //{
+    //    //    TileScript tarTile = tileScript.m_radius[i].GetComponent<TileScript>();
+    //    //    if (tarTile.m_holding && tarTile.m_holding.tag == "Player")
+    //    //        if (tarTile.m_holding.GetComponent<CharacterScript>().m_player != m_player && CheckIfAttack(_action) ||
+    //    //            tarTile.m_holding.GetComponent<CharacterScript>().m_player == m_player && !CheckIfAttack(_action))
+    //    //            m_targets.Add(tarTile.m_holding);
+    //    //}
+    //}
+
+    public bool CheckAllActionsRange()
+    {
+        CharacterScript targetScript = null;
+
+        for (int h = 0; h < 4; h++)
+        {
+            for (int i = 0; i < m_actions.Length; i++)
+            {
+                string[] actsSeparated = m_actions[i].Split('|');
+                string[] eng = actsSeparated[(int)DatabaseScript.actions.ENERGY].Split(':');
+
+                if (h == 3 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]))
+                {
+                    if (eng[1][0] == 'g' || eng[1][0] == 'r' || eng[1][0] == 'w' || eng[1][0] == 'b')
+                    {
+                        ActionTargeting();
+                        TileScript tScript = m_tile.GetComponent<TileScript>();
+
+                        for (int j = 0; j < tScript.m_radius.Count; j++)
+                        {
+                            if (tScript.m_radius[i].GetComponent<TileScript>().m_holding && tScript.m_radius[i].GetComponent<TileScript>().m_holding.tag == "Player" &&
+                                tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>().m_player != m_player)
+                            {
+                                targetScript = tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>();
+                            }
+                        }
+                    }
+                }
+                else if (h == 2 && eng[1].Length == 1 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
+                {
+                    ActionTargeting();
+                    TileScript tScript = m_tile.GetComponent<TileScript>();
+
+                    for (int j = 0; j < tScript.m_radius.Count; j++)
+                    {
+                        if (tScript.m_radius[i].GetComponent<TileScript>().m_holding && tScript.m_radius[i].GetComponent<TileScript>().m_holding.tag == "Player" &&
+                            tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>().m_player != m_player)
+                        {
+                            targetScript = tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>();
+                        }
+                    }
+                }
+                else if (h == 1 && eng[1].Length == 2 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
+                {
+                    ActionTargeting();
+                    TileScript tScript = m_tile.GetComponent<TileScript>();
+
+                    for (int j = 0; j < tScript.m_radius.Count; j++)
+                    {
+                        if (tScript.m_radius[i].GetComponent<TileScript>().m_holding && tScript.m_radius[i].GetComponent<TileScript>().m_holding.tag == "Player" &&
+                            tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>().m_player != m_player)
+                        {
+                            targetScript = tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>();
+                        }
+                    }
+                }
+                else if (h == 0 && eng[1].Length == 3 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
+                {
+                    ActionTargeting();
+                    TileScript tScript = m_tile.GetComponent<TileScript>();
+
+                    for (int j = 0; j < tScript.m_radius.Count; j++)
+                    {
+                        if (tScript.m_radius[i].GetComponent<TileScript>().m_holding && tScript.m_radius[i].GetComponent<TileScript>().m_holding.tag == "Player" &&
+                            tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>().m_player != m_player)
+                        {
+                            targetScript = tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>();
+                        }
+                    }
+                }
+
+                if (targetScript)
+                {
+                    if (TileScript.CaclulateDistance(m_tile.GetComponent<TileScript>(), targetScript.m_tile.GetComponent<TileScript>()) > 1)
+                        m_anim.Play("Ranged", -1, 0);
+                    else
+                        m_anim.Play("Melee", -1, 0);
+
+                    m_targets.Add(targetScript.gameObject);
+                    Action();
+                    PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
+                    PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
+                    return true;
+                }
+            }
+            if (targetScript)
+                break;
+        }
+        return false;
+    }
+
+    public void SortActions()
+    {
+        for (int i = 0; i < m_actions.Length; i++)
+        {
+            int currEng = ConvertedCost(DatabaseScript.GetActionData(m_actions[i], DatabaseScript.actions.ENERGY));
+
+            for (int j = i + 1; j < m_actions.Length; j++)
+            {
+                int indexedEng = ConvertedCost(DatabaseScript.GetActionData(m_actions[j], DatabaseScript.actions.ENERGY));
+
+                if (currEng > indexedEng)
+                {
+                    string temp = m_actions[i];
+                    m_actions[i] = m_actions[j];
+                    m_actions[j] = temp;
+                }
+            }
+        }
+    }
+
+    static public int ConvertedCost(string _eng)
+    {
+        if (PlayerScript.CheckIfGains(_eng))
+            return -_eng.Length;
+        else
+            return _eng.Length;
     }
 }

@@ -7,16 +7,29 @@ public class CameraScript : MonoBehaviour {
     public GameObject m_freeCam;
     public GameObject m_target;
     public GameObject m_board;
+    public bool m_rotate;
     //public float m_oldZ;
 
 	// Use this for initialization
-	void Start () {
+	void Start ()
+    {
+        m_rotate = false;
 	}
 	
 	// Update is called once per frame
 	void Update ()
     {
         // REFACTOR: Make all of this into FUNCTIONS
+
+        if (m_rotate)
+        {
+            float rotSpeed = 0.4f;
+
+            transform.RotateAround(m_freeCam.transform.position, Vector3.up, rotSpeed);
+            //transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y + rotSpeed, transform.position.z), transform.rotation);
+
+            return;
+        }
 
         if (m_target) // If the camera is told to focus on something
         {
@@ -55,25 +68,34 @@ public class CameraScript : MonoBehaviour {
         float maxDis = 12;
         float w = Input.GetAxis("Mouse ScrollWheel");
 
-        if (Input.GetMouseButton(1))
+        float x = Input.GetAxis("Mouse X");
+        float y = Input.GetAxis("Mouse Y");
+        if (Input.GetMouseButton(1)) //Input.GetMouseButton(1)
         {
             float rotSpeed = 4.5f;
-            float x = Input.GetAxis("Mouse X");
 
             // If right click is held down, moving the mouse side-to-side rotates the screen around the world's y-axis
             transform.RotateAround(m_freeCam.transform.position, Vector3.up, x * rotSpeed);
-
-            // if right click is held down, moiving the mouse wheel rotates the camera around the world's x-axis
-            if (w < 0 && transform.position.y > m_freeCam.transform.position.y + .5f || w > 0 && Vector3.Distance(transform.position, m_freeCam.transform.position) < maxDis)
-                transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y + transform.up.y * w * wheelSpeed, transform.position.z), transform.rotation);
         }
-        else
-            // if you are not holding down the right click, moving the mouse wheel will zoom the camera in and out
-            if (w > 0 && Vector3.Distance(transform.position, m_freeCam.transform.position) > 1 || w < 0 && Vector3.Distance(transform.position, m_freeCam.transform.position) < maxDis)
+
+        // if right click is held down, moiving the mouse wheel rotates the camera around the world's x-axis
+        if (!Input.GetKey(KeyCode.E))
+        {
+            if (Input.GetMouseButton(1) && w < 0 && transform.position.y > m_freeCam.transform.position.y + .5f || Input.GetMouseButton(1) && w > 0 && Vector3.Distance(transform.position, m_freeCam.transform.position) < maxDis)
+                transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y + transform.up.y * w * wheelSpeed, transform.position.z), transform.rotation);
+            else if (w > 0 && Vector3.Distance(transform.position, m_freeCam.transform.position) > 1 || w < 0 && Vector3.Distance(transform.position, m_freeCam.transform.position) < maxDis)
                 transform.SetPositionAndRotation(new Vector3(transform.position.x + transform.forward.x * w * wheelSpeed, transform.position.y + transform.forward.y * w * wheelSpeed, transform.position.z + transform.forward.z * w * wheelSpeed), transform.rotation);
+        }
 
         float forwardMoveSpeed = 0.1f;
         float sideMoveSpeed = 0.1f;
+        float wheelMovSpeed = 0.2f;
+
+        if (Input.GetMouseButton(2))
+        {
+            m_freeCam.transform.SetPositionAndRotation(new Vector3(m_freeCam.transform.position.x + transform.forward.x * -y * wheelMovSpeed, m_freeCam.transform.position.y, m_freeCam.transform.position.z + transform.forward.z * -y * wheelMovSpeed), Quaternion.identity);
+            m_freeCam.transform.SetPositionAndRotation(new Vector3(m_freeCam.transform.position.x + transform.right.x * -x * wheelMovSpeed, m_freeCam.transform.position.y, m_freeCam.transform.position.z + transform.right.z * -x * wheelMovSpeed), Quaternion.identity);
+        }
 
         // WASD will move the camera
         if (Input.GetKey(KeyCode.W))
@@ -87,7 +109,7 @@ public class CameraScript : MonoBehaviour {
         if (Input.GetKey(KeyCode.F))
         {
             BoardScript boardScript = m_board.GetComponent<BoardScript>();
-            m_target = boardScript.m_currPlayer;
+            m_target = boardScript.m_currCharScript.gameObject;
         }
 
         transform.LookAt(m_freeCam.transform);

@@ -132,7 +132,7 @@ public class StatusScript : MonoBehaviour {
                 m_charScript.m_effects[(int)effects.HINDER] = true;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
-                m_sprite = Resources.Load<Sprite>("Symbols/Ability Symbol");
+                m_sprite = Resources.Load<Sprite>("Symbols/Tech Symbol");
                 m_color = c_statusColor;
                 break;
             case "Immobilizing ATK":
@@ -159,7 +159,7 @@ public class StatusScript : MonoBehaviour {
                     m_lifeSpan = 0;
                 else
                     m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
-                m_sprite = Resources.Load<Sprite>("Symbols/Ability Symbol");
+                m_sprite = Resources.Load<Sprite>("Symbols/Tech Symbol");
                 m_color = c_debuffColor;
                 break;
             case "Passage":
@@ -193,7 +193,7 @@ public class StatusScript : MonoBehaviour {
                     m_lifeSpan = 0;
                 else
                     m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
-                m_sprite = Resources.Load<Sprite>("Symbols/Ability Symbol");
+                m_sprite = Resources.Load<Sprite>("Symbols/Tech Symbol");
                 m_color = c_statusColor;
                 break;
             case "Scarring ATK":
@@ -304,8 +304,12 @@ public class StatusScript : MonoBehaviour {
     public void DestroyStatus(GameObject _character)
     {
         RemoveEffect();
-        DestroyImmediate(this);
+
+        for (int i = 0; i < m_statMod.Length; i++)
+            m_statMod[i] = 0;
+
         ApplyStatus(_character);
+        Destroy(this);
         _character.GetComponent<CharacterScript>().UpdateStatusImages();
     }
 
