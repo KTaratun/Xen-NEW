@@ -11,6 +11,7 @@ public class PanelScript : MonoBehaviour {
 
     static public Color b_isFree = new Color(.5f, 1, .5f, 1);
     static public Color b_isDisallowed = new Color(1, .5f, .5f, 1);
+    static public Color b_isHalf = new Color(1, 1, .5f, 1);
 
     static public List<PanelScript> m_history;
     static public List<PanelScript> m_allPanels;
@@ -139,8 +140,6 @@ public class PanelScript : MonoBehaviour {
     {
         if (m_audio && m_direction == dir.UP)
             m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Menu Sound 1"));
-        //else if (m_audio && m_direction == dir.DOWN && name != "ActionPreview")
-        //    m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Menu Sound 3"));
 
         if (name == "Action Panel")
         {
@@ -183,8 +182,7 @@ public class PanelScript : MonoBehaviour {
                 if (def < 0)
                     def = 0;
             }
-            else if (actName == "Burst ATK" || actName == "Bash ATK" || actName == "Power ATK" || actName == "Aggressive ATK" ||
-                    actName == "Forceful ATK" || actName == "Devastating ATK")
+            else if (actName == "Burst ATK" || actName == "Forceful ATK" || actName == "Power ATK" || actName == "Devastating ATK")
             {
                 dmg += currScript.m_tempStats[(int)CharacterScript.sts.TEC];
             }
@@ -209,11 +207,8 @@ public class PanelScript : MonoBehaviour {
             int finalDmg = (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG]);
             string actName = DatabaseScript.GetActionData(m_cScript.m_currAction, DatabaseScript.actions.NAME);
 
-            if (actName == "Burst ATK" || actName == "Bash ATK" || actName == "Power ATK" || actName == "Aggressive ATK" ||
-                    actName == "Forceful ATK" || actName == "Devastating ATK")
-            {
+            if (actName == "Burst ATK" || actName == "Forceful ATK" || actName == "Power ATK" || actName == "Devastating ATK")
                 finalDmg += m_cScript.m_tempStats[(int)CharacterScript.sts.TEC];
-            }
 
             if (finalDmg > 0)
                 m_text[2].text = "DMG: " + finalDmg;
@@ -377,7 +372,13 @@ public class PanelScript : MonoBehaviour {
             m_panels[(int)CharacterScript.HUDPan.ACT_PAN].GetComponent<PanelScript>().PopulatePanel();
 
             if (name == "HUD Panel LEFT")
+            {
                 m_panels[(int)CharacterScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0].GetComponent<ButtonScript>().m_cScript = m_cScript;
+                if (m_cScript.m_hasActed[(int)CharacterScript.trn.ACT] == 2)
+                    m_panels[(int)CharacterScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0].GetComponent<Image>().color = b_isHalf;
+                else
+                    m_panels[(int)CharacterScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0].GetComponent<Image>().color = Color.white;
+            }
         }
         else if (name == "Main Panel")
         {
@@ -543,9 +544,16 @@ public class PanelScript : MonoBehaviour {
 
         if (name == "Confirmation Panel")
         {
-            transform.SetPositionAndRotation(new Vector3(Input.mousePosition.x, 1000, transform.position.z), transform.rotation);
-            if ((int)Input.mousePosition.y > 600)
-                m_boundryDis = (int)Input.mousePosition.y - 320;
+            if ((int)Input.mousePosition.x < 120)
+                transform.SetPositionAndRotation(new Vector3(120, 1000, transform.position.z), transform.rotation);
+            else if ((int)Input.mousePosition.x > 1160)
+                transform.SetPositionAndRotation(new Vector3(1160, 1000, transform.position.z), transform.rotation);
+            else
+                transform.SetPositionAndRotation(new Vector3(Input.mousePosition.x, 1000, transform.position.z), transform.rotation);
+
+
+            if ((int)Input.mousePosition.y > 550)
+                m_boundryDis = 300;
             else
                 m_boundryDis = (int)Input.mousePosition.y - 250;
         }
@@ -569,7 +577,9 @@ public class PanelScript : MonoBehaviour {
 
             // REFACTOR: Obnoxious check to see if there is a current action and if i
             CharacterScript currCharScript = m_main.GetComponent<BoardScript>().m_currCharScript;
-            string currCharActName = DatabaseScript.GetActionData(currCharScript.m_actions[i], DatabaseScript.actions.NAME);
+            string currCharActName = "";
+            if (currCharScript.m_currAction.Length > 0)
+                currCharActName = DatabaseScript.GetActionData(currCharScript.m_currAction, DatabaseScript.actions.NAME);
 
             bool disabled = false;
             int ind = 0;
@@ -599,7 +609,10 @@ public class PanelScript : MonoBehaviour {
             {
                 m_buttons[i].GetComponent<Image>().color = b_isFree;
                 m_buttons[i].onClick.AddListener(() => currCharScript.ActionTargeting());
-                m_buttons[i].interactable = true;
+                if (GetPanel("Choose Panel").m_inView == true)
+                    m_buttons[i].interactable = true;
+                else
+                    m_buttons[i].interactable = false;
             }
             else if (currCharActName == "Hack ATK" && currCharScript != m_cScript)
             {
@@ -620,7 +633,11 @@ public class PanelScript : MonoBehaviour {
                 m_buttons[i].GetComponent<Image>().color = new Color(1, 1, 1, 1);
                 PlayerScript playScript = m_cScript.m_player.GetComponent<PlayerScript>();
                 if (playScript.CheckEnergy(eng) && m_cScript.m_hasActed[(int)CharacterScript.trn.ACT] < 3)
+                {
                     m_buttons[i].interactable = true;
+                    if (playScript.CheckEnergy(eng) && m_cScript.m_hasActed[(int)CharacterScript.trn.ACT] == 2)
+                        m_buttons[i].GetComponent<Image>().color = b_isHalf;
+                }
                 else
                     m_buttons[i].interactable = false;
             }
@@ -807,8 +824,8 @@ public class PanelScript : MonoBehaviour {
     {
         BoardScript bScript = m_main.GetComponent<BoardScript>();
         GameObject pan = null;
-        float height = 55.0f; // The differnce in y each panel is 61.2f
-        float start = 205.0f;
+        float width = 65.0f;
+        float start = 190.0f;
 
         // Set current panel and count actives
         for (int i = 0; i < 8; i++)
@@ -822,7 +839,6 @@ public class PanelScript : MonoBehaviour {
         if (pan == null)
             return;
 
-        RectTransform panRect = pan.GetComponent<RectTransform>();
         CharacterScript c = pan.GetComponentInChildren<ButtonScript>().m_cScript;
 
         if (bScript.m_currRound.Count >= 8 && bScript.m_newTurn) //notListed.Count > 0 && notListed.Count + count > bScript.m_currRound.Count
@@ -845,11 +861,11 @@ public class PanelScript : MonoBehaviour {
 
             bScript.m_newTurn = false;
         }
-        else if (bScript.m_currRound.Count < 8 && bScript.m_newTurn) // if one of the panels is removed, move it every frame unitl it slides off to the left
+        else if (bScript.m_currRound.Count < m_panels.Length - 1 && bScript.m_newTurn) // if one of the panels is removed, move it every frame unitl it slides off to the left
         {
-            if (panRect.offsetMax.x > -200)
-                pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x - 10.0f, pan.transform.position.y, pan.transform.position.z), pan.transform.rotation);
-            else if (panRect.offsetMax.x <= -200)
+            if (pan.transform.position.y < 750)
+                pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x, pan.transform.position.y + 10.0f, pan.transform.position.z), pan.transform.rotation);
+            else if (pan.transform.position.y >= 750)
             {
                 pan.SetActive(false);
                 if (pan.GetComponent<Image>().color != new Color(1, .5f, .5f, 1))
@@ -860,27 +876,27 @@ public class PanelScript : MonoBehaviour {
         {
             // if was removed, check all of the panels that are still left to see if they are in their new position. If not, slide them down each frame until they are
 
-            int heightCount = 0;
-            for (int i = 0; i < 8; i++)
+            int widthCount = 0;
+
+            for (int i = 0; i < m_panels.Length - 1; i++)
             {
                 pan = m_panels[i];
                 if (!pan.activeSelf)
                     continue;
 
-                panRect = pan.GetComponent<RectTransform>();
-                float heightMod = start + height * heightCount;
-                heightCount++;
+                float widthMod = start + width * widthCount;
+                widthCount++;
 
-                if (pan.activeSelf && pan.transform.position.y > heightMod)
+                if (pan.activeSelf && pan.transform.position.x > widthMod)
                 {
-                    pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x, pan.transform.position.y - 10.0f, pan.transform.position.z), pan.transform.rotation);
+                    pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x - 10.0f, pan.transform.position.y, pan.transform.position.z), pan.transform.rotation);
 
-                    if (pan.transform.position.y < heightMod)
-                        pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x, heightMod, pan.transform.position.z), pan.transform.rotation);
+                    if (pan.transform.position.x < widthMod)
+                        pan.transform.SetPositionAndRotation(new Vector3(widthMod, pan.transform.position.y, pan.transform.position.z), pan.transform.rotation);
                 }
 
-                if (pan.activeSelf && panRect.offsetMax.x < 45)
-                    pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x + 10.0f, pan.transform.position.y, pan.transform.position.z), pan.transform.rotation);
+                if (pan.activeSelf && pan.transform.position.y > 705)
+                    pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x, pan.transform.position.y - 10.0f, pan.transform.position.z), pan.transform.rotation);
             }
         }
     }
@@ -914,24 +930,24 @@ public class PanelScript : MonoBehaviour {
     public void NewTurnOrder()
     {
         BoardScript bScript = m_main.GetComponent<BoardScript>();
-        float height = 55.0f; // The differnce in y each panel is 61.2f
-        float start = 205.0f;
+        float width = 65.0f;
+        float start = 190.0f;
         int roundCountModded = bScript.m_currRound.Count - 1;
 
         if (roundCountModded == 0)
             return;
 
-        if (roundCountModded > 8)
-        {
-            m_panels[8].SetActive(true);
-            Text t = m_panels[8].GetComponentInChildren<Text>();
-            t.text = "x" + (roundCountModded - 8).ToString();
-            roundCountModded = 8;
-        }
+        //if (roundCountModded > 8)
+        //{
+        //    m_panels[8].SetActive(true);
+        //    Text t = m_panels[8].GetComponentInChildren<Text>();
+        //    t.text = "x" + (roundCountModded - 8).ToString();
+        //    roundCountModded = 8;
+        //}
 
         for (int i = 0; i < roundCountModded; i++)
         {
-            m_panels[i].transform.SetPositionAndRotation(new Vector3(m_panels[i].transform.position.x, start + height * i, m_panels[i].transform.position.z), m_panels[i].transform.rotation);
+            m_panels[i].transform.SetPositionAndRotation(new Vector3(start + width * i, m_panels[i].transform.position.y, m_panels[i].transform.position.z), m_panels[i].transform.rotation);
             TurnPanelInit(i, bScript.m_currRound[i + 1].GetComponent<CharacterScript>()); // +1 because we are avoiding the first index
         }
     }

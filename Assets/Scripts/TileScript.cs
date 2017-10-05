@@ -118,27 +118,24 @@ public class TileScript : MonoBehaviour {
         List<TileScript> oddGen = new List<TileScript>();
         List<TileScript> evenGen = new List<TileScript>();
 
-        CharacterScript currCharScript = m_boardScript.m_currCharScript;
-        CharacterScript ownerCharScript = currCharScript;
-        if (m_holding && m_holding.tag == "Player")
-            ownerCharScript = m_holding.GetComponent<CharacterScript>();
+        CharacterScript ownerCharScript = m_boardScript.m_currCharScript;
 
         // Handle attacks with radius
         TileScript originalTileScript = this;
 
-        if (currCharScript.m_currAction.Length > 0 && _color != CharacterScript.c_move)
+        if (ownerCharScript.m_currAction.Length > 0 && _color != CharacterScript.c_move)
         {
-            string[] actSeparated = currCharScript.m_currAction.Split('|');
-            string[] range = actSeparated[(int)DatabaseScript.actions.RNG].Split(':');
-            string[] radius = actSeparated[(int)DatabaseScript.actions.RAD].Split(':');
+            string range = DatabaseScript.GetActionData(ownerCharScript.m_currAction, DatabaseScript.actions.RNG);
+            string radius = DatabaseScript.GetActionData(ownerCharScript.m_currAction, DatabaseScript.actions.RAD);
 
-            if (int.Parse(range[1]) == 0)
+            if (int.Parse(range) == 0 && int.Parse(radius) > 0)
             {
-                _range = int.Parse(radius[1]);
+                _range = int.Parse(radius);
                 _targetSelf = false;
-            }   originalTileScript = currCharScript.m_tile;
-            
-            if (int.Parse(radius[1]) > 0)
+                originalTileScript = ownerCharScript.m_tile;
+            }
+
+            if (int.Parse(radius) > 0)
                 _isBlockable = false;
         }
 
@@ -208,9 +205,9 @@ public class TileScript : MonoBehaviour {
                     Renderer tR = currNeighbor.GetComponent<Renderer>();
 
                     // If the fetch was yellow but doesn't have radius, then we want to select all tiles in a specific direction ie. Piercing, thrust and diagnal
-                    if (_color == Color.yellow && currCharScript.m_currAction.Length > 0 && tR.material.color == new Color(1, 1, 1, 0))
+                    if (_color == Color.yellow && ownerCharScript.m_currAction.Length > 0 && tR.material.color == new Color(1, 1, 1, 0))
                     {
-                        string[] actSeparated = currCharScript.m_currAction.Split('|');
+                        string[] actSeparated = ownerCharScript.m_currAction.Split('|');
                         string[] radius = actSeparated[(int)DatabaseScript.actions.RAD].Split(':');
                         if (int.Parse(radius[1]) == 0)
                             continue;
@@ -332,12 +329,12 @@ public class TileScript : MonoBehaviour {
     }
 
     // Reset all tiles to their original color REFACTOR: maybe make this a static class or remove the argument?
-    public void ClearRadius(TileScript _tS)
+    public void ClearRadius()
     {
-        List<TileScript> radTiles = _tS.m_radius;
+        List<TileScript> radTiles = m_radius;
 
-        if (_tS.m_targetRadius.Count > 0)
-            radTiles = _tS.m_targetRadius;
+        if (m_targetRadius.Count > 0)
+            radTiles = m_targetRadius;
 
         for (int i = 0; i < radTiles.Count; i++)
         {

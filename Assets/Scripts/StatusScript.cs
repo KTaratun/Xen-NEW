@@ -94,6 +94,26 @@ public class StatusScript : MonoBehaviour {
                 m_sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
                 m_color = c_buffColor;
                 break;
+            case "Charge":
+                m_statMod[(int)CharacterScript.sts.TEC] = 1;
+                m_mode = mode.TURN_END;
+                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                    m_lifeSpan = 0;
+                else
+                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                m_sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
+                m_color = c_buffColor;
+                break;
+            case "Crush":
+                m_statMod[(int)CharacterScript.sts.DEF] = -2;
+                m_mode = mode.TURN_END;
+                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                    m_lifeSpan = 0;
+                else
+                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                m_sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
+                m_color = c_debuffColor;
+                break;
             case "Delay ATK":
                 m_charScript.m_effects[(int)effects.DELAY] = true;
                 m_mode = mode.TURN_END;
@@ -195,6 +215,16 @@ public class StatusScript : MonoBehaviour {
                     m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
                 m_sprite = Resources.Load<Sprite>("Symbols/Tech Symbol");
                 m_color = c_statusColor;
+                break;
+            case "Revving ATK":
+                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                    m_statMod[(int)CharacterScript.sts.RAD] = 0;
+                else
+                    m_statMod[(int)CharacterScript.sts.RAD] = -2 - _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 2;
+                m_sprite = Resources.Load<Sprite>("Symbols/Radius Symbol");
+                m_color = c_buffColor;
                 break;
             case "Scarring ATK":
                 m_charScript.m_effects[(int)effects.SCARRING] = true;

@@ -92,7 +92,7 @@ public class BoardScript : MonoBehaviour {
                 m_currButton = null;
                 TileScript selectedTileScript = m_currCharScript.m_tile.GetComponent<TileScript>();
                 if (selectedTileScript.m_radius.Count > 0)
-                    selectedTileScript.ClearRadius(selectedTileScript);
+                    selectedTileScript.ClearRadius();
             }
             PanelScript.GetPanel("Confirmation Panel").m_buttons[1].GetComponent<ButtonScript>().ConfirmationButton("Pass");
         }
@@ -208,7 +208,7 @@ public class BoardScript : MonoBehaviour {
             m_currButton = null;
             TileScript selectedTileScript = m_currCharScript.m_tile.GetComponent<TileScript>();
             if (selectedTileScript.m_radius.Count > 0)
-                selectedTileScript.ClearRadius(selectedTileScript);
+                selectedTileScript.ClearRadius();
 
             PanelScript.GetPanel("ActionViewer Panel").m_inView = false;
         }
@@ -231,12 +231,9 @@ public class BoardScript : MonoBehaviour {
         Renderer sRend = currTScript.m_radius[0].GetComponent<Renderer>();
 
         if (m_highlightedTile)
-        {
-            TileScript highScript = m_highlightedTile.GetComponent<TileScript>();
-            currTScript.ClearRadius(highScript);
-        }
+            m_highlightedTile.ClearRadius();
 
-        currTScript.ClearRadius(currTScript);
+        currTScript.ClearRadius();
     }
 
     public void InitBoardTiles()
@@ -372,8 +369,10 @@ public class BoardScript : MonoBehaviour {
 
     public void Hover()
     {
+        // Don't hover under these conditions
         if (PanelScript.m_confirmPanel.m_inView || m_camIsFrozen || !m_currButton && m_currCharScript.m_tile.GetComponent<TileScript>().m_radius.Count > 0 || 
-            m_selected && m_selected.GetComponent<TileScript>().m_holding && m_selected.GetComponent<TileScript>().m_holding.tag == "Player")
+            m_selected && m_selected.GetComponent<TileScript>().m_holding && m_selected.GetComponent<TileScript>().m_holding.tag == "Player" ||
+            PanelScript.GetPanel("Choose Panel").m_inView && !m_currButton)
             return;
         else if (!m_currCharScript || PanelScript.CheckIfPanelOpen())
         {
@@ -394,18 +393,16 @@ public class BoardScript : MonoBehaviour {
 
         if (!Physics.Raycast(ray, out hit))
         {
-            if (m_highlightedTile)
-            {
-                TileScript m_highlightedTileScript = m_highlightedTile.GetComponent<TileScript>();
-                if (m_highlightedTileScript.m_holding)
-                    DeselectHighlightedTile();
-            }
+            if (m_highlightedTile && m_highlightedTile.m_holding)
+                DeselectHighlightedTile();
+
             return;
         }
 
         TileScript tScript = null;
         CharacterScript charScript = null;
 
+        // Check to see if you hit a tile or object, then grab the one you didn't hit
         if (hit.collider.gameObject.tag == "Tile")
         {
             tScript = hit.collider.gameObject.GetComponent<TileScript>();
@@ -419,12 +416,14 @@ public class BoardScript : MonoBehaviour {
                 charScript = hit.collider.gameObject.GetComponent<CharacterScript>();
         }
 
+        // If you hit a character/character tile, show their info
         if (charScript && PanelScript.GetPanel("HUD Panel RIGHT").m_inView == false)
             HighlightCharacter(charScript);
 
         if (tScript)
             HandleTile(tScript);
 
+        // If you hit a character/character tile and while you are aiming with an attack, show the new health after a hit
         if (charScript && tScript.gameObject.GetComponent<Renderer>().material.color == new Color(1, 0, 0, 1) ||
             charScript && tScript.gameObject.GetComponent<Renderer>().material.color == Color.yellow)
         {
@@ -432,12 +431,8 @@ public class BoardScript : MonoBehaviour {
             PanelScript.GetPanel("ActionPreview").PopulatePanel();
         }
 
-        if (m_highlightedTile && tScript != m_highlightedTile)
-        {
-            TileScript m_highlightedTileScript = m_highlightedTile.GetComponent<TileScript>();
-            if (m_highlightedTileScript.m_holding && m_highlightedTileScript.m_holding.tag == "Player" && hit.collider.gameObject != m_highlightedTileScript.m_holding)
+        if (m_highlightedTile && tScript != m_highlightedTile && m_highlightedTile.m_holding && m_highlightedTile.m_holding.tag == "Player")
                 DeselectHighlightedTile();
-        }
 
         if (tScript)
             m_highlightedTile = tScript;
@@ -449,15 +444,12 @@ public class BoardScript : MonoBehaviour {
         {
             Renderer oTR = m_oldTile.GetComponent<Renderer>();
             if (oTR.material.color == Color.yellow)
-            {
-                TileScript oldTileScript = m_oldTile.GetComponent<TileScript>();
-                oldTileScript.ClearRadius(oldTileScript);
-            }
+                m_oldTile.ClearRadius();
             else if (oTR.material.color.a != 0)
                 oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a - 0.5f);
 
-            // Hacky fix for when you spawn colored m_tiles for range and your cursor starts on one of the m_tiles
-            if (oTR.material.color.r == 0 && oTR.material.color.b == 1 && oTR.material.color.a == 0f || oTR.material.color.r == 1 && oTR.material.color.b == 0 && oTR.material.color.a == 0f)
+            // Hacky fix for when you spawn colored m_tiles for range and your cursor starts on one of the m_tiles. If it has no alpha and isn't white
+            if (oTR.material.color.a == 0f && oTR.material.color.r + oTR.material.color.g + oTR.material.color.b != 3)
                 oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a + 0.5f);
         }
 
@@ -465,42 +457,43 @@ public class BoardScript : MonoBehaviour {
 
         // TARGET RED TILE
 
-        bool targetSelf = true;
-        int rad = m_currCharScript.m_currRadius + m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD];
-
-        if (m_currCharScript.m_currAction.Length > 0 && tarRend.material.color == CharacterScript.c_attack) // REFACTOR: All this code just for piercing attack...
+        // For special case, multi targeting attacks
+        if (m_currCharScript.m_currAction.Length > 0 && tarRend.material.color == CharacterScript.c_attack)
         {
             string actName = DatabaseScript.GetActionData(m_currCharScript.m_currAction, DatabaseScript.actions.NAME);
-            string actRng = DatabaseScript.GetActionData(m_currCharScript.m_currAction, DatabaseScript.actions.RNG);
 
-            if (actName == "Piercing ATK" || actName == "Thrust ATK")
+            if (actName == "Slash ATK" || actName == "Cross ATK" || actName == "Dual ATK" || actName == "Piercing ATK" || actName == "Thrust ATK")
             {
-                _target.FetchTilesWithinRange(int.Parse(actRng) + m_currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, true, TileScript.targetRestriction.HORVERT, false);
+                string actRng = DatabaseScript.GetActionData(m_currCharScript.m_currAction, DatabaseScript.actions.RNG);
+
+                bool targetSelf = true;
+                if (actName == "Slash ATK" || actName == "Cross ATK" || actName == "Dual ATK")
+                    targetSelf = false;
+
+                TileScript.targetRestriction tR = TileScript.targetRestriction.NONE;
+                if (actName == "Piercing ATK" || actName == "Thrust ATK" || actName == "Slash ATK")
+                    tR = TileScript.targetRestriction.HORVERT;
+                else if (actName == "Cross ATK" || actName == "Dual ATK")
+                    tR = TileScript.targetRestriction.DIAGONAL;
+
+                bool isBlockable = false;
+                if (actName == "Slash ATK")
+                    isBlockable = true;
+
+                _target.FetchTilesWithinRange(int.Parse(actRng) + m_currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, targetSelf, tR, isBlockable);
                 m_oldTile = _target;
                 return;
             }
-            else if (actName == "Cross ATK" || actName == "Dual ATK")
-            {
-                _target.FetchTilesWithinRange(int.Parse(actRng) + m_currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, false, TileScript.targetRestriction.DIAGONAL, false);
-                m_oldTile = _target;
-                return;
-            }
-            else if (actName == "Slash ATK")
-            {
-                _target.FetchTilesWithinRange(int.Parse(actRng) + m_currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, false, TileScript.targetRestriction.HORVERT, true);
-                m_oldTile = _target;
-                return;
-            }
-
-            if (actName == "Fortifying ATK" || actName == "Blinding ATK")
-                targetSelf = false;
-
-            if (actName == "Magnet ATK")
-                rad += m_currCharScript.m_tempStats[(int)CharacterScript.sts.TEC];
         }
 
-        if (m_currCharScript.m_currRadius + m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0 && tarRend.material.color == CharacterScript.c_attack)
-            _target.FetchTilesWithinRange(rad, Color.yellow, targetSelf, TileScript.targetRestriction.NONE, true);
+        // For standard radius attacks
+        int rad = m_currCharScript.m_currRadius + m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD];
+
+        if (m_currCharScript.m_currAction.Length > 0 && DatabaseScript.GetActionData(m_currCharScript.m_currAction, DatabaseScript.actions.NAME) == "Magnet ATK")
+            rad += m_currCharScript.m_tempStats[(int)CharacterScript.sts.TEC];
+
+        if (rad > 0 && tarRend.material.color == CharacterScript.c_attack)
+            _target.FetchTilesWithinRange(rad, Color.yellow, true, TileScript.targetRestriction.NONE, true);
         else
             tarRend.material.color = new Color(tarRend.material.color.r, tarRend.material.color.g, tarRend.material.color.b, tarRend.material.color.a + 0.5f);
 
@@ -705,7 +698,7 @@ public class BoardScript : MonoBehaviour {
         PanelScript roundPanScript = PanelScript.GetPanel("Round Panel");
         roundPanScript.PopulatePanel();
 
-        //PanelScript.GetPanel("Turn Panel").NewTurnOrder();
+        PanelScript.GetPanel("Turn Panel").NewTurnOrder();
     }
 
     public void GameOver(PlayerScript _winningTeam)

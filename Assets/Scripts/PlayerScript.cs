@@ -104,17 +104,21 @@ public class PlayerScript : MonoBehaviour {
         return colors;
     }
 
-    public void RemoveRandomEnergy()
+    public void RemoveRandomEnergy(int _num)
     {
         List<int> energyOverZero = new List<int>();
-        for (int i = 0; i < m_energy.Length; i++)
-            if (m_energy[i] > 0)
-                energyOverZero.Add(i);
-
-        if (energyOverZero.Count > 0)
+        for (int h = 0; h < _num; h++)
         {
-            int randomEnergy = Random.Range(0, energyOverZero.Count);
-            m_energy[energyOverZero[randomEnergy]]--;
+            for (int i = 0; i < m_energy.Length; i++)
+                if (m_energy[i] > 0)
+                    energyOverZero.Add(i);
+
+            if (energyOverZero.Count > 0)
+            {
+                int randomEnergy = Random.Range(0, energyOverZero.Count);
+                m_energy[energyOverZero[randomEnergy]]--;
+            }
+            energyOverZero.Clear();
         }
     }
 }

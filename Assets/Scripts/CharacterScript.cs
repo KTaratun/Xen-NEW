@@ -239,6 +239,7 @@ public class CharacterScript : ObjectScript {
                 textMesh.color = Color.white;
                 textMesh.text = "0";
                 m_popupText.SetActive(false);
+                m_boardScript.m_camIsFrozen = false;
             }
         }
     }
@@ -268,6 +269,9 @@ public class CharacterScript : ObjectScript {
 
     public void Movement(TileScript selectedScript, TileScript newScript, bool _isForced)
     {
+        if (selectedScript == newScript)
+            return;
+
         newScript.m_holding = selectedScript.m_holding;
         selectedScript.m_holding = null;
         m_boardScript.m_selected = null;
@@ -290,7 +294,7 @@ public class CharacterScript : ObjectScript {
         transform.LookAt(m_tile.transform);
         m_boardScript.m_isForcedMove = null;
 
-        selectedScript.ClearRadius(selectedScript);
+        selectedScript.ClearRadius();
     }
 
     public void ActionTargeting()
@@ -298,16 +302,6 @@ public class CharacterScript : ObjectScript {
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
         string actRng = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RNG);
         string actRad = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RAD);
-
-        // If the action doesn't target
-        if (actName == "Channel")
-        {
-            PanelScript.GetPanel("Action Panel").m_inView = false;
-            List<GameObject> myself = new List<GameObject>();
-            myself.Add(gameObject);
-            Action();
-            return;
-        }
 
         TileScript tileScript = m_tile.GetComponent<TileScript>();
         TileScript.targetRestriction targetingRestriction = TileScript.targetRestriction.NONE;
@@ -342,14 +336,14 @@ public class CharacterScript : ObjectScript {
         if (finalRNG < 1)
             finalRNG = 1;
 
+        if (actName == "Channel")
+            finalRNG = 0;
+
         // See if it's an attack or not
         if (CheckIfAttack(actName))
             tileScript.FetchTilesWithinRange(finalRNG, c_attack, targetSelf, targetingRestriction, isBlockable);
         else
             tileScript.FetchTilesWithinRange(finalRNG, c_action, targetSelf, targetingRestriction, isBlockable);
-
-        //PanelScript actionPanScript = PanelScript.GetPanel("Action Panel");
-        //actionPanScript.m_inView = false;
     }
 
     public void ActionAnimation()
@@ -394,10 +388,10 @@ public class CharacterScript : ObjectScript {
         if (m_targets.Count > 0)
         {
             if (selectedTileScript.m_targetRadius.Count > 0)
-                selectedTileScript.ClearRadius(selectedTileScript);
+                selectedTileScript.ClearRadius();
 
             if (!m_boardScript.m_isForcedMove)
-                m_tile.GetComponent<TileScript>().ClearRadius(m_tile.GetComponent<TileScript>());
+                m_tile.GetComponent<TileScript>().ClearRadius();
         }
     }
 
@@ -420,10 +414,15 @@ public class CharacterScript : ObjectScript {
 
             if (!m_isFree)
                 m_hasActed[(int)trn.ACT] += 2;
+            else //TEMP FIX
+                m_boardScript.m_camIsFrozen = false;
         }
 
         if (PlayerScript.CheckIfGains(actEng) || !PlayerScript.CheckIfGains(actEng) && !m_isFree)
             EnergyConversion(actEng);
+
+        if (m_isFree)
+            PanelScript.GetPanel("Choose Panel").m_inView = false;
 
         m_exp += actEng.Length;
 
@@ -433,11 +432,13 @@ public class CharacterScript : ObjectScript {
         UpdateStatusImages();
 
         PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)HUDPan.ACT_PAN].GetComponent<PanelScript>().PopulatePanel();
+        PanelScript.GetPanel("HUD Panel RIGHT").PopulatePanel();
         PanelScript.GetPanel("ActionViewer Panel").m_inView = false;
         m_boardScript.m_selected = null;
+        m_boardScript.m_currButton = null;
     }
 
-    public void Attack() // used to be bool
+    public void Attack()
     {
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
         string actDmg = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.DMG);
@@ -447,8 +448,7 @@ public class CharacterScript : ObjectScript {
         bool soloBuff = false;
         if (actName == "Fortifying ATK")// || actName == "Cleansing ATK")
             teamBuff = true;
-        else if (actName == "Winding ATK" || actName == "Devastating ATK" || actName == "Targeting ATK" ||
-            actName == "Healing ATK")
+        else if (actName == "Winding ATK" || actName == "Devastating ATK" || actName == "Targeting ATK" || actName == "Healing ATK")
             soloBuff = true;
 
         for (int i = 0; i < m_targets.Count; i++)
@@ -474,8 +474,7 @@ public class CharacterScript : ObjectScript {
                 else if (int.Parse(actDmg) + m_tempStats[(int)sts.DMG] - targetScript.m_tempStats[(int)sts.DEF] >= 0)
                     finalDMG = (int.Parse(actDmg) + m_tempStats[(int)sts.DMG] - targetScript.m_tempStats[(int)sts.DEF]).ToString();
 
-                if (actName == "Burst ATK" || actName == "Bash ATK" || actName == "Power ATK" || actName == "Aggressive ATK" ||
-                    actName == "Forceful ATK" || actName == "Devastating ATK")
+                if (actName == "Burst ATK" || actName == "Forceful ATK" || actName == "Power ATK" || actName == "Devastating ATK")
                     finalDMG = (int.Parse(finalDMG) + m_tempStats[(int)sts.TEC]).ToString();
 
                 targetScript.ReceiveDamage(finalDMG, Color.white);
@@ -491,8 +490,7 @@ public class CharacterScript : ObjectScript {
                     Ability(gameObject, actName);
 
         // REFACTOR
-        if (actName == "Redirect ATK" && m_boardScript.m_isForcedMove ||
-            actName == "Copy ATK" && m_boardScript.m_isForcedMove)
+        if (actName == "Redirect ATK" && m_boardScript.m_isForcedMove || actName == "Copy ATK" && m_boardScript.m_isForcedMove)
             m_boardScript.m_isForcedMove = null;
         else
             m_hasActed[(int)trn.ACT] += 3;
@@ -608,6 +606,8 @@ public class CharacterScript : ObjectScript {
             case "Bleed ATK":
             case "Blinding ATK":
             case "Boost":
+            case "Charge":
+            case "Crush":
             case "Delay ATK":
             case "Disorienting ATK":
             case "Explosive":
@@ -620,6 +620,7 @@ public class CharacterScript : ObjectScript {
             case "Prepare":
             //case "Protect":
             case "Reflect":
+            case "Revving ATK":
             case "Scarring ATK":
             case "Smoke ATK":
             case "Spot":
@@ -642,7 +643,8 @@ public class CharacterScript : ObjectScript {
             case "Copy ATK":
             case "Hack ATK":
             case "Redirect ATK":
-                SelectorInit(targetScript, BoardScript.pnls.ACTION_PANEL);
+                PanelScript.GetPanel("Choose Panel").m_inView = true;
+                //SelectorInit(targetScript, BoardScript.pnls.ACTION_PANEL);
                 break;
             case "Disrupting ATK":
             case "Extension":
@@ -652,10 +654,22 @@ public class CharacterScript : ObjectScript {
                 break;
             //case "Cleansing ATK":
             case "Healing ATK":
-                targetScript.HealHealth(2 + m_tempStats[(int)sts.TEC]);
+                if (m_tempStats[(int)sts.TEC] > 0)
+                {
+                    targetScript.m_player.GetComponent<PlayerScript>().RemoveRandomEnergy(m_tempStats[(int)sts.TEC]);
+                    targetScript.HealHealth(2 + m_tempStats[(int)sts.TEC]);
+                }
+                else
+                    targetScript.HealHealth(2);
                 break;
             case "Heal":
-                targetScript.HealHealth(3 + m_tempStats[(int)sts.TEC]);
+                if (m_tempStats[(int)sts.TEC] > 0)
+                {
+                    targetScript.m_player.GetComponent<PlayerScript>().RemoveRandomEnergy(m_tempStats[(int)sts.TEC]);
+                    targetScript.HealHealth(3 + m_tempStats[(int)sts.TEC]);
+                }
+                else
+                    targetScript.HealHealth(3);
                 break;
             // Unique abilities
             case "Blast ATK":
@@ -678,13 +692,13 @@ public class CharacterScript : ObjectScript {
             case "Dash ATK":
                 if (TileScript.CheckForEmptyNeighbor(tileScript))
                 {
-                    tileScript.ClearRadius(tileScript);
+                    tileScript.ClearRadius();
                     m_boardScript.m_isForcedMove = gameObject;
                     MovementSelection(3 + m_tempStats[(int)sts.TEC]);
                 }
                 break;
             case "Diminish ATK":
-                targetScript.m_player.GetComponent<PlayerScript>().RemoveRandomEnergy();
+                targetScript.m_player.GetComponent<PlayerScript>().RemoveRandomEnergy(1);
                 break;
             case "Feint ATK":
                 if (m_tempStats[(int)sts.TEC] > -3)
@@ -706,7 +720,7 @@ public class CharacterScript : ObjectScript {
             case "Push ATK":
                 if (TileScript.CheckForEmptyNeighbor(targetTile))
                 {
-                    tileScript.ClearRadius(tileScript);
+                    tileScript.ClearRadius();
                     m_boardScript.m_isForcedMove = _currTarget;
                     targetScript.MovementSelection(3 + m_tempStats[(int)sts.TEC]);
                 }
@@ -987,7 +1001,7 @@ public class CharacterScript : ObjectScript {
         selector.m_cScript = _targetScript;
         selector.PopulatePanel();
 
-        m_tile.GetComponent<TileScript>().ClearRadius(m_tile.GetComponent<TileScript>());
+        m_tile.GetComponent<TileScript>().ClearRadius();
         m_boardScript.m_isForcedMove = gameObject;
     }
 
