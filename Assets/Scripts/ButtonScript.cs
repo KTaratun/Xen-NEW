@@ -366,7 +366,7 @@ public class ButtonScript : MonoBehaviour {
             if (actName == "Prismatic ATK")
                     AddEnergy(2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
             else if (actName == "Deplete ATK" || actName == "Syphon ATK")
-                SubtractEnergy(2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC], m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy);
+                SubtractEnergy(2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC], m_main.m_cScript.m_player.m_energy);
         }
     }
 
@@ -405,7 +405,7 @@ public class ButtonScript : MonoBehaviour {
     {
         string actName = DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME);
         CharacterScript charScript = m_boardScript.m_currCharScript;
-        PlayerScript playScript = charScript.m_player.GetComponent<PlayerScript>();
+        PlayerScript playScript = charScript.m_player;
         int added = 0;
 
         if (actName == "Syphon ATK" || actName == "Deplete ATK")
@@ -413,10 +413,10 @@ public class ButtonScript : MonoBehaviour {
             for (int i = 0; i < m_parent.m_images.Length; i++)
             {
                 if (actName == "Syphon ATK")
-                    playScript.m_energy[i] += m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy[i] - int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+                    playScript.m_energy[i] += m_main.m_cScript.m_player.m_energy[i] - int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
 
-                added += m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy[i] - int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
-                m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy[i] = int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+                added += m_main.m_cScript.m_player.m_energy[i] - int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+                m_main.m_cScript.m_player.m_energy[i] = int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
             }
         }
         else
@@ -430,7 +430,7 @@ public class ButtonScript : MonoBehaviour {
             if (actName == "Prismatic ATK" || actName == "Syphon ATK" || actName == "Deplete ATK")
                 charScript.ReceiveDamage((added - 2).ToString(), Color.white);
 
-        playScript.SetEnergyPanel();
+        playScript.SetEnergyPanel(charScript);
         ResumeGame();
     }
 
@@ -439,7 +439,7 @@ public class ButtonScript : MonoBehaviour {
         string actName = DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME);
         if (actName == "Syphon ATK" || actName == "Deplete ATK")
             for (int i = 0; i < m_parent.m_images.Length; i++)
-                m_parent.m_images[i].GetComponentInChildren<Text>().text = m_main.m_cScript.m_player.GetComponent<PlayerScript>().m_energy[i].ToString();
+                m_parent.m_images[i].GetComponentInChildren<Text>().text = m_main.m_cScript.m_player.m_energy[i].ToString();
         else
             for (int i = 0; i < m_parent.m_images.Length; i++)
                 m_parent.m_images[i].GetComponentInChildren<Text>().text = "0";
@@ -475,14 +475,13 @@ public class ButtonScript : MonoBehaviour {
         else if (_confirm == "Move")
         {
             TileScript moverTile = m_cScript.m_tile.GetComponent<TileScript>();
-            TileScript selectedTile = m_boardScript.m_selected.GetComponent<TileScript>();
             if (m_boardScript.m_isForcedMove)
             {
                 m_cScript = m_boardScript.m_isForcedMove.GetComponent<CharacterScript>();
                 moverTile = m_cScript.m_tile.GetComponent<TileScript>();
             }
 
-            gameObject.GetComponent<Button>().onClick.AddListener(() => m_cScript.Movement(moverTile, selectedTile, false));
+            gameObject.GetComponent<Button>().onClick.AddListener(() => m_cScript.Movement(moverTile, m_boardScript.m_selected, false));
         }
         else if (_confirm == "New Action")
         {

@@ -190,7 +190,8 @@ public class TileScript : MonoBehaviour {
                     }
 
                     // if color is movement color and the current tile is holding someone
-                    if (_color == CharacterScript.c_move && tScript.m_holding || !_targetSelf && tScript == ownerCharScript.m_tile.GetComponent<TileScript>())
+                    if (_color == CharacterScript.c_move && tScript.m_holding && tScript.m_holding.tag != "PowerUp" || 
+                        !_targetSelf && tScript == ownerCharScript.m_tile.GetComponent<TileScript>())
                         continue;
 
                     //if (tScript.m_holding && tScript.m_holding.tag == "Player" && tScript.m_holding.GetComponent<CharacterScript>().m_effects[(int)StatusScript.effects.PROTECT])

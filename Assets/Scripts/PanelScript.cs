@@ -22,7 +22,7 @@ public class PanelScript : MonoBehaviour {
     public CharacterScript m_cScript;
     public GameObject m_main;
     public Button[] m_buttons;
-    public GameObject[] m_panels;
+    public PanelScript[] m_panels;
     public Text[] m_text;
     public Image[] m_images;
     static public bool m_locked;
@@ -62,7 +62,7 @@ public class PanelScript : MonoBehaviour {
 
         if (name == "Turn Panel")
             for (int i = 0; i < m_panels.Length; i++)
-                m_panels[i].SetActive(false);
+                m_panels[i].gameObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -100,13 +100,6 @@ public class PanelScript : MonoBehaviour {
         {
             BoardScript bScript = m_main.GetComponent<BoardScript>();
             CharacterScript cScript = bScript.m_currCharScript;
-            if (cScript.m_currAction.Length > 0)
-            {
-                string actName = DatabaseScript.GetActionData(cScript.m_currAction, DatabaseScript.actions.NAME);
-
-                if (actName == "Copy ATK" || actName == "Redirect ATK")
-                    m_allPanels[(int)BoardScript.pnls.MAIN_PANEL].m_buttons[(int)butts.ACT_BUTT].interactable = false;
-            }
         }
     }
 
@@ -155,13 +148,13 @@ public class PanelScript : MonoBehaviour {
                     string[] eng = actsSeparated[(int)DatabaseScript.actions.ENERGY].Split(':');
                 
                     if (eng[1][0] == 'g' || eng[1][0] == 'r' || eng[1][0] == 'w' || eng[1][0] == 'b')
-                        FirstActionAvailable(m_panels[0], m_cScript.m_actions[i]);
+                        FirstActionAvailable(m_panels[0].gameObject, m_cScript.m_actions[i]);
                     else if (eng[1].Length == 1)
-                        FirstActionAvailable(m_panels[1], m_cScript.m_actions[i]);
+                        FirstActionAvailable(m_panels[1].gameObject, m_cScript.m_actions[i]);
                     else if (eng[1].Length == 2)
-                        FirstActionAvailable(m_panels[2], m_cScript.m_actions[i]);
+                        FirstActionAvailable(m_panels[2].gameObject, m_cScript.m_actions[i]);
                     else if (eng[1].Length == 3)
-                        FirstActionAvailable(m_panels[3], m_cScript.m_actions[i]);
+                        FirstActionAvailable(m_panels[3].gameObject, m_cScript.m_actions[i]);
                 }
             }
         }
@@ -169,8 +162,8 @@ public class PanelScript : MonoBehaviour {
         {
             BoardScript bScript = m_main.GetComponent<BoardScript>();
             CharacterScript currScript = bScript.m_currCharScript;
-            m_panels[0].GetComponent<Image>().color = new Color(currScript.m_teamColor.r + 0.3f, currScript.m_teamColor.g + 0.3f, currScript.m_teamColor.b + 0.3f, 1);
-            m_panels[1].GetComponent<Image>().color = new Color(m_cScript.m_teamColor.r + 0.3f, m_cScript.m_teamColor.g + 0.3f, m_cScript.m_teamColor.b + 0.3f, 1);
+            //m_panels[0].gameObject.GetComponent<Image>().color = new Color(currScript.m_teamColor.r + 0.3f, currScript.m_teamColor.g + 0.3f, currScript.m_teamColor.b + 0.3f, 1);
+            //m_panels[1].gameObject.GetComponent<Image>().color = new Color(m_cScript.m_teamColor.r + 0.3f, m_cScript.m_teamColor.g + 0.3f, m_cScript.m_teamColor.b + 0.3f, 1);
 
             int def = m_cScript.m_tempStats[(int)CharacterScript.sts.DEF];
             int dmg = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.DMG)) + currScript.m_tempStats[(int)CharacterScript.sts.DMG] - def;
@@ -371,6 +364,8 @@ public class PanelScript : MonoBehaviour {
             m_panels[(int)CharacterScript.HUDPan.ACT_PAN].GetComponent<PanelScript>().m_cScript = m_cScript;
             m_panels[(int)CharacterScript.HUDPan.ACT_PAN].GetComponent<PanelScript>().PopulatePanel();
 
+            m_cScript.m_player.SetEnergyPanel(m_cScript);
+
             if (name == "HUD Panel LEFT")
             {
                 m_panels[(int)CharacterScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0].GetComponent<ButtonScript>().m_cScript = m_cScript;
@@ -521,14 +516,26 @@ public class PanelScript : MonoBehaviour {
         }
         else if (name == "StatusViewer Panel")
         {
-            StatusScript[] statScripts = m_cScript.GetComponents<StatusScript>();
+            if (m_cScript)
+            {
+                StatusScript[] statScripts = m_cScript.GetComponents<StatusScript>();
 
-            m_images[0].sprite = statScripts[m_cScript.m_currStatus].m_sprite;
-            m_images[0].color = statScripts[m_cScript.m_currStatus].m_color;
+                m_images[0].sprite = statScripts[m_cScript.m_currStatus].m_sprite;
+                m_images[0].color = statScripts[m_cScript.m_currStatus].m_color;
 
-            m_text[0].text = "Duration: " + statScripts[m_cScript.m_currStatus].m_lifeSpan.ToString();
-            m_text[1].text = statScripts[m_cScript.m_currStatus].m_effect;
+                m_text[0].text = "Duration: " + statScripts[m_cScript.m_currStatus].m_lifeSpan.ToString();
+                m_text[1].text = statScripts[m_cScript.m_currStatus].m_effect;
+            }
+            else
+            {
+                PowerupScript pUP = m_main.GetComponent<BoardScript>().m_highlightedTile.m_holding.GetComponent<PowerupScript>();
 
+                m_images[0].sprite = pUP.m_sprite;
+                m_images[0].color = pUP.m_color;
+
+                m_text[0].text = "Duration: N/A";
+                m_text[1].text = pUP.m_effect;
+            }
         }
 
         if (m_direction == dir.UP && !m_inView)
@@ -631,11 +638,10 @@ public class PanelScript : MonoBehaviour {
             else
             {
                 m_buttons[i].GetComponent<Image>().color = new Color(1, 1, 1, 1);
-                PlayerScript playScript = m_cScript.m_player.GetComponent<PlayerScript>();
-                if (playScript.CheckEnergy(eng) && m_cScript.m_hasActed[(int)CharacterScript.trn.ACT] < 3)
+                if (m_cScript.m_player.CheckEnergy(eng) && m_cScript.m_hasActed[(int)CharacterScript.trn.ACT] < 3)
                 {
                     m_buttons[i].interactable = true;
-                    if (playScript.CheckEnergy(eng) && m_cScript.m_hasActed[(int)CharacterScript.trn.ACT] == 2)
+                    if (m_cScript.m_player.CheckEnergy(eng) && m_cScript.m_hasActed[(int)CharacterScript.trn.ACT] == 2)
                         m_buttons[i].GetComponent<Image>().color = b_isHalf;
                 }
                 else
@@ -732,8 +738,7 @@ public class PanelScript : MonoBehaviour {
                 else
                 {
                     buttons[i].GetComponent<Image>().color = new Color(1, 1, 1, 1);
-                    PlayerScript playScript = m_cScript.m_player.GetComponent<PlayerScript>();
-                    if (playScript.CheckEnergy(eng[1]))
+                    if (m_cScript.m_player.CheckEnergy(eng[1]))
                     {
                         if (m_cScript)
                             buttons[i].onClick.AddListener(() => currCharScript.ActionTargeting());
@@ -827,41 +832,42 @@ public class PanelScript : MonoBehaviour {
         float width = 65.0f;
         float start = 190.0f;
 
-        // Set current panel and count actives
-        for (int i = 0; i < 8; i++)
-            if (m_panels[i].activeSelf && pan == null)
-                if (pan == null)
-                {
-                    pan = m_panels[i];
-                    break;
-                }
+        // Set current panel and count 
+        for (int i = 0; i < m_panels.Length; i++)
+        {
+            if (m_panels[i].gameObject.activeSelf)
+            {
+                pan = m_panels[i].gameObject;
+                break;
+            }
+        }
 
         if (pan == null)
             return;
 
         CharacterScript c = pan.GetComponentInChildren<ButtonScript>().m_cScript;
 
-        if (bScript.m_currRound.Count >= 8 && bScript.m_newTurn) //notListed.Count > 0 && notListed.Count + count > bScript.m_currRound.Count
-        {
-            for (int i = 0; i < 7; i++)
-            {
-                ButtonScript b = m_panels[i + 1].GetComponentInChildren<ButtonScript>();
-                TurnPanelInit(i, b.m_cScript);
-            }
-
-            TurnPanelInit(7, bScript.m_currRound[7].GetComponent<CharacterScript>());
-
-            if (bScript.m_currRound.Count == 8)
-                m_panels[8].SetActive(false);
-            else
-            {
-                Text t = m_panels[8].GetComponentInChildren<Text>();
-                t.text = "x" + (bScript.m_currRound.Count - 8).ToString();
-            }
-
-            bScript.m_newTurn = false;
-        }
-        else if (bScript.m_currRound.Count < m_panels.Length - 1 && bScript.m_newTurn) // if one of the panels is removed, move it every frame unitl it slides off to the left
+        //if (bScript.m_currRound.Count >= 8 && bScript.m_newTurn) //notListed.Count > 0 && notListed.Count + count > bScript.m_currRound.Count
+        //{
+        //    for (int i = 0; i < 7; i++)
+        //    {
+        //        ButtonScript b = m_panels[i + 1].GetComponentInChildren<ButtonScript>();
+        //        TurnPanelInit(i, b.m_cScript);
+        //    }
+        //
+        //    TurnPanelInit(7, bScript.m_currRound[7].GetComponent<CharacterScript>());
+        //
+        //    if (bScript.m_currRound.Count == 8)
+        //        m_panels[8].SetActive(false);
+        //    else
+        //    {
+        //        Text t = m_panels[8].GetComponentInChildren<Text>();
+        //        t.text = "x" + (bScript.m_currRound.Count - 8).ToString();
+        //    }
+        //
+        //    bScript.m_newTurn = false;
+        //}
+        if (bScript.m_currRound.Count < m_panels.Length - 1 && bScript.m_newTurn) // if one of the panels is removed, move it every frame unitl it slides off to the left
         {
             if (pan.transform.position.y < 750)
                 pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x, pan.transform.position.y + 10.0f, pan.transform.position.z), pan.transform.rotation);
@@ -880,7 +886,7 @@ public class PanelScript : MonoBehaviour {
 
             for (int i = 0; i < m_panels.Length - 1; i++)
             {
-                pan = m_panels[i];
+                pan = m_panels[i].gameObject;
                 if (!pan.activeSelf)
                     continue;
 
@@ -903,12 +909,12 @@ public class PanelScript : MonoBehaviour {
 
     private void TurnPanelInit(int _ind, CharacterScript _charScript)
     {
-        m_panels[_ind].SetActive(true);
+        m_panels[_ind].gameObject.SetActive(true);
 
         if (_charScript.m_turnPanels.Count > 0)
-            _charScript.m_turnPanels[0] = m_panels[_ind];
+            _charScript.m_turnPanels[0] = m_panels[_ind].gameObject;
         else
-            _charScript.m_turnPanels.Add(m_panels[_ind]);
+            _charScript.m_turnPanels.Add(m_panels[_ind].gameObject);
 
         if (_charScript.m_effects[(int)StatusScript.effects.STUN] && _ind == 0)
             m_panels[_ind].GetComponent<Image>().color = new Color(1, .5f, .5f, 1);

@@ -6,10 +6,6 @@ using UnityEngine.SceneManagement;
 
 public class BoardScript : MonoBehaviour {
 
-    public enum pnls { MAIN_PANEL, ACTION_PANEL, AUXILIARY_PANEL, STATUS_PANEL, HUD_LEFT_PANEL, HUD_RIGHT_PANEL, TURN_PANEL,
-        ROUND_PANEL, ENERGY_PANEL, STATUS_VIEWER_PANEL, STATUS_SELECTOR, ENERGY_SELECTOR, ACTION_PREVIEW,
-        ACTION_VIEWER_PANEL, CHARACTER_VIEWER_PANEL, TOTAL_PANEL }
-
     public Camera m_camera; // Why it do that squiggle?
     public int m_roundCount;
     public int m_environmentalDensity; // This dictates how many environmental objs per tile
@@ -34,6 +30,7 @@ public class BoardScript : MonoBehaviour {
     public bool m_newTurn;
     public AudioSource m_audio;
     public Button m_currButton;
+    public GameObject m_powerup;
 
     // Use this for initialization
     void Start ()
@@ -110,7 +107,7 @@ public class BoardScript : MonoBehaviour {
                 while (i + 1 < 8)
                 {
                     if (actPan.m_buttons[i + 1].GetComponentInChildren<Text>().text != "EMPTY" &&
-                        m_currCharScript.m_player.GetComponent<PlayerScript>().CheckEnergy(DatabaseScript.GetActionData(actPan.m_buttons[i + 1].GetComponent<ButtonScript>().m_action, DatabaseScript.actions.ENERGY)))
+                        m_currCharScript.m_player.CheckEnergy(DatabaseScript.GetActionData(actPan.m_buttons[i + 1].GetComponent<ButtonScript>().m_action, DatabaseScript.actions.ENERGY)))
                     {
                         actPan.m_buttons[i + 1].GetComponent<ButtonScript>().Select();
                         break;
@@ -123,7 +120,7 @@ public class BoardScript : MonoBehaviour {
                 while (i - 1 >= 0)
                 {
                     if (i - 1 >= 0 && actPan.m_buttons[i - 1].GetComponentInChildren<Text>().text != "EMPTY" &&
-                         m_currCharScript.m_player.GetComponent<PlayerScript>().CheckEnergy(DatabaseScript.GetActionData(actPan.m_buttons[i - 1].GetComponent<ButtonScript>().m_action, DatabaseScript.actions.ENERGY)))
+                         m_currCharScript.m_player.CheckEnergy(DatabaseScript.GetActionData(actPan.m_buttons[i - 1].GetComponent<ButtonScript>().m_action, DatabaseScript.actions.ENERGY)))
                     {
                         actPan.m_buttons[i - 1].GetComponent<ButtonScript>().Select();
                         break;
@@ -322,11 +319,10 @@ public class BoardScript : MonoBehaviour {
                     cScript.m_hasActed[1] = 0;
 
                     // Link to player
-                    cScript.m_player = m_players[i];
                     PlayerScript playScript = m_players[i].GetComponent<PlayerScript>();
-                    m_players[i].name = "Team " + (i + 1).ToString();
-                    playScript.m_characters.Add(newChar);
-
+                    cScript.m_player = playScript;
+                    playScript.name = "Team " + (i + 1).ToString();
+                    playScript.m_characters.Add(cScript);
                     PlaceOnBoard(newChar);
                 }
             }
@@ -431,11 +427,18 @@ public class BoardScript : MonoBehaviour {
             PanelScript.GetPanel("ActionPreview").PopulatePanel();
         }
 
-        if (m_highlightedTile && tScript != m_highlightedTile && m_highlightedTile.m_holding && m_highlightedTile.m_holding.tag == "Player")
+        if (m_highlightedTile && tScript != m_highlightedTile)
+        {
+            PanelScript.GetPanel("StatusViewer Panel").m_inView = false;
+            if (m_highlightedTile.m_holding && m_highlightedTile.m_holding.tag == "Player")
                 DeselectHighlightedTile();
+        }
 
         if (tScript)
             m_highlightedTile = tScript;
+
+        if (tScript.m_holding && tScript.m_holding.tag == "PowerUp")
+            PanelScript.GetPanel("StatusViewer Panel").PopulatePanel();
     }
 
     private void HandleTile(TileScript _target)
@@ -515,14 +518,6 @@ public class BoardScript : MonoBehaviour {
             PanelScript hudPanScript = PanelScript.GetPanel("HUD Panel RIGHT");
             hudPanScript.m_cScript = _character;
             hudPanScript.PopulatePanel();
-
-            Image[] hudEnergy = hudPanScript.m_panels[(int)CharacterScript.HUDPan.ENG_PAN].GetComponentsInChildren<Image>();
-            int[] charEnergy = _character.m_player.GetComponent<PlayerScript>().m_energy;
-            for (int i = 0; i < charEnergy.Length; i++)
-            {
-                Text t = hudEnergy[i + 1].GetComponentInChildren<Text>();
-                t.text = charEnergy[i].ToString();
-            }
         }
     }
 
@@ -558,10 +553,12 @@ public class BoardScript : MonoBehaviour {
         int numTeamsActive = 0;
         for (int i = 0; i < m_players.Length; i++)
         {
-            playScript = m_players[i].GetComponent<PlayerScript>();
-            for (int j = 0; j < playScript.m_characters.Count; j++)
+            if (!m_players[i])
+                continue;
+
+            for (int j = 0; j < m_players[i].GetComponent<PlayerScript>().m_characters.Count; j++)
             {
-                if (playScript.m_characters[j].GetComponent<CharacterScript>().m_isAlive)
+                if (m_players[i].GetComponent<PlayerScript>().m_characters[j].m_isAlive)
                 {
                     numTeamsActive++;
                     winningTeam = playScript;
@@ -613,10 +610,6 @@ public class BoardScript : MonoBehaviour {
         PanelScript HUDLeftScript = PanelScript.GetPanel("HUD Panel LEFT");
         HUDLeftScript.m_cScript = m_currCharScript;
         HUDLeftScript.PopulatePanel();
-
-        playScript = m_currCharScript.m_player.GetComponent<PlayerScript>();
-        if (playScript)
-            playScript.SetEnergyPanel();
 
         CameraScript camScript = m_camera.GetComponent<CameraScript>();
         camScript.m_target = m_currCharScript.gameObject;
@@ -699,6 +692,14 @@ public class BoardScript : MonoBehaviour {
         roundPanScript.PopulatePanel();
 
         PanelScript.GetPanel("Turn Panel").NewTurnOrder();
+
+        SpawnItem();
+    }
+
+    public void SpawnItem()
+    {
+        GameObject pUP = Instantiate(m_powerup);
+        PlaceOnBoard(pUP);
     }
 
     public void GameOver(PlayerScript _winningTeam)

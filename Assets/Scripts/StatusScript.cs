@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class StatusScript : MonoBehaviour {
 
-    public enum mode { TURN_END, ROUND_END }
+    public enum mode { TURN_END, ROUND_END, NONE }
     public enum effects { SCARRING, BLEED, BYPASS, HINDER, IMMOBILE, WARD, STUN, DELAY, REFLECT, TOT }
 
     static public Color c_buffColor = Color.cyan;

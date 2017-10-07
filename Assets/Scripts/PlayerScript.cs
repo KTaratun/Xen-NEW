@@ -7,10 +7,10 @@ public class PlayerScript : MonoBehaviour {
 
     public enum eng { GRN, RED, WHT, BLU, TOT }
 
-    public List<GameObject> m_characters;
-    public GameObject m_energyPanel;
+    public List<CharacterScript> m_characters;
     public int m_num;
     public int[] m_energy;
+    public BoardScript m_bScript;
 
 	// Use this for initialization
 	void Start ()
@@ -23,9 +23,13 @@ public class PlayerScript : MonoBehaviour {
 		
 	}
 
-    public void SetEnergyPanel()
+    public void SetEnergyPanel(CharacterScript _caller)
     {
-        Text[] text = m_energyPanel.GetComponentsInChildren<Text>();
+        Text[] text = null;
+        if (_caller == m_bScript.m_currCharScript)
+            text = PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)CharacterScript.HUDPan.ENG_PAN].GetComponentsInChildren<Text>();
+        else
+            text = PanelScript.GetPanel("HUD Panel RIGHT").m_panels[(int)CharacterScript.HUDPan.ENG_PAN].GetComponentsInChildren<Text>();
 
         for (int i = 0; i < text.Length; i++)
             text[i].text = m_energy[i].ToString();

@@ -24,7 +24,7 @@ public class CharacterScript : ObjectScript {
     public GameObject m_popupText;
     public GameObject[] m_popupSpheres;
     public GameObject[] m_colorDisplay;
-    public GameObject m_player;
+    public PlayerScript m_player;
     public Animator m_anim;
     public Color m_teamColor;
     public string m_name;
@@ -145,6 +145,11 @@ public class CharacterScript : ObjectScript {
                 m_anim.Play("Idle Melee", -1, 0);
 
                 m_boardScript.m_currButton = null;
+
+                if (m_tile.m_holding && m_tile.m_holding.tag == "PowerUp")
+                    m_tile.m_holding.GetComponent<PowerupScript>().OnPickup(this);
+
+                m_tile.m_holding = gameObject;
 
                 if (m_isAI && m_currAction.Length > 0)
                 {
@@ -272,7 +277,6 @@ public class CharacterScript : ObjectScript {
         if (selectedScript == newScript)
             return;
 
-        newScript.m_holding = selectedScript.m_holding;
         selectedScript.m_holding = null;
         m_boardScript.m_selected = null;
         m_tile = newScript;
@@ -418,10 +422,9 @@ public class CharacterScript : ObjectScript {
                 m_boardScript.m_camIsFrozen = false;
         }
 
-        if (PlayerScript.CheckIfGains(actEng) || !PlayerScript.CheckIfGains(actEng) && !m_isFree)
+        if (!m_isFree)
             EnergyConversion(actEng);
-
-        if (m_isFree)
+        else
             PanelScript.GetPanel("Choose Panel").m_inView = false;
 
         m_exp += actEng.Length;
@@ -431,7 +434,7 @@ public class CharacterScript : ObjectScript {
 
         UpdateStatusImages();
 
-        PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)HUDPan.ACT_PAN].GetComponent<PanelScript>().PopulatePanel();
+        PanelScript.GetPanel("HUD Panel LEFT").PopulatePanel();
         PanelScript.GetPanel("HUD Panel RIGHT").PopulatePanel();
         PanelScript.GetPanel("ActionViewer Panel").m_inView = false;
         m_boardScript.m_selected = null;
@@ -529,12 +532,6 @@ public class CharacterScript : ObjectScript {
             textMesh.text = (int.Parse(textMesh.text) + int.Parse(_dmg)).ToString();
         else
             textMesh.text = _dmg;
-
-        if (this == m_boardScript.m_currCharScript)
-        {
-            PanelScript actPanScript = PanelScript.GetPanel("HUD Panel LEFT");
-            actPanScript.PopulatePanel();
-        }
     }
 
     public void Dead()
@@ -638,7 +635,7 @@ public class CharacterScript : ObjectScript {
                 if (_name == "Prismatic ATK" && m_tempStats[(int)sts.TEC] < -2 || _name == "Deplete ATK" && m_tempStats[(int)sts.TEC] < -1 ||
                     _name == "Syphon ATK" && m_tempStats[(int)sts.TEC] < -2)
                     break;
-                    SelectorInit(targetScript, BoardScript.pnls.ENERGY_SELECTOR);
+                    SelectorInit(targetScript, "Energy Selector");
                 break;
             case "Copy ATK":
             case "Hack ATK":
@@ -650,13 +647,13 @@ public class CharacterScript : ObjectScript {
             case "Extension":
             //case "Modification": Permanently add a temp status effect
                 if (targetScript.GetComponents<StatusScript>().Length > 0)
-                    SelectorInit(targetScript, BoardScript.pnls.STATUS_SELECTOR);
+                    SelectorInit(targetScript, "Status Selector");
                 break;
             //case "Cleansing ATK":
             case "Healing ATK":
                 if (m_tempStats[(int)sts.TEC] > 0)
                 {
-                    targetScript.m_player.GetComponent<PlayerScript>().RemoveRandomEnergy(m_tempStats[(int)sts.TEC]);
+                    targetScript.m_player.RemoveRandomEnergy(m_tempStats[(int)sts.TEC]);
                     targetScript.HealHealth(2 + m_tempStats[(int)sts.TEC]);
                 }
                 else
@@ -665,7 +662,7 @@ public class CharacterScript : ObjectScript {
             case "Heal":
                 if (m_tempStats[(int)sts.TEC] > 0)
                 {
-                    targetScript.m_player.GetComponent<PlayerScript>().RemoveRandomEnergy(m_tempStats[(int)sts.TEC]);
+                    targetScript.m_player.RemoveRandomEnergy(m_tempStats[(int)sts.TEC]);
                     targetScript.HealHealth(3 + m_tempStats[(int)sts.TEC]);
                 }
                 else
@@ -680,8 +677,7 @@ public class CharacterScript : ObjectScript {
                 StatusScript.ApplyStatus(_currTarget);
                 break;
             case "Channel":
-                m_player.GetComponent<PlayerScript>().m_energy[(int)PlayerScript.eng.BLU] += 2;
-                m_player.GetComponent<PlayerScript>().SetEnergyPanel();
+                m_player.m_energy[(int)PlayerScript.eng.BLU] += 2;
                 break;
             case "Concussive ATK":
                 targetScript.m_tempStats[(int)sts.SPD] -= 3 + m_tempStats[(int)sts.TEC];
@@ -698,7 +694,7 @@ public class CharacterScript : ObjectScript {
                 }
                 break;
             case "Diminish ATK":
-                targetScript.m_player.GetComponent<PlayerScript>().RemoveRandomEnergy(1);
+                targetScript.m_player.RemoveRandomEnergy(1);
                 break;
             case "Feint ATK":
                 if (m_tempStats[(int)sts.TEC] > -3)
@@ -859,30 +855,29 @@ public class CharacterScript : ObjectScript {
 
     private void EnergyConversion(string _energy)
     {
-        PlayerScript playScript = m_player.GetComponent<PlayerScript>();
         // Assign _energy symbols
         for (int i = 0; i < _energy.Length; i++)
         {
             if (_energy[i] == 'g')
-                playScript.m_energy[0] += 1;
+                m_player.m_energy[0] += 1;
             else if (_energy[i] == 'r')
-                playScript.m_energy[1] += 1;
+                m_player.m_energy[1] += 1;
             else if (_energy[i] == 'w')
-                playScript.m_energy[2] += 1;
+                m_player.m_energy[2] += 1;
             else if (_energy[i] == 'b')
-                playScript.m_energy[3] += 1;
+                m_player.m_energy[3] += 1;
             else if (_energy[i] == 'G')
-                playScript.m_energy[0] -= 1;
+                m_player.m_energy[0] -= 1;
             else if (_energy[i] == 'R')
-                playScript.m_energy[1] -= 1;
+                m_player.m_energy[1] -= 1;
             else if (_energy[i] == 'W')
-                playScript.m_energy[2] -= 1;
+                m_player.m_energy[2] -= 1;
             else if (_energy[i] == 'B')
-                playScript.m_energy[3] -= 1;
+                m_player.m_energy[3] -= 1;
         }
 
         SetPopupSpheres(_energy);
-        playScript.SetEnergyPanel();
+        m_player.SetEnergyPanel(this);
     }
 
     public void SetPopupSpheres(string _energy)
@@ -946,21 +941,11 @@ public class CharacterScript : ObjectScript {
         }
     }
 
-    //public void Pass()
-    //{
-    //    //PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
-    //    //PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
-    //    m_hasActed[(int)trn.MOV] = true;
-    //    m_hasActed[(int)trn.ACT] = true;
-    //    PanelScript.CloseHistory();
-    //}
-
-    // Maybe move  REFACTOR: This looks odd
-    public void SelectorInit(CharacterScript _targetScript, BoardScript.pnls _selector)
+    public void SelectorInit(CharacterScript _targetScript, string _pan)
     {
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
         PanelScript selector = PanelScript.GetPanel("Status Selector");
-        if (_selector == BoardScript.pnls.STATUS_SELECTOR)
+        if (_pan == "Status Selector")
         {
             selector = PanelScript.GetPanel("Status Selector");
             if (actName == "Disrupting ATK")
@@ -970,7 +955,7 @@ public class CharacterScript : ObjectScript {
             if (actName == "Extension" || actName == "Modification")
                 selector.m_text[0].text = "Choose a status to boost";
         }
-        else if (_selector == BoardScript.pnls.ENERGY_SELECTOR)
+        else if (_pan == "Energy Selector")
         {
             selector = PanelScript.GetPanel("Energy Selector");
 
@@ -984,8 +969,7 @@ public class CharacterScript : ObjectScript {
                 for (int i = 0; i < selector.m_images.Length; i++)
                 {
                     Text t = selector.m_images[i].GetComponentInChildren<Text>();
-                    PlayerScript pScript = _targetScript.m_player.GetComponent<PlayerScript>();
-                    t.text = pScript.m_energy[i].ToString();
+                    t.text = _targetScript.m_player.m_energy[i].ToString();
                 }
             }
             else if (actName == "Prismatic ATK") // if channel
@@ -995,8 +979,6 @@ public class CharacterScript : ObjectScript {
                     selector.m_images[i].GetComponentInChildren<Text>().text = "0";
             }
         }
-        else if (_selector == BoardScript.pnls.ACTION_PANEL)
-            selector = PanelScript.GetPanel("Action Panel");
 
         selector.m_cScript = _targetScript;
         selector.PopulatePanel();
@@ -1184,7 +1166,7 @@ public class CharacterScript : ObjectScript {
                 string[] actsSeparated = m_actions[i].Split('|');
                 string[] eng = actsSeparated[(int)DatabaseScript.actions.ENERGY].Split(':');
 
-                if (h == 3 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]))
+                if (h == 3 && m_player.CheckEnergy(eng[1]))
                 {
                     if (eng[1][0] == 'g' || eng[1][0] == 'r' || eng[1][0] == 'w' || eng[1][0] == 'b')
                     {
@@ -1201,7 +1183,7 @@ public class CharacterScript : ObjectScript {
                         }
                     }
                 }
-                else if (h == 2 && eng[1].Length == 1 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
+                else if (h == 2 && eng[1].Length == 1 && m_player.CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
                 {
                     ActionTargeting();
                     TileScript tScript = m_tile.GetComponent<TileScript>();
@@ -1215,7 +1197,7 @@ public class CharacterScript : ObjectScript {
                         }
                     }
                 }
-                else if (h == 1 && eng[1].Length == 2 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
+                else if (h == 1 && eng[1].Length == 2 && m_player.CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
                 {
                     ActionTargeting();
                     TileScript tScript = m_tile.GetComponent<TileScript>();
@@ -1229,7 +1211,7 @@ public class CharacterScript : ObjectScript {
                         }
                     }
                 }
-                else if (h == 0 && eng[1].Length == 3 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
+                else if (h == 0 && eng[1].Length == 3 && m_player.CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
                 {
                     ActionTargeting();
                     TileScript tScript = m_tile.GetComponent<TileScript>();
