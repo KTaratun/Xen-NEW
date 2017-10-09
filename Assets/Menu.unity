@@ -649,6 +649,7 @@ MonoBehaviour:
   - {fileID: 1178932921}
   - {fileID: 1732085536}
   - {fileID: 1070634189}
+  m_hovered: 0
   m_action: 
 --- !u!1 &36843982
 GameObject:
@@ -787,6 +788,7 @@ MonoBehaviour:
   - {fileID: 174926582}
   - {fileID: 1752116109}
   - {fileID: 358916093}
+  m_hovered: 0
   m_action: 
 --- !u!114 &37687118
 MonoBehaviour:
@@ -986,6 +988,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  m_hovered: 0
   m_action: 
 --- !u!114 &39620848
 MonoBehaviour:
@@ -2240,6 +2243,7 @@ MonoBehaviour:
   - {fileID: 762683561}
   - {fileID: 1447288231}
   - {fileID: 622256250}
+  m_hovered: 0
   m_action: 
 --- !u!1 &80535378
 GameObject:
@@ -2306,6 +2310,7 @@ MonoBehaviour:
   - {fileID: 734102395}
   - {fileID: 848108606}
   - {fileID: 1674748791}
+  m_hovered: 0
   m_action: 
 --- !u!114 &80535381
 MonoBehaviour:
@@ -3297,6 +3302,7 @@ MonoBehaviour:
   - {fileID: 435224585}
   - {fileID: 358449426}
   - {fileID: 1141270245}
+  m_hovered: 0
   m_action: 
 --- !u!114 &104724174
 MonoBehaviour:
@@ -4315,6 +4321,7 @@ MonoBehaviour:
   - {fileID: 2065349651}
   - {fileID: 661997138}
   - {fileID: 436861985}
+  m_hovered: 0
   m_action: 
 --- !u!114 &132540120
 MonoBehaviour:
@@ -5063,6 +5070,7 @@ MonoBehaviour:
   - {fileID: 400106729}
   - {fileID: 112881779}
   - {fileID: 1421183286}
+  m_hovered: 0
   m_action: 
 --- !u!1 &145687804
 GameObject:
@@ -5765,6 +5773,7 @@ MonoBehaviour:
   - {fileID: 1308612636}
   - {fileID: 1643516916}
   - {fileID: 755478928}
+  m_hovered: 0
   m_action: 
 --- !u!114 &160922633
 MonoBehaviour:
@@ -7037,6 +7046,7 @@ MonoBehaviour:
   - {fileID: 707810642}
   - {fileID: 697433059}
   - {fileID: 337422126}
+  m_hovered: 0
   m_action: 
 --- !u!1 &189489743
 GameObject:
@@ -7884,6 +7894,7 @@ MonoBehaviour:
   - {fileID: 1814792660}
   - {fileID: 1925432584}
   - {fileID: 1396554726}
+  m_hovered: 0
   m_action: 
 --- !u!1 &209483129
 GameObject:
@@ -8766,6 +8777,7 @@ MonoBehaviour:
   - {fileID: 907073881}
   - {fileID: 5827493}
   - {fileID: 316487547}
+  m_hovered: 0
   m_action: 
 --- !u!114 &233563636
 MonoBehaviour:
@@ -9290,6 +9302,7 @@ MonoBehaviour:
   - {fileID: 478459076}
   - {fileID: 1622978873}
   - {fileID: 358984903}
+  m_hovered: 0
   m_action: 
 --- !u!1 &248938668
 GameObject:
@@ -9766,6 +9779,7 @@ MonoBehaviour:
   - {fileID: 1375698974}
   - {fileID: 2057035753}
   - {fileID: 1085069947}
+  m_hovered: 0
   m_action: 
 --- !u!114 &262924752
 MonoBehaviour:
@@ -10940,6 +10954,7 @@ MonoBehaviour:
   - {fileID: 1387905406}
   - {fileID: 779229957}
   - {fileID: 933186307}
+  m_hovered: 0
   m_action: 
 --- !u!114 &290919120
 MonoBehaviour:
@@ -11515,6 +11530,12 @@ CanvasRenderer:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 297218808}
+--- !u!114 &299833297 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114005726492196820, guid: df1673fdf6742894b960ac5037278fcf,
+    type: 2}
+  m_PrefabInternal: {fileID: 699113018}
+  m_Script: {fileID: 11500000, guid: 38c19b1279105cc419a0a7fbe5a5113f, type: 3}
 --- !u!1 &301391101
 GameObject:
   m_ObjectHideFlags: 0
@@ -11764,6 +11785,7 @@ MonoBehaviour:
   - {fileID: 2138661806}
   - {fileID: 1043450031}
   - {fileID: 70649072}
+  m_hovered: 0
   m_action: 
 --- !u!1 &311891183
 GameObject:
@@ -12869,6 +12891,7 @@ MonoBehaviour:
   - {fileID: 2048734069}
   - {fileID: 161649663}
   - {fileID: 1281615850}
+  m_hovered: 0
   m_action: 
 --- !u!114 &347381275
 MonoBehaviour:
@@ -14709,6 +14732,7 @@ MonoBehaviour:
   - {fileID: 510026803}
   - {fileID: 1922692764}
   - {fileID: 2101217541}
+  m_hovered: 0
   m_action: 
 --- !u!114 &397464831
 MonoBehaviour:
@@ -15030,6 +15054,7 @@ MonoBehaviour:
   - {fileID: 153580743}
   - {fileID: 914426350}
   - {fileID: 1316915115}
+  m_hovered: 0
   m_action: 
 --- !u!1 &402534776
 GameObject:
@@ -15093,6 +15118,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  m_hovered: 0
   m_action: 
 --- !u!114 &402534779
 MonoBehaviour:
@@ -15335,6 +15361,7 @@ MonoBehaviour:
   - {fileID: 105728235}
   - {fileID: 945181047}
   - {fileID: 632338337}
+  m_hovered: 0
   m_action: 
 --- !u!1001 &405963666
 Prefab:
@@ -15515,6 +15542,7 @@ MonoBehaviour:
   - {fileID: 553007390}
   - {fileID: 1661529188}
   - {fileID: 869927601}
+  m_hovered: 0
   m_action: 
 --- !u!1 &411358865
 GameObject:
@@ -16168,6 +16196,7 @@ MonoBehaviour:
   - {fileID: 1708844804}
   - {fileID: 547111274}
   - {fileID: 340035195}
+  m_hovered: 0
   m_action: 
 --- !u!114 &426033998
 MonoBehaviour:
@@ -16821,6 +16850,7 @@ MonoBehaviour:
   - {fileID: 1786475579}
   - {fileID: 292674386}
   - {fileID: 821296578}
+  m_hovered: 0
   m_action: 
 --- !u!114 &433094620
 MonoBehaviour:
@@ -20207,6 +20237,7 @@ MonoBehaviour:
   - {fileID: 1788175507}
   - {fileID: 527297528}
   - {fileID: 339321166}
+  m_hovered: 0
   m_action: 
 --- !u!114 &549718642
 MonoBehaviour:
@@ -20550,6 +20581,7 @@ MonoBehaviour:
   - {fileID: 1993753741}
   - {fileID: 460687141}
   - {fileID: 1613055396}
+  m_hovered: 0
   m_action: 
 --- !u!114 &560522018
 MonoBehaviour:
@@ -21748,6 +21780,7 @@ MonoBehaviour:
   - {fileID: 61700663}
   - {fileID: 543911919}
   - {fileID: 440786301}
+  m_hovered: 0
   m_action: 
 --- !u!1 &602777685
 GameObject:
@@ -21814,6 +21847,7 @@ MonoBehaviour:
   - {fileID: 948040915}
   - {fileID: 1695231968}
   - {fileID: 1819780554}
+  m_hovered: 0
   m_action: 
 --- !u!114 &602777688
 MonoBehaviour:
@@ -22408,8 +22442,8 @@ GameObject:
   - component: {fileID: 627979219}
   - component: {fileID: 627979218}
   m_Layer: 5
-  m_Name: Elements Button
-  m_TagString: Untagged
+  m_Name: 4
+  m_TagString: Action Button
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -22458,6 +22492,7 @@ MonoBehaviour:
   - {fileID: 589701525}
   - {fileID: 1383043440}
   - {fileID: 1112334744}
+  m_hovered: 0
   m_action: 
 --- !u!114 &627979219
 MonoBehaviour:
@@ -22774,6 +22809,7 @@ MonoBehaviour:
   - {fileID: 1598951305}
   - {fileID: 859361703}
   - {fileID: 703111339}
+  m_hovered: 0
   m_action: 
 --- !u!1 &631859823
 GameObject:
@@ -23672,6 +23708,7 @@ MonoBehaviour:
   - {fileID: 1768863276}
   - {fileID: 2112394750}
   - {fileID: 99258251}
+  m_hovered: 0
   m_action: 
 --- !u!114 &646787851
 MonoBehaviour:
@@ -24762,6 +24799,7 @@ MonoBehaviour:
   - {fileID: 469994575}
   - {fileID: 1000194066}
   - {fileID: 946024713}
+  m_hovered: 0
   m_action: 
 --- !u!114 &680638355
 MonoBehaviour:
@@ -25318,6 +25356,7 @@ MonoBehaviour:
   - {fileID: 217445909}
   - {fileID: 1309685242}
   - {fileID: 18511862}
+  m_hovered: 0
   m_action: 
 --- !u!114 &695572125
 MonoBehaviour:
@@ -25467,6 +25506,11 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 719920516}
     m_Modifications:
+    - target: {fileID: 114638944620014056, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_panels.Array.size
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 224271251351181244, guid: df1673fdf6742894b960ac5037278fcf,
         type: 2}
       propertyPath: m_LocalPosition.x
@@ -25667,6 +25711,100 @@ Prefab:
       propertyPath: m_main
       value: 
       objectReference: {fileID: 2086643348}
+    - target: {fileID: 114190005952473594, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_panels.Array.data[0]
+      value: 
+      objectReference: {fileID: 1619410403}
+    - target: {fileID: 114190005952473594, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_panels.Array.data[1]
+      value: 
+      objectReference: {fileID: 299833297}
+    - target: {fileID: 114638944620014056, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_panels.Array.data[0]
+      value: 
+      objectReference: {fileID: 2031092211}
+    - target: {fileID: 114638944620014056, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_panels.Array.data[1]
+      value: 
+      objectReference: {fileID: 1665461358}
+    - target: {fileID: 114638944620014056, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_panels.Array.data[2]
+      value: 
+      objectReference: {fileID: 897121036}
+    - target: {fileID: 114638944620014056, guid: df1673fdf6742894b960ac5037278fcf,
+        type: 2}
+      propertyPath: m_panels.Array.data[3]
+      value: 
+      objectReference: {fileID: 960663858}
+    - target: {fileID: 1501638510608878, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1557184067931758, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1918284391078372, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1776467708472132, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1764212431174496, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1277547857161942, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1995069554729030, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1669575241391532, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1514166853888000, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1493917035314996, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1461024415275420, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1716090437169828, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1772089798515382, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1409783034234538, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1559248645231428, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1409417421933664, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
+      propertyPath: m_TagString
+      value: Action Button
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: df1673fdf6742894b960ac5037278fcf, type: 2}
   m_IsPrefabParent: 0
@@ -26448,8 +26586,8 @@ GameObject:
   - component: {fileID: 715757343}
   - component: {fileID: 715757342}
   m_Layer: 5
-  m_Name: Elements Button
-  m_TagString: Untagged
+  m_Name: 0
+  m_TagString: Action Button
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -26498,6 +26636,7 @@ MonoBehaviour:
   - {fileID: 1857113488}
   - {fileID: 215697079}
   - {fileID: 1027176450}
+  m_hovered: 0
   m_action: 
 --- !u!114 &715757343
 MonoBehaviour:
@@ -26876,6 +27015,7 @@ MonoBehaviour:
   - {fileID: 1419809586}
   - {fileID: 1771882647}
   - {fileID: 322019283}
+  m_hovered: 0
   m_action: 
 --- !u!114 &721344064
 MonoBehaviour:
@@ -27415,6 +27555,7 @@ MonoBehaviour:
   - {fileID: 192306782}
   - {fileID: 511382746}
   - {fileID: 1562205873}
+  m_hovered: 0
   m_action: 
 --- !u!1 &728436702
 GameObject:
@@ -29115,6 +29256,7 @@ MonoBehaviour:
   - {fileID: 1833904035}
   - {fileID: 1498312330}
   - {fileID: 49429196}
+  m_hovered: 0
   m_action: 
 --- !u!114 &786391557
 MonoBehaviour:
@@ -29313,6 +29455,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  m_hovered: 0
   m_action: 
 --- !u!114 &787713649
 MonoBehaviour:
@@ -29723,6 +29866,7 @@ MonoBehaviour:
   - {fileID: 1039958996}
   - {fileID: 943261276}
   - {fileID: 1481413641}
+  m_hovered: 0
   m_action: 
 --- !u!114 &800185500
 MonoBehaviour:
@@ -31733,6 +31877,7 @@ MonoBehaviour:
   - {fileID: 1025232451}
   - {fileID: 1123083354}
   - {fileID: 1550406565}
+  m_hovered: 0
   m_action: 
 --- !u!114 &871134441
 MonoBehaviour:
@@ -32229,6 +32374,7 @@ MonoBehaviour:
   - {fileID: 2140984277}
   - {fileID: 816184511}
   - {fileID: 1622521728}
+  m_hovered: 0
   m_action: 
 --- !u!114 &881810415
 MonoBehaviour:
@@ -32709,6 +32855,7 @@ MonoBehaviour:
   - {fileID: 1321775928}
   - {fileID: 160510274}
   - {fileID: 1095213771}
+  m_hovered: 0
   m_action: 
 --- !u!114 &892330628
 MonoBehaviour:
@@ -33136,6 +33283,33 @@ CanvasRenderer:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 896356476}
+--- !u!1 &897121032 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1160219425358642, guid: df1673fdf6742894b960ac5037278fcf,
+    type: 2}
+  m_PrefabInternal: {fileID: 699113018}
+--- !u!114 &897121036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 897121032}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38c19b1279105cc419a0a7fbe5a5113f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_inView: 0
+  m_direction: 4
+  m_slideSpeed: 0
+  m_boundryDis: 0
+  m_cScript: {fileID: 0}
+  m_main: {fileID: 0}
+  m_buttons: []
+  m_panels: []
+  m_text: []
+  m_images: []
+  m_audio: {fileID: 0}
 --- !u!1 &898344691
 GameObject:
   m_ObjectHideFlags: 0
@@ -34083,6 +34257,7 @@ MonoBehaviour:
   - {fileID: 42924380}
   - {fileID: 958828703}
   - {fileID: 1213167352}
+  m_hovered: 0
   m_action: 
 --- !u!114 &922910516
 MonoBehaviour:
@@ -34938,6 +35113,7 @@ MonoBehaviour:
   - {fileID: 1646347973}
   - {fileID: 1575591517}
   - {fileID: 1178676711}
+  m_hovered: 0
   m_action: 
 --- !u!114 &946969787
 MonoBehaviour:
@@ -35417,10 +35593,37 @@ MonoBehaviour:
   m_main: {fileID: 0}
   m_buttons: []
   m_panels:
-  - {fileID: 427052764}
-  - {fileID: 1094320323}
-  - {fileID: 1245512104}
-  - {fileID: 1431309383}
+  - {fileID: 427052768}
+  - {fileID: 1094320327}
+  - {fileID: 1245512108}
+  - {fileID: 1431309387}
+  m_text: []
+  m_images: []
+  m_audio: {fileID: 0}
+--- !u!1 &960663854 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1140962945202372, guid: df1673fdf6742894b960ac5037278fcf,
+    type: 2}
+  m_PrefabInternal: {fileID: 699113018}
+--- !u!114 &960663858
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 960663854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38c19b1279105cc419a0a7fbe5a5113f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_inView: 0
+  m_direction: 4
+  m_slideSpeed: 0
+  m_boundryDis: 0
+  m_cScript: {fileID: 0}
+  m_main: {fileID: 0}
+  m_buttons: []
+  m_panels: []
   m_text: []
   m_images: []
   m_audio: {fileID: 0}
@@ -35747,6 +35950,7 @@ MonoBehaviour:
   - {fileID: 541826117}
   - {fileID: 1975377600}
   - {fileID: 446599344}
+  m_hovered: 0
   m_action: 
 --- !u!1 &963292742
 GameObject:
@@ -36041,6 +36245,7 @@ MonoBehaviour:
   - {fileID: 199714489}
   - {fileID: 1765824915}
   - {fileID: 828646528}
+  m_hovered: 0
   m_action: 
 --- !u!114 &964355509
 MonoBehaviour:
@@ -36471,6 +36676,7 @@ MonoBehaviour:
   - {fileID: 1108391531}
   - {fileID: 1244230821}
   - {fileID: 1879582002}
+  m_hovered: 0
   m_action: 
 --- !u!114 &976582747
 MonoBehaviour:
@@ -38648,6 +38854,7 @@ MonoBehaviour:
   - {fileID: 1985718080}
   - {fileID: 726163211}
   - {fileID: 1894837894}
+  m_hovered: 0
   m_action: 
 --- !u!1 &1032490977
 GameObject:
@@ -39408,7 +39615,7 @@ MonoBehaviour:
   - {fileID: 80535382}
   - {fileID: 560522019}
   m_panels:
-  - {fileID: 147751006}
+  - {fileID: 0}
   m_text: []
   m_images: []
   m_audio: {fileID: 0}
@@ -39662,6 +39869,7 @@ MonoBehaviour:
   - {fileID: 1766860807}
   - {fileID: 2073098551}
   - {fileID: 1738657926}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1060592336
 MonoBehaviour:
@@ -40193,6 +40401,7 @@ MonoBehaviour:
   - {fileID: 1384089709}
   - {fileID: 1109649676}
   - {fileID: 1247323998}
+  m_hovered: 0
   m_action: 
 --- !u!1 &1081584398
 GameObject:
@@ -40439,8 +40648,8 @@ GameObject:
   - component: {fileID: 1089901511}
   - component: {fileID: 1089901510}
   m_Layer: 5
-  m_Name: Elements Button (1)
-  m_TagString: Untagged
+  m_Name: 5
+  m_TagString: Action Button
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -40489,6 +40698,7 @@ MonoBehaviour:
   - {fileID: 145409388}
   - {fileID: 278756021}
   - {fileID: 293220166}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1089901511
 MonoBehaviour:
@@ -41927,6 +42137,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1125273236
 MonoBehaviour:
@@ -42207,6 +42418,7 @@ MonoBehaviour:
   - {fileID: 738720729}
   - {fileID: 1474037553}
   - {fileID: 782592017}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1125369069
 MonoBehaviour:
@@ -42884,6 +43096,7 @@ MonoBehaviour:
   - {fileID: 1320433776}
   - {fileID: 1314625758}
   - {fileID: 1348495419}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1137135575
 MonoBehaviour:
@@ -44775,6 +44988,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1200938095
 MonoBehaviour:
@@ -45070,6 +45284,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1212648239
 MonoBehaviour:
@@ -45599,7 +45814,7 @@ MonoBehaviour:
   m_main: {fileID: 2098346378}
   m_buttons: []
   m_panels:
-  - {fileID: 1789116521}
+  - {fileID: 1789116522}
   m_text: []
   m_images: []
   m_audio: {fileID: 0}
@@ -46826,6 +47041,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1283840992
 MonoBehaviour:
@@ -47915,6 +48131,7 @@ MonoBehaviour:
   - {fileID: 1979189298}
   - {fileID: 1833985939}
   - {fileID: 1133989952}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1312439746
 MonoBehaviour:
@@ -50505,6 +50722,7 @@ MonoBehaviour:
   - {fileID: 714945641}
   - {fileID: 172768959}
   - {fileID: 642353421}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1379447992
 MonoBehaviour:
@@ -51355,6 +51573,7 @@ MonoBehaviour:
   - {fileID: 644230454}
   - {fileID: 896356476}
   - {fileID: 703840812}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1397566013
 MonoBehaviour:
@@ -52354,6 +52573,7 @@ MonoBehaviour:
   - {fileID: 1823311861}
   - {fileID: 766592191}
   - {fileID: 198366222}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1420727546
 MonoBehaviour:
@@ -52867,6 +53087,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1433041893
 MonoBehaviour:
@@ -53243,8 +53464,8 @@ GameObject:
   - component: {fileID: 1441293868}
   - component: {fileID: 1441293867}
   m_Layer: 5
-  m_Name: Elements Button (3)
-  m_TagString: Untagged
+  m_Name: 7
+  m_TagString: Action Button
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -53293,6 +53514,7 @@ MonoBehaviour:
   - {fileID: 120681713}
   - {fileID: 1173077289}
   - {fileID: 609612824}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1441293868
 MonoBehaviour:
@@ -53666,8 +53888,8 @@ GameObject:
   - component: {fileID: 1454948774}
   - component: {fileID: 1454948773}
   m_Layer: 5
-  m_Name: Elements Button (3)
-  m_TagString: Untagged
+  m_Name: 3
+  m_TagString: Action Button
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -53716,6 +53938,7 @@ MonoBehaviour:
   - {fileID: 297218808}
   - {fileID: 2091450514}
   - {fileID: 1857790834}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1454948774
 MonoBehaviour:
@@ -54105,6 +54328,7 @@ MonoBehaviour:
   - {fileID: 2087040901}
   - {fileID: 1100521802}
   - {fileID: 1042670828}
+  m_hovered: 0
   m_action: 
 --- !u!1 &1474037553
 GameObject:
@@ -54809,6 +55033,7 @@ MonoBehaviour:
   - {fileID: 491065164}
   - {fileID: 789597069}
   - {fileID: 244684908}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1496846250
 MonoBehaviour:
@@ -55296,6 +55521,7 @@ MonoBehaviour:
   - {fileID: 999615279}
   - {fileID: 2095892587}
   - {fileID: 1022340778}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1514310910
 MonoBehaviour:
@@ -56228,6 +56454,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1538515178
 MonoBehaviour:
@@ -57241,6 +57468,7 @@ MonoBehaviour:
   - {fileID: 1377461985}
   - {fileID: 1700546720}
   - {fileID: 650606992}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1571921378
 MonoBehaviour:
@@ -58634,6 +58862,7 @@ MonoBehaviour:
   - {fileID: 494329073}
   - {fileID: 17677230}
   - {fileID: 521239041}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1615503739
 MonoBehaviour:
@@ -58983,6 +59212,7 @@ MonoBehaviour:
   - {fileID: 886382645}
   - {fileID: 1155407363}
   - {fileID: 1392727434}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1624420194
 MonoBehaviour:
@@ -60454,7 +60684,35 @@ MonoBehaviour:
   - {fileID: 572824542}
   - {fileID: 91521390}
   - {fileID: 1317375549}
+  m_hovered: 0
   m_action: 
+--- !u!1 &1665461354 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1275341930140072, guid: df1673fdf6742894b960ac5037278fcf,
+    type: 2}
+  m_PrefabInternal: {fileID: 699113018}
+--- !u!114 &1665461358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1665461354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38c19b1279105cc419a0a7fbe5a5113f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_inView: 0
+  m_direction: 4
+  m_slideSpeed: 0
+  m_boundryDis: 0
+  m_cScript: {fileID: 0}
+  m_main: {fileID: 0}
+  m_buttons: []
+  m_panels: []
+  m_text: []
+  m_images: []
+  m_audio: {fileID: 0}
 --- !u!1 &1667352705
 GameObject:
   m_ObjectHideFlags: 0
@@ -60470,8 +60728,8 @@ GameObject:
   - component: {fileID: 1667352708}
   - component: {fileID: 1667352707}
   m_Layer: 5
-  m_Name: Elements Button (2)
-  m_TagString: Untagged
+  m_Name: 6
+  m_TagString: Action Button
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -60520,6 +60778,7 @@ MonoBehaviour:
   - {fileID: 1465225611}
   - {fileID: 1046515059}
   - {fileID: 1937836211}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1667352708
 MonoBehaviour:
@@ -61127,6 +61386,7 @@ MonoBehaviour:
   - {fileID: 520854070}
   - {fileID: 1396485033}
   - {fileID: 387765017}
+  m_hovered: 0
   m_action: 
 --- !u!1 &1690529852
 GameObject:
@@ -61379,6 +61639,7 @@ MonoBehaviour:
   - {fileID: 2106154850}
   - {fileID: 565765619}
   - {fileID: 1808240829}
+  m_hovered: 0
   m_action: 
 --- !u!1 &1692190296
 GameObject:
@@ -62329,6 +62590,7 @@ MonoBehaviour:
   - {fileID: 1369221159}
   - {fileID: 1425561515}
   - {fileID: 2133138120}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1729607002
 MonoBehaviour:
@@ -63339,6 +63601,7 @@ MonoBehaviour:
   - {fileID: 1170054815}
   - {fileID: 2039608973}
   - {fileID: 700454961}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1761221669
 MonoBehaviour:
@@ -63861,6 +64124,7 @@ MonoBehaviour:
   - {fileID: 492374108}
   - {fileID: 954747985}
   - {fileID: 453948968}
+  m_hovered: 0
   m_action: 
 --- !u!1 &1771882647
 GameObject:
@@ -64187,6 +64451,7 @@ MonoBehaviour:
   - {fileID: 276351274}
   - {fileID: 170173860}
   - {fileID: 321509638}
+  m_hovered: 0
   m_action: 
 --- !u!1 &1776778916
 GameObject:
@@ -64478,11 +64743,12 @@ CanvasRenderer:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1788175507}
---- !u!1 &1789116521 stripped
-GameObject:
-  m_PrefabParentObject: {fileID: 1620529811145698, guid: df1673fdf6742894b960ac5037278fcf,
+--- !u!114 &1789116522 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114190005952473594, guid: df1673fdf6742894b960ac5037278fcf,
     type: 2}
   m_PrefabInternal: {fileID: 699113018}
+  m_Script: {fileID: 11500000, guid: 38c19b1279105cc419a0a7fbe5a5113f, type: 3}
 --- !u!1 &1797056233
 GameObject:
   m_ObjectHideFlags: 0
@@ -64625,6 +64891,7 @@ MonoBehaviour:
   - {fileID: 1944876052}
   - {fileID: 566234933}
   - {fileID: 1113259592}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1813339249
 MonoBehaviour:
@@ -64904,6 +65171,7 @@ MonoBehaviour:
   - {fileID: 673081295}
   - {fileID: 1749567451}
   - {fileID: 1168717251}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1815187723
 MonoBehaviour:
@@ -65683,6 +65951,7 @@ MonoBehaviour:
   - {fileID: 863837041}
   - {fileID: 1145259264}
   - {fileID: 230673345}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1834041315
 MonoBehaviour:
@@ -65885,6 +66154,7 @@ MonoBehaviour:
   - {fileID: 169722861}
   - {fileID: 1823518648}
   - {fileID: 780857527}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1836554017
 MonoBehaviour:
@@ -66842,6 +67112,7 @@ MonoBehaviour:
   - {fileID: 1018844793}
   - {fileID: 607725041}
   - {fileID: 338758893}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1862167747
 MonoBehaviour:
@@ -67592,6 +67863,7 @@ MonoBehaviour:
   - {fileID: 1407931537}
   - {fileID: 512975863}
   - {fileID: 1321933334}
+  m_hovered: 0
   m_action: 
 --- !u!1 &1875902404
 GameObject:
@@ -67752,8 +68024,8 @@ GameObject:
   - component: {fileID: 1878276083}
   - component: {fileID: 1878276082}
   m_Layer: 5
-  m_Name: Elements Button (1)
-  m_TagString: Untagged
+  m_Name: 1
+  m_TagString: Action Button
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -67802,6 +68074,7 @@ MonoBehaviour:
   - {fileID: 1200278463}
   - {fileID: 418691077}
   - {fileID: 304582073}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1878276083
 MonoBehaviour:
@@ -68225,6 +68498,7 @@ MonoBehaviour:
   - {fileID: 1484663129}
   - {fileID: 1640371944}
   - {fileID: 411991393}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1890767176
 MonoBehaviour:
@@ -69803,6 +70077,7 @@ MonoBehaviour:
   - {fileID: 1157977511}
   - {fileID: 1086070609}
   - {fileID: 1953114127}
+  m_hovered: 0
   m_action: 
 --- !u!1 &1933109898
 GameObject:
@@ -70283,6 +70558,7 @@ MonoBehaviour:
   - {fileID: 147249275}
   - {fileID: 46528546}
   - {fileID: 692358415}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1939093097
 MonoBehaviour:
@@ -70839,6 +71115,7 @@ MonoBehaviour:
   - {fileID: 1933109898}
   - {fileID: 747693433}
   - {fileID: 1990609949}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1950832735
 MonoBehaviour:
@@ -71312,6 +71589,7 @@ MonoBehaviour:
   - {fileID: 1378498682}
   - {fileID: 1575363417}
   - {fileID: 999854186}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1955910198
 MonoBehaviour:
@@ -71503,6 +71781,7 @@ MonoBehaviour:
   - {fileID: 1663910034}
   - {fileID: 1044668284}
   - {fileID: 822531732}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1957492181
 MonoBehaviour:
@@ -72657,8 +72936,8 @@ GameObject:
   - component: {fileID: 1980655611}
   - component: {fileID: 1980655610}
   m_Layer: 5
-  m_Name: Elements Button (2)
-  m_TagString: Untagged
+  m_Name: 2
+  m_TagString: Action Button
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -72707,6 +72986,7 @@ MonoBehaviour:
   - {fileID: 816056004}
   - {fileID: 988219947}
   - {fileID: 404618197}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1980655611
 MonoBehaviour:
@@ -72909,6 +73189,7 @@ MonoBehaviour:
   - {fileID: 1692190296}
   - {fileID: 287878967}
   - {fileID: 458407395}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1981299759
 MonoBehaviour:
@@ -73266,6 +73547,7 @@ MonoBehaviour:
   - {fileID: 1377296936}
   - {fileID: 80906623}
   - {fileID: 1438972010}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1989166949
 MonoBehaviour:
@@ -73781,6 +74063,7 @@ MonoBehaviour:
   - {fileID: 1858283240}
   - {fileID: 352029812}
   - {fileID: 1829067636}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1992228003
 MonoBehaviour:
@@ -74055,6 +74338,7 @@ MonoBehaviour:
   - {fileID: 105409681}
   - {fileID: 154707836}
   - {fileID: 934049813}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1993220223
 MonoBehaviour:
@@ -74319,6 +74603,7 @@ MonoBehaviour:
   - {fileID: 1133279659}
   - {fileID: 590471919}
   - {fileID: 172202651}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1994850493
 MonoBehaviour:
@@ -74671,6 +74956,7 @@ MonoBehaviour:
   - {fileID: 482861408}
   - {fileID: 683077148}
   - {fileID: 550901770}
+  m_hovered: 0
   m_action: 
 --- !u!114 &1997213654
 MonoBehaviour:
@@ -75006,6 +75292,7 @@ MonoBehaviour:
   - {fileID: 1296370237}
   - {fileID: 1769069437}
   - {fileID: 1066586225}
+  m_hovered: 0
   m_action: 
 --- !u!114 &2018842617
 MonoBehaviour:
@@ -75194,6 +75481,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  m_hovered: 0
   m_action: 
 --- !u!114 &2023897523
 MonoBehaviour:
@@ -75403,6 +75691,33 @@ CanvasRenderer:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 2028247412}
+--- !u!1 &2031092207 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1905515002440554, guid: df1673fdf6742894b960ac5037278fcf,
+    type: 2}
+  m_PrefabInternal: {fileID: 699113018}
+--- !u!114 &2031092211
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2031092207}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38c19b1279105cc419a0a7fbe5a5113f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_inView: 0
+  m_direction: 4
+  m_slideSpeed: 0
+  m_boundryDis: 0
+  m_cScript: {fileID: 0}
+  m_main: {fileID: 0}
+  m_buttons: []
+  m_panels: []
+  m_text: []
+  m_images: []
+  m_audio: {fileID: 0}
 --- !u!1 &2031104031
 GameObject:
   m_ObjectHideFlags: 0
@@ -76450,6 +76765,7 @@ MonoBehaviour:
   - {fileID: 1731451832}
   - {fileID: 1406283738}
   - {fileID: 815461352}
+  m_hovered: 0
   m_action: 
 --- !u!114 &2072308305
 MonoBehaviour:
@@ -76798,6 +77114,7 @@ MonoBehaviour:
   - {fileID: 391814611}
   - {fileID: 1410548814}
   - {fileID: 1587630219}
+  m_hovered: 0
   m_action: 
 --- !u!114 &2075277535
 MonoBehaviour:
@@ -78558,6 +78875,7 @@ MonoBehaviour:
   - {fileID: 664148834}
   - {fileID: 98538476}
   - {fileID: 1962983811}
+  m_hovered: 0
   m_action: 
 --- !u!114 &2129450502
 MonoBehaviour:

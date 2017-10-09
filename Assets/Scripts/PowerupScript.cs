@@ -47,9 +47,14 @@ public class PowerupScript : ObjectScript {
             m_upward = !m_upward;
     }
 
+    private void OnMouseDown()
+    {
+        m_boardScript.m_highlightedTile.OnMouseDown();
+    }
+
     public void CreateRandom()
     {
-        typ type = (typ)Random.Range(0, 3);
+        typ type = (typ)Random.Range(0, 4);
         MeshRenderer mRend = GetComponentInChildren<MeshRenderer>();
 
         if (type == typ.ENERGY)
@@ -89,14 +94,14 @@ public class PowerupScript : ObjectScript {
             else if (energy == 4)
             {
                 m_name = powerups.ALL_ENG;
-                m_color = Color.white;
-                mRend.material.color = Color.white;
+                m_color = Color.magenta;
+                mRend.material.color = Color.magenta;
                 m_effect = "Gain 1 Energy of each color.";
             }
         }
         else if (type == typ.STAT)
         {
-            int stat = Random.Range(0, 5);
+            int stat = Random.Range(0, 4);
             m_color = StatusScript.c_buffColor;
 
             if (stat == 0)
@@ -171,12 +176,12 @@ public class PowerupScript : ObjectScript {
                 mRend.material = Resources.Load<Material>("Symbols/Materials/Speed Symbol");
                 m_effect = "Receive -3 Speed.";
             }
-            else if (neg == 4)
+            else if (neg == 2)
             {
                 m_name = powerups.WEAK;
-                m_sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
-                mRend.material = Resources.Load<Material>("Symbols/Materials/Damage Symbol");
-                m_effect = "Receive -1 Damage for the fight.";
+                m_sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
+                mRend.material = Resources.Load<Material>("Symbols/Materials/Defense Symbol");
+                m_effect = "Receive -1 Defense for the fight.";
             }
 
             mRend.material.color = StatusScript.c_debuffColor;

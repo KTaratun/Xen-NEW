@@ -151,6 +151,9 @@ public class CharacterScript : ObjectScript {
 
                 m_tile.m_holding = gameObject;
 
+                if (m_tile.m_traversed)
+                    m_tile.m_traversed = false;
+
                 if (m_isAI && m_currAction.Length > 0)
                 {
                     if (TileScript.CaclulateDistance(m_tile.GetComponent<TileScript>(), m_targets[0].GetComponent<CharacterScript>().m_tile.GetComponent<TileScript>()) > 1)
@@ -159,8 +162,6 @@ public class CharacterScript : ObjectScript {
                         m_anim.Play("Melee", -1, 0);
 
                     Action();
-                    PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
-                    PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
                 }
             }
         }
@@ -251,8 +252,7 @@ public class CharacterScript : ObjectScript {
 
     private void OnMouseDown()
     {
-        TileScript tileScript = m_tile.GetComponent<TileScript>();
-        tileScript.OnMouseDown();
+        m_tile.OnMouseDown();
     }
 
     public void MovementSelection(int _forceMove)
@@ -272,13 +272,19 @@ public class CharacterScript : ObjectScript {
         //mainPanScript.m_inView = false;
     }
 
-    public void Movement(TileScript selectedScript, TileScript newScript, bool _isForced)
+    public void Movement(TileScript newScript, bool _isForced)
     {
-        if (selectedScript == newScript)
+        if (m_tile == newScript)
             return;
 
-        selectedScript.m_holding = null;
-        m_boardScript.m_selected = null;
+        if (newScript == null)
+            return;
+
+        m_tile.m_holding = null;
+        if (!_isForced)
+            m_boardScript.m_selected = null;
+
+        m_tile.ClearRadius();
         m_tile = newScript;
         m_boardScript.m_camIsFrozen = true;
         m_anim.Play("Running Melee", -1, 0);
@@ -297,8 +303,6 @@ public class CharacterScript : ObjectScript {
         PanelScript.CloseHistory();
         transform.LookAt(m_tile.transform);
         m_boardScript.m_isForcedMove = null;
-
-        selectedScript.ClearRadius();
     }
 
     public void ActionTargeting()
@@ -333,7 +337,7 @@ public class CharacterScript : ObjectScript {
         int finalRNG = int.Parse(actRng);
         finalRNG += m_tempStats[(int)sts.RNG];
         
-        if (actName == "Snipe ATK" || actName == "Redirect ATK")
+        if (actName == "Snipe ATK" || actName == "Redirect ATK" || actName == "Pull ATK" || actName == "Lunge ATK")
             finalRNG += m_tempStats[(int)sts.TEC];
 
         //if (finalRNG > 1 && finalRNG + m_tempStats[(int)sts.RNG] > 1)
@@ -451,7 +455,8 @@ public class CharacterScript : ObjectScript {
         bool soloBuff = false;
         if (actName == "Fortifying ATK")// || actName == "Cleansing ATK")
             teamBuff = true;
-        else if (actName == "Winding ATK" || actName == "Devastating ATK" || actName == "Targeting ATK" || actName == "Healing ATK")
+        else if (actName == "Winding ATK" || actName == "Devastating ATK" || actName == "Targeting ATK" 
+            || actName == "Healing ATK" || actName == "Accelerating ATK")
             soloBuff = true;
 
         for (int i = 0; i < m_targets.Count; i++)
@@ -466,10 +471,13 @@ public class CharacterScript : ObjectScript {
             if (!teamBuff || teamBuff && targetScript.m_player != m_player)
             {
                 // DAMAGE MODS
-                if (actName == "Bypass ATK" && !m_effects[(int)StatusScript.effects.HINDER])
+                if (actName == "Bypass ATK" && !m_effects[(int)StatusScript.effects.HINDER] || actName == "Forceful ATK" && !m_effects[(int)StatusScript.effects.HINDER])
                 {
                     int def = targetScript.m_tempStats[(int)sts.DEF];
-                    def -= 2 + m_tempStats[(int)sts.TEC];
+                    if (actName == "Bypass ATK")
+                        def -= 2 + m_tempStats[(int)sts.TEC];
+                    else if (actName == "Forceful ATK")
+                        def -= 1 + m_tempStats[(int)sts.TEC];
                     if (def < 0)
                         def = 0;
                     finalDMG = (int.Parse(actDmg) + m_tempStats[(int)sts.DMG] - def).ToString();
@@ -477,7 +485,7 @@ public class CharacterScript : ObjectScript {
                 else if (int.Parse(actDmg) + m_tempStats[(int)sts.DMG] - targetScript.m_tempStats[(int)sts.DEF] >= 0)
                     finalDMG = (int.Parse(actDmg) + m_tempStats[(int)sts.DMG] - targetScript.m_tempStats[(int)sts.DEF]).ToString();
 
-                if (actName == "Burst ATK" || actName == "Forceful ATK" || actName == "Power ATK" || actName == "Devastating ATK")
+                if (actName == "Burst ATK" || actName == "Power ATK" || actName == "Devastating ATK")
                     finalDMG = (int.Parse(finalDMG) + m_tempStats[(int)sts.TEC]).ToString();
 
                 targetScript.ReceiveDamage(finalDMG, Color.white);
@@ -599,6 +607,7 @@ public class CharacterScript : ObjectScript {
         switch (_name)
         {
             // Simple status abilities
+            case "Accelerating ATK":
             case "Arm ATK":
             case "Bleed ATK":
             case "Blinding ATK":
@@ -617,7 +626,6 @@ public class CharacterScript : ObjectScript {
             case "Prepare":
             //case "Protect":
             case "Reflect":
-            case "Revving ATK":
             case "Scarring ATK":
             case "Smoke ATK":
             case "Spot":
@@ -653,8 +661,16 @@ public class CharacterScript : ObjectScript {
             case "Healing ATK":
                 if (m_tempStats[(int)sts.TEC] > 0)
                 {
-                    targetScript.m_player.RemoveRandomEnergy(m_tempStats[(int)sts.TEC]);
-                    targetScript.HealHealth(2 + m_tempStats[(int)sts.TEC]);
+                    if (targetScript.m_player.TotalEnergy() >= m_tempStats[(int)sts.TEC])
+                    {
+                        targetScript.HealHealth(2 + m_tempStats[(int)sts.TEC]);
+                        targetScript.m_player.RemoveRandomEnergy(m_tempStats[(int)sts.TEC]);
+                    }
+                    else
+                    {
+                        targetScript.HealHealth(2 + m_tempStats[targetScript.m_player.TotalEnergy()]);
+                        targetScript.m_player.RemoveRandomEnergy(targetScript.m_player.TotalEnergy());
+                    }
                 }
                 else
                     targetScript.HealHealth(2);
@@ -662,15 +678,23 @@ public class CharacterScript : ObjectScript {
             case "Heal":
                 if (m_tempStats[(int)sts.TEC] > 0)
                 {
-                    targetScript.m_player.RemoveRandomEnergy(m_tempStats[(int)sts.TEC]);
-                    targetScript.HealHealth(3 + m_tempStats[(int)sts.TEC]);
+                    if (targetScript.m_player.TotalEnergy() >= m_tempStats[(int)sts.TEC])
+                    {
+                        targetScript.HealHealth(3 + m_tempStats[(int)sts.TEC]);
+                        targetScript.m_player.RemoveRandomEnergy(m_tempStats[(int)sts.TEC]);
+                    }
+                    else
+                    {
+                        targetScript.HealHealth(3 + m_tempStats[targetScript.m_player.TotalEnergy()]);
+                        targetScript.m_player.RemoveRandomEnergy(targetScript.m_player.TotalEnergy());
+                    }
                 }
                 else
                     targetScript.HealHealth(3);
                 break;
             // Unique abilities
             case "Blast ATK":
-                Knockback(targetScript, m_boardScript.m_selected.GetComponent<TileScript>(), 2 + m_tempStats[(int)sts.TEC]);
+                Knockback(targetScript, m_boardScript.m_selected, 2 + m_tempStats[(int)sts.TEC]);
                 break;
             case "Break ATK":
                 targetScript.m_stats[(int)sts.DMG]++;
@@ -705,10 +729,10 @@ public class CharacterScript : ObjectScript {
                     targetScript.m_tempStats[(int)sts.SPD] += 2 + m_tempStats[(int)sts.TEC];
                 break;
             case "Lunge ATK":
-                PullTowards(this, targetScript.m_tile.GetComponent<TileScript>(), 100);
+                PullTowards(this, targetScript.m_tile, 100);
                 break;
             case "Magnet ATK":
-                PullTowards(targetScript, m_boardScript.m_selected.GetComponent<TileScript>(), 100);
+                PullTowards(targetScript, m_boardScript.m_selected, 100);
                 break;
             case "Pull ATK":
                 PullTowards(targetScript, tileScript, 100);
@@ -743,44 +767,29 @@ public class CharacterScript : ObjectScript {
     private void PullTowards(CharacterScript _targetScript, TileScript _towards, int _maxDis)
     {
         TileScript targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
-        TileScript nei;
+        TileScript nei = null;
 
         while (_maxDis > 0)
         {
-            if (targetTileScript.m_x < _towards.m_x && targetTileScript.m_neighbors[(int)TileScript.nbors.right] && 
-                !targetTileScript.m_neighbors[(int)TileScript.nbors.right].GetComponent<TileScript>().m_holding)
-            {
+            if (targetTileScript.m_x < _towards.m_x && targetTileScript.m_neighbors[(int)TileScript.nbors.right])
                 nei = targetTileScript.m_neighbors[(int)TileScript.nbors.right].GetComponent<TileScript>();
-                _targetScript.Movement(targetTileScript, nei, true);
-                targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
-                _maxDis--;
-                continue;
-            }
-            else if (targetTileScript.m_x > _towards.m_x && targetTileScript.m_neighbors[(int)TileScript.nbors.left] &&
-                !targetTileScript.m_neighbors[(int)TileScript.nbors.left].GetComponent<TileScript>().m_holding)
-            {
+            else if (targetTileScript.m_x > _towards.m_x && targetTileScript.m_neighbors[(int)TileScript.nbors.left])
                 nei = targetTileScript.m_neighbors[(int)TileScript.nbors.left].GetComponent<TileScript>();
-                _targetScript.Movement(targetTileScript, nei, true);
-                targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
-                _maxDis--;
-                continue;
-            }
-            else if (targetTileScript.m_z < _towards.m_z && targetTileScript.m_neighbors[(int)TileScript.nbors.top] &&
-                !targetTileScript.m_neighbors[(int)TileScript.nbors.top].GetComponent<TileScript>().m_holding)
-            {
+            else if (targetTileScript.m_z < _towards.m_z && targetTileScript.m_neighbors[(int)TileScript.nbors.top])
                 nei = targetTileScript.m_neighbors[(int)TileScript.nbors.top].GetComponent<TileScript>();
-                _targetScript.Movement(targetTileScript, nei, true);
-                targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
-                _maxDis--;
-                continue;
-            }
-            else if (targetTileScript.m_z > _towards.m_z && targetTileScript.m_neighbors[(int)TileScript.nbors.bottom] &&
-                !targetTileScript.m_neighbors[(int)TileScript.nbors.bottom].GetComponent<TileScript>().m_holding)
-            {
+            else if (targetTileScript.m_z > _towards.m_z && targetTileScript.m_neighbors[(int)TileScript.nbors.bottom])
                 nei = targetTileScript.m_neighbors[(int)TileScript.nbors.bottom].GetComponent<TileScript>();
-                _targetScript.Movement(targetTileScript, nei, true);
-                targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
+            else
+                nei = null;
+
+            if (nei && !nei.m_holding && !nei.m_traversed || nei && nei.m_holding && nei.m_holding.tag == "PowerUp" && !nei.m_traversed)
+            {
+                _targetScript.Movement(nei, true);
+                targetTileScript = nei;
                 _maxDis--;
+                if (targetTileScript == _towards)
+                    _towards.m_traversed = true;
+
                 continue;
             }
             break;
@@ -795,51 +804,23 @@ public class CharacterScript : ObjectScript {
         while (_force > 0)
         {
             if (targetTileScript.m_x < _away.m_x && targetTileScript.m_neighbors[(int)TileScript.nbors.left])
-            {
                 nei = targetTileScript.m_neighbors[(int)TileScript.nbors.left].GetComponent<TileScript>();
-                if (!nei.m_holding)
-                {
-                    _targetScript.Movement(targetTileScript, nei, true);
-                    targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
-                    _force--;
-                    continue;
-                }
-            }
             else if (targetTileScript.m_x > _away.m_x && targetTileScript.m_neighbors[(int)TileScript.nbors.right])
-            {
                 nei = targetTileScript.m_neighbors[(int)TileScript.nbors.right].GetComponent<TileScript>();
-                if (!nei.m_holding)
-                {
-                    _targetScript.Movement(targetTileScript, nei, true);
-                    targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
-                    _force--;
-                    continue;
-                }
-            }
             else if (targetTileScript.m_z < _away.m_z && targetTileScript.m_neighbors[(int)TileScript.nbors.bottom])
-            {
                 nei = targetTileScript.m_neighbors[(int)TileScript.nbors.bottom].GetComponent<TileScript>();
-                if (!nei.m_holding)
-                {
-                    _targetScript.Movement(targetTileScript, nei, true);
-                    targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
-                    _force--;
-                    continue;
-                }
-            }
             else if (targetTileScript.m_z > _away.m_z && targetTileScript.m_neighbors[(int)TileScript.nbors.top])
-            {
                 nei = targetTileScript.m_neighbors[(int)TileScript.nbors.top].GetComponent<TileScript>();
-                if (!nei.m_holding)
-                {
-                    _targetScript.Movement(targetTileScript, nei, true);
-                    targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
-                    _force--;
-                    continue;
-                }
-            }
             else
-                nei = null;           
+                nei = null;
+
+            if (nei && !nei.m_holding || nei && nei.m_holding && nei.m_holding.tag == "PowerUp")
+            {
+                _targetScript.Movement(nei, true);
+                targetTileScript = nei;
+                _force--;
+                continue;
+            }
 
             int extraDMG = Mathf.CeilToInt(_force / 2.0f);
             _targetScript.ReceiveDamage(((extraDMG).ToString()), Color.white);
@@ -849,6 +830,7 @@ public class CharacterScript : ObjectScript {
                 CharacterScript neiCharScript = nei.m_holding.GetComponent<CharacterScript>();
                 neiCharScript.ReceiveDamage(extraDMG.ToString(), Color.white);
             }
+
             break;
         }
     }

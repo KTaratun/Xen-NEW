@@ -38,7 +38,7 @@ public class TeamMenuScript : MonoBehaviour {
     {
         for (int i = 0; i < 4; i++)
         {
-            PanelScript panScript = PanelScript.GetPanel("CharacterSlots").m_panels[i].GetComponent<PanelScript>();
+            PanelScript panScript = PanelScript.GetPanel("CharacterSlots").m_panels[i];
             Button[] team = panScript.m_buttons;
             for (int j = 0; j < 6; j++)
             {
@@ -79,8 +79,6 @@ public class TeamMenuScript : MonoBehaviour {
 
     public void NewCharacter()
     {
-        if (!PanelScript.GetPanel("Character Panel").m_inView)
-            return;
     }
 
     public void RandomCharacter()
@@ -171,72 +169,6 @@ public class TeamMenuScript : MonoBehaviour {
 
         return name;
     }
-
-    // REFACTOR: Move to populate panel
-    //public void PopulateCharacterViewer()
-    //{
-    //    // If another panel is open, don't open character viewer for already loaded character
-    //    Button currB = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
-    //    int res = 0;
-    //
-    //    m_panels[(int)menuPans.PRESELECT_PANEL].m_inView = false;
-    //
-    //    if (CheckIfPanelOpen())
-    //        return;
-    //
-    //    PanelScript charViewScript = m_panels[(int)menuPans.CHAR_VIEW];
-    //    charViewScript.m_inView = true;
-    //
-    //    Button[] buttons = charViewScript.m_buttons;
-    //
-    //    PanelScript actionScript = charViewScript.m_panels[0].GetComponent<PanelScript>();
-    //    PanelScript statPan = charViewScript.m_panels[1].GetComponent<PanelScript>();
-    //
-    //    CharacterScript currCharScript = m_currCharacter.GetComponent<CharacterScript>();
-    //    currCharScript.InitializeStats();
-    //    actionScript.m_cScript = currCharScript;
-    //
-    //    res = 0;
-    //    if (int.TryParse(currB.name, out res)) // If last pressed button is an int, it's a preset character panel button. Character slot buttons names are in the x,x format
-    //    {
-    //        DatabaseScript dbScript = gameObject.GetComponent<DatabaseScript>();
-    //
-    //        string[] presetDataSeparated = dbScript.m_presets[int.Parse(currB.name)].Split('|');
-    //        string[] presetName = presetDataSeparated[(int)DatabaseScript.presets.NAME].Split(':');
-    //        string[] presetColor = presetDataSeparated[(int)DatabaseScript.presets.COLORS].Split(':');
-    //
-    //        FillOutCharacterData(presetName[1], presetColor[1], dbScript.GetActions(dbScript.m_presets[int.Parse(currB.name)]), 0);
-    //        charViewScript.m_cScript = currCharScript;
-    //        charViewScript.PopulatePanel();
-    //
-    //        // Determine if select or remove will be visible
-    //        for (int i = 0; i < buttons.Length; i++)
-    //        {
-    //            if (buttons[i].name == "Select Button" && buttons[i].gameObject.transform.position.x > 1000)
-    //                buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(buttons[i].gameObject.transform.position.x - 1000, buttons[i].gameObject.transform.position.y, buttons[i].gameObject.transform.position.z), buttons[i].gameObject.transform.rotation);
-    //            if (buttons[i].name == "Remove Button" && buttons[i].gameObject.transform.position.x < 1000)
-    //                buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(buttons[i].gameObject.transform.position.x + 1000, buttons[i].gameObject.transform.position.y, buttons[i].gameObject.transform.position.z), buttons[i].gameObject.transform.rotation);
-    //        }
-    //    }
-    //    else
-    //    {
-    //        m_currButton = currB;
-    //
-    //        currCharScript = PlayerPrefScript.LoadChar(currB.name, currCharScript);
-    //
-    //        charViewScript.m_cScript = currCharScript;
-    //        charViewScript.PopulatePanel();
-    //
-    //        // Determine if select or remove will be visible
-    //        for (int i = 0; i < buttons.Length; i++)
-    //        {
-    //            if (buttons[i].name == "Select Button" && buttons[i].gameObject.transform.position.x < 1000)
-    //                buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(buttons[i].gameObject.transform.position.x + 1000, buttons[i].gameObject.transform.position.y, buttons[i].gameObject.transform.position.z), buttons[i].gameObject.transform.rotation);
-    //            if (buttons[i].name == "Remove Button" && buttons[i].gameObject.transform.position.x > 1000)
-    //                buttons[i].gameObject.transform.SetPositionAndRotation(new Vector3(buttons[i].gameObject.transform.position.x - 1000, buttons[i].gameObject.transform.position.y, buttons[i].gameObject.transform.position.z), buttons[i].gameObject.transform.rotation);
-    //        }
-    //    }
-    //}
 
     public void FillOutCharacterData(string _name, string _color, string[] _actions, string _stats, int _exp, int _level, int _gender)
     {
@@ -426,7 +358,7 @@ public class TeamMenuScript : MonoBehaviour {
 
             // If one of the other new buttons already has this action, skip it
             for (int i = 0; i < _buttons.Length; i++)
-                if (newAct == _buttons[i].name)
+                if (newAct == _buttons[i].GetComponent<ButtonScript>().m_action)
                     actOK = false;
 
             // If the character already has this action, skip it
@@ -481,6 +413,7 @@ public class TeamMenuScript : MonoBehaviour {
     {
         PanelScript actPanScript = PanelScript.GetPanel("CharacterViewer Panel").m_panels[0].GetComponent<PanelScript>();
         Button newAct = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+        string action = newAct.GetComponent<ButtonScript>().m_action;
 
         if (m_saveButton)
             m_saveButton.image.color = Color.white;
@@ -490,13 +423,13 @@ public class TeamMenuScript : MonoBehaviour {
         for (int i = 0; i < actPanScript.m_panels.Length; i++)
         {
             Button[] buttons = actPanScript.m_panels[i].GetComponentsInChildren<Button>();
-            if (PlayerScript.CheckIfGains(DatabaseScript.GetActionData(newAct.name, DatabaseScript.actions.ENERGY)) && i == 0 ||
-                !PlayerScript.CheckIfGains(DatabaseScript.GetActionData(newAct.name, DatabaseScript.actions.ENERGY)) &&
-                DatabaseScript.GetActionData(newAct.name, DatabaseScript.actions.ENERGY).Length == 1 && i == 1 ||
-                !PlayerScript.CheckIfGains(DatabaseScript.GetActionData(newAct.name, DatabaseScript.actions.ENERGY)) &&
-                DatabaseScript.GetActionData(newAct.name, DatabaseScript.actions.ENERGY).Length == 2 && i == 2 ||
-                !PlayerScript.CheckIfGains(DatabaseScript.GetActionData(newAct.name, DatabaseScript.actions.ENERGY)) &&
-                DatabaseScript.GetActionData(newAct.name, DatabaseScript.actions.ENERGY).Length == 3 && i == 3)
+            if (PlayerScript.CheckIfGains(DatabaseScript.GetActionData(action, DatabaseScript.actions.ENERGY)) && i == 0 ||
+                !PlayerScript.CheckIfGains(DatabaseScript.GetActionData(action, DatabaseScript.actions.ENERGY)) &&
+                DatabaseScript.GetActionData(action, DatabaseScript.actions.ENERGY).Length == 1 && i == 1 ||
+                !PlayerScript.CheckIfGains(DatabaseScript.GetActionData(action, DatabaseScript.actions.ENERGY)) &&
+                DatabaseScript.GetActionData(action, DatabaseScript.actions.ENERGY).Length == 2 && i == 2 ||
+                !PlayerScript.CheckIfGains(DatabaseScript.GetActionData(action, DatabaseScript.actions.ENERGY)) &&
+                DatabaseScript.GetActionData(action, DatabaseScript.actions.ENERGY).Length == 3 && i == 3)
             {
                 ColorActionButtons(buttons, true);
             }
@@ -545,7 +478,7 @@ public class TeamMenuScript : MonoBehaviour {
                 if (i != m_currCharScript.m_actions.Length)
                     newActions[i] = m_currCharScript.m_actions[i];
                 else
-                    newActions[i] = m_saveButton.name;
+                    newActions[i] = m_saveButton.GetComponent<ButtonScript>().m_action;
             }
 
             m_currCharScript.m_actions = newActions;
@@ -555,7 +488,7 @@ public class TeamMenuScript : MonoBehaviour {
             for (int i = 0; i < m_currCharScript.m_actions.Length; i++)
             {
                 if (oldActString == DatabaseScript.GetActionData(m_currCharScript.m_actions[i], DatabaseScript.actions.NAME))
-                    m_currCharScript.m_actions[i] = m_saveButton.name;
+                    m_currCharScript.m_actions[i] = m_saveButton.GetComponent<ButtonScript>().m_action;
             }
         }
 

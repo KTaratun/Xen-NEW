@@ -56,6 +56,16 @@ public class StatusScript : MonoBehaviour {
 
         switch (actName)
         {
+            case "Accelerating ATK":
+                m_statMod[(int)CharacterScript.sts.MOV] = 1;
+                m_mode = mode.TURN_END;
+                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                    m_lifeSpan = 0;
+                else
+                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
+                m_color = c_buffColor;
+                break;
             case "Arm ATK":
                 m_statMod[(int)CharacterScript.sts.DMG] = -1;
                 m_mode = mode.TURN_END;
@@ -75,7 +85,7 @@ public class StatusScript : MonoBehaviour {
                 m_color = c_debuffColor;
                 break;
             case "Blinding ATK":
-                m_statMod[(int)CharacterScript.sts.RNG] = -1;
+                m_statMod[(int)CharacterScript.sts.RNG] = -2;
                 m_mode = mode.ROUND_END;
                 if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
                     m_lifeSpan = 0;
@@ -216,16 +226,6 @@ public class StatusScript : MonoBehaviour {
                 m_sprite = Resources.Load<Sprite>("Symbols/Tech Symbol");
                 m_color = c_statusColor;
                 break;
-            case "Revving ATK":
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
-                    m_statMod[(int)CharacterScript.sts.RAD] = 0;
-                else
-                    m_statMod[(int)CharacterScript.sts.RAD] = -2 - _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
-                m_mode = mode.TURN_END;
-                m_lifeSpan = 2;
-                m_sprite = Resources.Load<Sprite>("Symbols/Radius Symbol");
-                m_color = c_buffColor;
-                break;
             case "Scarring ATK":
                 m_charScript.m_effects[(int)effects.SCARRING] = true;
                 m_mode = mode.TURN_END;
@@ -304,7 +304,7 @@ public class StatusScript : MonoBehaviour {
         CharacterScript charScript = _character.GetComponent<CharacterScript>();
         StatusScript[] statScripts = charScript.GetComponents<StatusScript>();
 
-        for (int i = 1; i < charScript.m_stats.Length; i++) // Don't do this for the first index since that would reset HP
+        for (int i = 2; i < charScript.m_stats.Length; i++) // Don't do this for the first index since that would reset HP
         {
             charScript.m_tempStats[i] = charScript.m_stats[i];
 

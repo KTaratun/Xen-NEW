@@ -125,4 +125,13 @@ public class PlayerScript : MonoBehaviour {
             energyOverZero.Clear();
         }
     }
+
+    public int TotalEnergy()
+    {
+        int total = 0;
+        for (int i = 0; i < m_energy.Length; i++)
+            total += m_energy[i];
+
+        return total;
+    }
 }

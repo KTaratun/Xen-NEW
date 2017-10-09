@@ -16,7 +16,7 @@ public class TileScript : MonoBehaviour {
     public int m_z;
     public BoardScript m_boardScript;
     private Color m_oldColor;
-    private bool m_traversed;
+    public bool m_traversed; // Used for path planning and to determine future occupancy of a tile
     private int m_depth;
     //private LineRenderer m_line;
 
@@ -61,7 +61,10 @@ public class TileScript : MonoBehaviour {
             m_boardScript.m_selected = this;
         }
         else
-            m_boardScript.m_selected = null;
+            m_boardScript.m_selected = this;
+
+        if (m_boardScript.m_selected == null)
+            return;
 
         // If selecting a tile while moving
         if (renderer.material.color == Color.blue) // If tile is blue when clicked, perform movement code
@@ -408,6 +411,6 @@ public class TileScript : MonoBehaviour {
         for (int i = 0; i < visited.Count; i++)
             visited[i].m_traversed = false;
 
-        m_holding.GetComponent<CharacterScript>().Movement(this, closest, true);
+        m_holding.GetComponent<CharacterScript>().Movement(closest, true);
     }
 }

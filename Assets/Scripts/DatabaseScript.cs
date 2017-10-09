@@ -65,6 +65,30 @@ public class DatabaseScript : MonoBehaviour {
     {
         string[] actSeparated = _action.Split('|');
         string[] data = actSeparated[(int)_data].Split(':');
+
         return data[1];
+    }
+
+    static public string ModifyActions(CharacterScript _char, string _action)
+    {
+        string newString = "";
+        for (int i = 0; i < _action.Length; i++)
+        {
+            if (i < _action.Length - 1 && _action[i + 1] == '*')
+            {
+                int numConverted = _action[i] - '0';
+                if (numConverted == -16)
+                {
+                    newString += ' ';
+                    numConverted = 0;
+                }
+                int moddedNum = numConverted + _char.m_tempStats[(int)CharacterScript.sts.TEC];
+                string moddedString = moddedNum.ToString();
+                newString += moddedString;
+            }
+            else
+                newString += _action[i];
+        }
+        return newString;
     }
 }

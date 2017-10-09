@@ -366,9 +366,8 @@ public class BoardScript : MonoBehaviour {
     public void Hover()
     {
         // Don't hover under these conditions
-        if (PanelScript.m_confirmPanel.m_inView || m_camIsFrozen || !m_currButton && m_currCharScript.m_tile.GetComponent<TileScript>().m_radius.Count > 0 || 
-            m_selected && m_selected.GetComponent<TileScript>().m_holding && m_selected.GetComponent<TileScript>().m_holding.tag == "Player" ||
-            PanelScript.GetPanel("Choose Panel").m_inView && !m_currButton)
+        if (PanelScript.m_confirmPanel.m_inView || m_camIsFrozen || PanelScript.GetPanel("Choose Panel").m_inView && !m_currButton ||
+            m_selected && m_selected.GetComponent<TileScript>().m_holding && m_selected.GetComponent<TileScript>().m_holding.tag == "Player")
             return;
         else if (!m_currCharScript || PanelScript.CheckIfPanelOpen())
         {
@@ -387,11 +386,12 @@ public class BoardScript : MonoBehaviour {
 
         ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-        if (!Physics.Raycast(ray, out hit))
+        if (!Physics.Raycast(ray, out hit) || !hit.collider.gameObject)
         {
             if (m_highlightedTile && m_highlightedTile.m_holding)
                 DeselectHighlightedTile();
 
+            PanelScript.GetPanel("StatusViewer Panel").m_inView = false;
             return;
         }
 
@@ -429,7 +429,8 @@ public class BoardScript : MonoBehaviour {
 
         if (m_highlightedTile && tScript != m_highlightedTile)
         {
-            PanelScript.GetPanel("StatusViewer Panel").m_inView = false;
+            if (!PanelScript.GetPanel("StatusViewer Panel").m_cScript)
+                PanelScript.GetPanel("StatusViewer Panel").m_inView = false;
             if (m_highlightedTile.m_holding && m_highlightedTile.m_holding.tag == "Player")
                 DeselectHighlightedTile();
         }
@@ -437,8 +438,11 @@ public class BoardScript : MonoBehaviour {
         if (tScript)
             m_highlightedTile = tScript;
 
-        if (tScript.m_holding && tScript.m_holding.tag == "PowerUp")
+        if (tScript && tScript.m_holding && tScript.m_holding.tag == "PowerUp")
+        {
+            PanelScript.GetPanel("StatusViewer Panel").m_cScript = null;
             PanelScript.GetPanel("StatusViewer Panel").PopulatePanel();
+        }
     }
 
     private void HandleTile(TileScript _target)
@@ -548,7 +552,6 @@ public class BoardScript : MonoBehaviour {
 
     public void NewTurn()
     {
-        PlayerScript playScript = null;
         PlayerScript winningTeam = null;
         int numTeamsActive = 0;
         for (int i = 0; i < m_players.Length; i++)
@@ -561,7 +564,7 @@ public class BoardScript : MonoBehaviour {
                 if (m_players[i].GetComponent<PlayerScript>().m_characters[j].m_isAlive)
                 {
                     numTeamsActive++;
-                    winningTeam = playScript;
+                    winningTeam = m_players[i].GetComponent<PlayerScript>();
                     break;
                 }
             }
@@ -590,7 +593,7 @@ public class BoardScript : MonoBehaviour {
         m_currCharScript = m_currRound[0].GetComponent<CharacterScript>();
         m_currRound.RemoveAt(0);
 
-        if (m_currCharScript.m_effects[(int)StatusScript.effects.STUN] || !m_currCharScript.m_isAlive)
+        while (m_currCharScript.m_effects[(int)StatusScript.effects.STUN] || !m_currCharScript.m_isAlive)
         {
             m_currCharScript.m_turnPanels.Clear();
             StatusScript.UpdateStatus(m_currCharScript.gameObject, StatusScript.mode.TURN_END);
