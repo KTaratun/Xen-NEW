@@ -216,7 +216,7 @@ public class PanelScript : MonoBehaviour {
                 finalRng += m_cScript.m_tempStats[(int)CharacterScript.sts.TEC];
 
             if (finalRng + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG] > 0)
-                m_text[3].text = "RNG: " + (finalRng + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG]);
+                m_text[3].text = "RNG: " + finalRng;
             else
                 m_text[3].text = "RNG: 0";
 
@@ -227,7 +227,7 @@ public class PanelScript : MonoBehaviour {
                 finalRad += m_cScript.m_tempStats[(int)CharacterScript.sts.TEC];
 
             if (finalRad + m_cScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0)
-                m_text[4].text = "RAD: " + (finalRad + m_cScript.m_tempStats[(int)CharacterScript.sts.RAD]);
+                m_text[4].text = "RAD: " + finalRad;
             else
                 m_text[4].text = "RAD: 0";
 
@@ -875,7 +875,7 @@ public class PanelScript : MonoBehaviour {
                 float widthMod = start + width * widthCount;
                 widthCount++;
 
-                if (pan.activeSelf && pan.transform.position.x > widthMod)
+                if (pan.transform.position.x > widthMod)
                 {
                     pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x - 10.0f, pan.transform.position.y, pan.transform.position.z), pan.transform.rotation);
 
@@ -883,11 +883,11 @@ public class PanelScript : MonoBehaviour {
                         pan.transform.SetPositionAndRotation(new Vector3(widthMod, pan.transform.position.y, pan.transform.position.z), pan.transform.rotation);
                 }
 
-                if (pan.activeSelf && pan.transform.position.y > 705)
+                if (pan.transform.position.y > 705)
                 {
                     pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x, pan.transform.position.y - 5.0f, pan.transform.position.z), pan.transform.rotation);
 
-                    if (pan.activeSelf && pan.transform.position.y < 705)
+                    if (pan.transform.position.y < 705)
                         pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x, 705, pan.transform.position.z), pan.transform.rotation);
                 }
             }

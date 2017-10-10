@@ -386,7 +386,7 @@ public class BoardScript : MonoBehaviour {
 
         ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-        if (!Physics.Raycast(ray, out hit) || !hit.collider.gameObject)
+        if (!Physics.Raycast(ray, out hit))
         {
             if (m_highlightedTile && m_highlightedTile.m_holding)
                 DeselectHighlightedTile();

@@ -10,6 +10,7 @@ TagManager:
   - Environment
   - Selector
   - Action Button
+  - PowerUp
   layers:
   - Default
   - TransparentFX

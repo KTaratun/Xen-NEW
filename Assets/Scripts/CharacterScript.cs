@@ -139,10 +139,10 @@ public class CharacterScript : ObjectScript {
             if (Vector3.Distance(transform.position, m_tile.transform.position) < snapDistance)
             {
                 transform.SetPositionAndRotation(m_tile.transform.position, transform.rotation);
-                m_boardScript.m_camIsFrozen = false;
                 CameraScript cam = m_boardScript.m_camera.GetComponent<CameraScript>();
                 cam.m_target = null;
-                m_anim.Play("Idle Melee", -1, 0);
+                if (m_isAlive)
+                    m_anim.Play("Idle Melee", -1, 0);
 
                 m_boardScript.m_currButton = null;
 
@@ -160,9 +160,9 @@ public class CharacterScript : ObjectScript {
                         m_anim.Play("Ranged", -1, 0);
                     else
                         m_anim.Play("Melee", -1, 0);
-
-                    Action();
                 }
+                else
+                    m_boardScript.m_camIsFrozen = false;
             }
         }
     }
@@ -171,15 +171,17 @@ public class CharacterScript : ObjectScript {
     {
         PanelScript mainPanelScript = PanelScript.GetPanel("Main Panel");
 
-        if (m_boardScript.m_currCharScript == this && m_hasActed[(int)trn.MOV] + m_hasActed[(int)trn.ACT] > 3 && !m_boardScript.m_isForcedMove && !m_boardScript.m_camIsFrozen || 
-            m_boardScript.m_currCharScript == this && m_hasActed[(int)trn.MOV] + m_hasActed[(int)trn.ACT] > 3 && m_isAI && !m_boardScript.m_camIsFrozen)
-        {
-            PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[(int)trn.MOV].interactable = true;
-            StatusScript.UpdateStatus(gameObject, StatusScript.mode.TURN_END);
-            m_hasActed[(int)trn.MOV] = 0;
-            m_hasActed[(int)trn.ACT] = 0;
-            m_boardScript.NewTurn();
-        }
+        if (m_anim.GetCurrentAnimatorStateInfo(0).fullPathHash == Animator.StringToHash("Base.Idle Melee") && !m_boardScript.m_camIsFrozen)
+            if (m_boardScript.m_currCharScript == this && m_hasActed[(int)trn.MOV] + m_hasActed[(int)trn.ACT] > 3 && !m_boardScript.m_isForcedMove || 
+                m_boardScript.m_currCharScript == this && m_hasActed[(int)trn.MOV] + m_hasActed[(int)trn.ACT] > 3 && m_isAI)
+            {
+                PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[(int)trn.MOV].interactable = true;
+                StatusScript.UpdateStatus(gameObject, StatusScript.mode.TURN_END);
+                m_hasActed[(int)trn.MOV] = 0;
+                m_hasActed[(int)trn.ACT] = 0;
+                m_currAction = "";
+                m_boardScript.NewTurn();
+            }
     }
 
     private void UpdateOverheadItems()
@@ -242,10 +244,10 @@ public class CharacterScript : ObjectScript {
 
             if (textMesh.color.a <= 0)
             {
+                m_boardScript.m_camIsFrozen = false;
                 textMesh.color = Color.white;
                 textMesh.text = "0";
                 m_popupText.SetActive(false);
-                m_boardScript.m_camIsFrozen = false;
             }
         }
     }
@@ -287,7 +289,8 @@ public class CharacterScript : ObjectScript {
         m_tile.ClearRadius();
         m_tile = newScript;
         m_boardScript.m_camIsFrozen = true;
-        m_anim.Play("Running Melee", -1, 0);
+        if (m_isAlive)
+            m_anim.Play("Running Melee", -1, 0);
 
         if (this == m_boardScript.m_currCharScript)
             m_boardScript.m_currTile = m_tile;
@@ -295,9 +298,8 @@ public class CharacterScript : ObjectScript {
         {
             m_hasActed[(int)trn.MOV] += 2;
             PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[(int)trn.MOV].interactable = false;
-            m_boardScript.m_currButton.GetComponent<Image>().color = Color.white;
-
-            PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)HUDPan.ACT_PAN].GetComponent<PanelScript>().PopulatePanel();
+            if (m_boardScript.m_currButton)
+                m_boardScript.m_currButton.GetComponent<Image>().color = Color.white;
         }
 
         PanelScript.CloseHistory();
@@ -405,6 +407,9 @@ public class CharacterScript : ObjectScript {
 
     public void Action()
     {
+        if (m_currAction.Length == 0)
+            return;
+
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
         string actEng = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.ENERGY);
 
@@ -439,7 +444,8 @@ public class CharacterScript : ObjectScript {
         UpdateStatusImages();
 
         PanelScript.GetPanel("HUD Panel LEFT").PopulatePanel();
-        PanelScript.GetPanel("HUD Panel RIGHT").PopulatePanel();
+        if (!m_isAI)
+            PanelScript.GetPanel("HUD Panel RIGHT").PopulatePanel();
         PanelScript.GetPanel("ActionViewer Panel").m_inView = false;
         m_boardScript.m_selected = null;
         m_boardScript.m_currButton = null;
@@ -1012,220 +1018,109 @@ public class CharacterScript : ObjectScript {
         if (!m_anim)
             m_anim = GetComponentInChildren<Animator>();
 
-        m_tile.GetComponent<TileScript>().AITilePlanning();
+        m_boardScript.m_camIsFrozen = true;
 
-        //bool actted = false;
-        //
-        //for (int h = 0; h < 4; h++)
-        //{
-        //    for (int i = 0; i < m_actions.Length; i++)
-        //    {
-        //        string[] actsSeparated = m_actions[i].Split('|');
-        //        string[] eng = actsSeparated[(int)DatabaseScript.actions.ENERGY].Split(':');
-        //
-        //        if (h == 3 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]))
-        //        {
-        //            if (eng[1][0] == 'g' || eng[1][0] == 'r' || eng[1][0] == 'w' || eng[1][0] == 'b')
-        //                actted = AIExploreOption(m_actions[i]);
-        //        }
-        //        else if (h == 2 && eng[1].Length == 1 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
-        //            actted = AIExploreOption(m_actions[i]);
-        //        else if (h == 1 && eng[1].Length == 2 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
-        //            actted = AIExploreOption(m_actions[i]);
-        //        else if (h == 0 && eng[1].Length == 3 && m_player.GetComponent<PlayerScript>().CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
-        //            actted = AIExploreOption(m_actions[i]);
-        //
-        //        if (actted)
-        //            break;
-        //    }
-        //    if (actted)
-        //        break;
-        //}
-        //
-        //if (!actted)
-        //{
-        //    CharacterScript closest = null;
-        //    TileScript tile = m_tile.GetComponent<TileScript>();
-        //    for (int i = 0; i < m_boardScript.m_characters.Count; i++)
-        //    {
-        //        CharacterScript targetScript = m_boardScript.m_characters[i].GetComponent<CharacterScript>();
-        //        if (targetScript.m_player == m_player)
-        //            continue;
-        //
-        //        TileScript tarTile = targetScript.m_tile.GetComponent<TileScript>();
-        //        if (closest == null || TileScript.CaclulateDistance(tile, tarTile) < TileScript.CaclulateDistance(tile, closest.m_tile.GetComponent<TileScript>()))
-        //            closest = targetScript;
-        //    }
-        //
-        //    tile.AITilePlanning(closest.m_tile.GetComponent<TileScript>(), m_tempStats[(int)sts.MOV]);
-        //    //PullTowards(this, closest.m_tile.GetComponent<TileScript>(), m_tempStats[(int)sts.MOV]);
-        //
-        //    PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
-        //    PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
-        //}
+        List<AIActionScript> viableActions = new List<AIActionScript>();
+        for (int i = 0; i < m_boardScript.m_characters.Count; i++)
+        {
+            CharacterScript target = m_boardScript.m_characters[i].GetComponent<CharacterScript>();
+            if (!target.m_isAlive)
+                continue;
 
-        //for (int i = 0; i < selectedTileScript.m_Radius.Count; i++)
-        //{
-        //    TileScript tarTile = selectedTileScript.m_targetRadius[i].GetComponent<TileScript>();
-        //    if (tarTile.m_holding && tarTile.m_holding.tag == "Player")
-        //        m_targets.Add(tarTile.m_holding);
-        //}
-        //
-        //for (int i = 0; i < selectedTileScript.m_targetRadius.Count; i++)
-        //{
-        //    TileScript tarTile = selectedTileScript.m_targetRadius[i].GetComponent<TileScript>();
-        //    if (tarTile.m_holding && tarTile.m_holding.tag == "Player")
-        //        m_targets.Add(tarTile.m_holding);
-        //}
+            List<TileScript> path = m_tile.AITilePlanning(target.m_tile);
+            AIActionScript newAct = CheckViableActions(target, path);
+            if (newAct)
+                viableActions.Add(newAct);
+        }
+
+        AIActionScript mostViable = null;
+        for (int i = 0; i < viableActions.Count; i++)
+            if (i == 0 || viableActions[i].m_value > mostViable.m_value)
+                mostViable = viableActions[i];
+
+        if (mostViable.m_value > 0)
+        {
+            m_targets = mostViable.m_targets;
+            m_currAction = mostViable.m_action;
+            if (mostViable.m_position)
+                Movement(mostViable.m_position, false);
+            else
+            {
+                if (TileScript.CaclulateDistance(m_tile.GetComponent<TileScript>(), m_targets[0].GetComponent<CharacterScript>().m_tile.GetComponent<TileScript>()) > 1)
+                    m_anim.Play("Ranged", -1, 0);
+                else
+                    m_anim.Play("Melee", -1, 0);
+
+                m_hasActed[0] = 3;
+                m_hasActed[1] = 3;
+            }
+        }
+        else
+        {
+            Movement(mostViable.m_position, false);
+            m_hasActed[0] = 3;
+            m_hasActed[1] = 3;
+        }
+
+        for (int i = 0; i < viableActions.Count; i++)
+            Destroy(viableActions[i]);
+
+        // check all targets
+        // value will be based on distance if outside of range after moving
+        // if within range of an attack before or after moving, value is based on end result of best potential action on target
     }
 
-    //private bool AIExploreOption(string _action)
-    //{
-    //    m_currAction = _action;
-    //
-    //    string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
-    //    string actRng = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RNG);
-    //    string actRad = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RAD);
-    //
-    //    TileScript tileScript = m_tile.GetComponent<TileScript>();
-    //
-    //    for (int i = 0; i < m_boardScript.m_characters.Count; i++)
-    //    {
-    //        CharacterScript targetScript = m_boardScript.m_characters[i].GetComponent<CharacterScript>();
-    //        if (targetScript.m_player == m_player && CheckIfAttack(actName) ||
-    //            targetScript.m_player != m_player && !CheckIfAttack(actName))
-    //            continue;
-    //
-    //        if (TileScript.CaclulateDistance(m_tile.GetComponent<TileScript>(), targetScript.m_tile.GetComponent<TileScript>()) <= int.Parse(actRng) + m_tempStats[(int)sts.RNG])
-    //        {
-    //            //if (r.material.color == Color.green)
-    //            //    m_anim.Play("Ability", -1, 0);
-    //            if (TileScript.CaclulateDistance(m_tile.GetComponent<TileScript>(), targetScript.m_tile.GetComponent<TileScript>()) > 1)
-    //                m_anim.Play("Ranged", -1, 0);
-    //            else
-    //                m_anim.Play("Melee", -1, 0);
-    //
-    //            m_targets.Add(targetScript.gameObject);
-    //            Action();
-    //            PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
-    //            PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
-    //        }
-    //        else if (PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable == true &&
-    //            TileScript.CaclulateDistance(m_tile.GetComponent<TileScript>(), targetScript.m_tile.GetComponent<TileScript>()) <= int.Parse(actRng) + m_tempStats[(int)sts.RNG] + m_tempStats[(int)sts.MOV])
-    //        {
-    //            int dif = TileScript.CaclulateDistance(m_tile.GetComponent<TileScript>(), targetScript.m_tile.GetComponent<TileScript>()) - int.Parse(actRng) + m_tempStats[(int)sts.RNG];
-    //            tileScript.AITilePlanning(targetScript.m_tile.GetComponent<TileScript>(), dif);
-    //            //PullTowards(this, targetScript.m_tile.GetComponent<TileScript>(), dif);
-    //            PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
-    //        }
-    //        else
-    //            return false;
-    //
-    //        return true;
-    //    }
-    //
-    //    return false;
-    //    //ActionTargeting();
-    //    //
-    //    //for (int i = 0; i < tileScript.m_radius.Count; i++)
-    //    //{
-    //    //    TileScript tarTile = tileScript.m_radius[i].GetComponent<TileScript>();
-    //    //    if (tarTile.m_holding && tarTile.m_holding.tag == "Player")
-    //    //        if (tarTile.m_holding.GetComponent<CharacterScript>().m_player != m_player && CheckIfAttack(_action) ||
-    //    //            tarTile.m_holding.GetComponent<CharacterScript>().m_player == m_player && !CheckIfAttack(_action))
-    //    //            m_targets.Add(tarTile.m_holding);
-    //    //}
-    //}
-
-    public bool CheckAllActionsRange()
+    public AIActionScript CheckViableActions(CharacterScript _target, List<TileScript> _path)
     {
-        CharacterScript targetScript = null;
+        int disToTar = _path.Count + 1;
+        List<AIActionScript> viableActs = new List<AIActionScript>();
 
-        for (int h = 0; h < 4; h++)
+        for (int i = 0; i < m_actions.Length; i++)
         {
-            for (int i = 0; i < m_actions.Length; i++)
+            string name = DatabaseScript.GetActionData(m_actions[i], DatabaseScript.actions.NAME);
+            string eng = DatabaseScript.GetActionData(m_actions[i], DatabaseScript.actions.ENERGY);
+            int rng = int.Parse(DatabaseScript.GetActionData(m_actions[i], DatabaseScript.actions.RNG));
+            int rad = int.Parse(DatabaseScript.GetActionData(m_actions[i], DatabaseScript.actions.RAD));
+
+            if (m_player.CheckEnergy(eng) && m_tempStats[(int)sts.MOV] + rng >= disToTar)
             {
-                string[] actsSeparated = m_actions[i].Split('|');
-                string[] eng = actsSeparated[(int)DatabaseScript.actions.ENERGY].Split(':');
+                if (CheckIfAttack(name) && _target.m_player == m_player || !CheckIfAttack(name) && _target != m_player)
+                    continue;
 
-                if (h == 3 && m_player.CheckEnergy(eng[1]))
-                {
-                    if (eng[1][0] == 'g' || eng[1][0] == 'r' || eng[1][0] == 'w' || eng[1][0] == 'b')
-                    {
-                        ActionTargeting();
-                        TileScript tScript = m_tile.GetComponent<TileScript>();
+                AIActionScript newAct = gameObject.AddComponent<AIActionScript>();
+                if (rng + rad < disToTar)
+                    newAct.m_position = _path[_path.Count - rng];
+                else
+                    newAct.m_position = null;
 
-                        for (int j = 0; j < tScript.m_radius.Count; j++)
-                        {
-                            if (tScript.m_radius[i].GetComponent<TileScript>().m_holding && tScript.m_radius[i].GetComponent<TileScript>().m_holding.tag == "Player" &&
-                                tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>().m_player != m_player)
-                            {
-                                targetScript = tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>();
-                            }
-                        }
-                    }
-                }
-                else if (h == 2 && eng[1].Length == 1 && m_player.CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
-                {
-                    ActionTargeting();
-                    TileScript tScript = m_tile.GetComponent<TileScript>();
-
-                    for (int j = 0; j < tScript.m_radius.Count; j++)
-                    {
-                        if (tScript.m_radius[i].GetComponent<TileScript>().m_holding && tScript.m_radius[i].GetComponent<TileScript>().m_holding.tag == "Player" &&
-                            tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>().m_player != m_player)
-                        {
-                            targetScript = tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>();
-                        }
-                    }
-                }
-                else if (h == 1 && eng[1].Length == 2 && m_player.CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
-                {
-                    ActionTargeting();
-                    TileScript tScript = m_tile.GetComponent<TileScript>();
-
-                    for (int j = 0; j < tScript.m_radius.Count; j++)
-                    {
-                        if (tScript.m_radius[i].GetComponent<TileScript>().m_holding && tScript.m_radius[i].GetComponent<TileScript>().m_holding.tag == "Player" &&
-                            tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>().m_player != m_player)
-                        {
-                            targetScript = tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>();
-                        }
-                    }
-                }
-                else if (h == 0 && eng[1].Length == 3 && m_player.CheckEnergy(eng[1]) && !PlayerScript.CheckIfGains(eng[1]))
-                {
-                    ActionTargeting();
-                    TileScript tScript = m_tile.GetComponent<TileScript>();
-
-                    for (int j = 0; j < tScript.m_radius.Count; j++)
-                    {
-                        if (tScript.m_radius[i].GetComponent<TileScript>().m_holding && tScript.m_radius[i].GetComponent<TileScript>().m_holding.tag == "Player" &&
-                            tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>().m_player != m_player)
-                        {
-                            targetScript = tScript.m_radius[i].GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>();
-                        }
-                    }
-                }
-
-                if (targetScript)
-                {
-                    if (TileScript.CaclulateDistance(m_tile.GetComponent<TileScript>(), targetScript.m_tile.GetComponent<TileScript>()) > 1)
-                        m_anim.Play("Ranged", -1, 0);
-                    else
-                        m_anim.Play("Melee", -1, 0);
-
-                    m_targets.Add(targetScript.gameObject);
-                    Action();
-                    PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.MOV_BUTT].interactable = false;
-                    PanelScript.GetPanel("Main Panel").m_buttons[(int)PanelScript.butts.ACT_BUTT].interactable = false;
-                    return true;
-                }
+                newAct.m_targets = new List<GameObject>();
+                newAct.CalculateValue(m_actions[i], _target);
+                viableActs.Add(newAct);
             }
-            if (targetScript)
-                break;
         }
-        return false;
+
+        AIActionScript mostViable = null;
+
+        if (viableActs.Count > 0)
+        {
+            for (int i = 0; i < viableActs.Count; i++)
+                if (i == 0 || viableActs[i].m_value > mostViable.m_value)
+                    mostViable = viableActs[i];
+
+            for (int i = 0; i < viableActs.Count; i++)
+            {
+                if (viableActs[i] != mostViable)
+                    Destroy(viableActs[i]);
+            }
+        }
+        else if (_target.m_player != m_player)
+        {
+            mostViable = gameObject.AddComponent<AIActionScript>();
+            mostViable.m_position = _path[m_tempStats[(int)sts.MOV] - 1];
+            mostViable.m_value = -TileScript.CaclulateDistance(mostViable.m_position, _target.m_tile);
+        }
+        
+        return mostViable;
     }
 
     public void SortActions()

@@ -17,6 +17,7 @@ public class TileScript : MonoBehaviour {
     public BoardScript m_boardScript;
     private Color m_oldColor;
     public bool m_traversed; // Used for path planning and to determine future occupancy of a tile
+    public TileScript m_parent; // Used for determining path for AI
     private int m_depth;
     //private LineRenderer m_line;
 
@@ -361,15 +362,16 @@ public class TileScript : MonoBehaviour {
         return Mathf.Abs(_targetOne.m_x - _targetTwo.m_x) + Mathf.Abs(_targetOne.m_z - _targetTwo.m_z);
     }
 
-    public void AITilePlanning()
+    public List<TileScript> AITilePlanning(TileScript _targetTile)
     {
         TileScript currTileScript = this;
-        CharacterScript currCharScript = m_holding.GetComponent<CharacterScript>();
+        CharacterScript currCharScript = m_boardScript.m_currCharScript;
         m_depth = 0;
 
         List<TileScript> branches = new List<TileScript>();
         List<TileScript> visited = new List<TileScript>();
-        TileScript closest = null;
+        List<TileScript> path = new List<TileScript>();
+        TileScript adjacentTile = null;
 
         branches.Add(currTileScript);
         visited.Add(currTileScript);
@@ -380,37 +382,71 @@ public class TileScript : MonoBehaviour {
             branches.RemoveAt(0);
             int newDepth = currTileScript.m_depth + 1;
 
-            //if (!currCharScript.CheckAllActionsRange())
+            if (CaclulateDistance(currTileScript, _targetTile) < 2)
+            {
+                adjacentTile = currTileScript;
+                break;
+            }
 
-
-                //if (CaclulateDistance(currTileScript, _targetTile) < 2)
-                //{
-                //    closest = currTileScript;
-                //    break;
-                //}
-                //else if (newDepth > _maxDis)
-                //{
-                //    if (!closest || CaclulateDistance(currTileScript, _targetTile) < CaclulateDistance(closest, _targetTile))
-                //        closest = currTileScript;
-                //    continue;
-                //}
+            int[] order = { -1, -1, -1, -1 };
+            for (int i = 0; i < order.Length; i++)
+            {
+                int rand = -1;
+                while (rand == -1 || order[rand] != -1)
+                    rand = Random.Range(0, 4);
+                order[rand] = i;
+            } 
 
             for (int i = 0; i < 4; i++)
             {
-                if (currTileScript.m_neighbors[i] && !currTileScript.m_neighbors[i].GetComponent<TileScript>().m_traversed &&
-                    !currTileScript.m_neighbors[i].GetComponent<TileScript>().m_holding)
+                if (currTileScript.m_neighbors[order[i]] && !currTileScript.m_neighbors[order[i]].m_traversed &&
+                    !currTileScript.m_neighbors[order[i]].m_holding)
                 {
-                    currTileScript.m_neighbors[i].GetComponent<TileScript>().m_depth = newDepth;
-                    branches.Add(currTileScript.m_neighbors[i].GetComponent<TileScript>());
-                    visited.Add(currTileScript.m_neighbors[i].GetComponent<TileScript>());
-                    currTileScript.m_neighbors[i].GetComponent<TileScript>().m_traversed = true;
+                    TileScript nei = currTileScript.m_neighbors[order[i]];
+                    nei.m_depth = newDepth;
+                    AddSORTED(branches, nei, _targetTile);
+                    visited.Add(nei);
+                    nei.m_traversed = true;
+                    nei.m_parent = currTileScript;
                 }
             }
         }
 
-        for (int i = 0; i < visited.Count; i++)
-            visited[i].m_traversed = false;
+        currTileScript = adjacentTile;
+        while (currTileScript && currTileScript.m_parent)
+        {
+            path.Add(currTileScript);
+            currTileScript = currTileScript.m_parent;
+        }
 
-        m_holding.GetComponent<CharacterScript>().Movement(closest, true);
+        path.Reverse();
+
+        for (int i = 0; i < visited.Count; i++)
+        {
+            visited[i].m_traversed = false;
+            visited[i].m_parent = null;
+        }
+
+        return path;
+    }
+
+    private void AddSORTED(List<TileScript> _list, TileScript _tScript, TileScript _target)
+    {
+        if (_list.Count > 0)
+            for (int i = 0; i < _list.Count; i++)
+            {
+                if (CaclulateDistance(_tScript, _target) < CaclulateDistance(_list[i], _target))
+                {
+                    _list.Insert(i, _tScript);
+                    break;
+                }
+                else if (i == _list.Count - 1)
+                {
+                    _list.Add(_tScript);
+                    break;
+                }
+            }
+        else
+            _list.Add(_tScript);
     }
 }
