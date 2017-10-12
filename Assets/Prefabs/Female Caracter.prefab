@@ -334,7 +334,7 @@ GameObject:
   - component: {fileID: 4931831427467488}
   - component: {fileID: 212066200545846408}
   m_Layer: 0
-  m_Name: New Sprite
+  m_Name: Dead Symbol
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2304,7 +2304,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1281908906681866}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.162, z: 0}
+  m_LocalPosition: {x: 0, y: 0.5, z: 0}
   m_LocalScale: {x: 0.045153305, y: 0.04515329, z: 0.04515329}
   m_Children: []
   m_Father: {fileID: 4270520559704738}
@@ -3854,6 +3854,7 @@ MonoBehaviour:
   m_turnPanels: []
   m_healthBar: {fileID: 1318601787758306}
   m_popupText: {fileID: 1933251457436188}
+  m_statusSymbol: {fileID: 1281908906681866}
   m_popupSpheres:
   - {fileID: 1198285821892346}
   - {fileID: 1771402892111464}
@@ -3884,6 +3885,9 @@ MonoBehaviour:
   m_isDiabled: 
   m_gender: 0
   m_weapons: []
+  m_targets: []
+  m_audio: {fileID: 0}
+  m_hasActed: 
 --- !u!135 &135047136950433516
 SphereCollider:
   m_ObjectHideFlags: 1
@@ -4380,7 +4384,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -1
-  m_Sprite: {fileID: 21300000, guid: ec0b69255aaa919458e2807712aec0a6, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 3b750da5f6550ba45976ea69e3c069c2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

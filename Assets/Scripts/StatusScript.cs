@@ -111,7 +111,7 @@ public class StatusScript : MonoBehaviour {
                     m_lifeSpan = 0;
                 else
                     m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
-                m_sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
+                m_sprite = Resources.Load<Sprite>("Symbols/Tech Symbol");
                 m_color = c_buffColor;
                 break;
             case "Crush":
@@ -127,14 +127,20 @@ public class StatusScript : MonoBehaviour {
             case "Delay ATK":
                 m_charScript.m_effects[(int)effects.DELAY] = true;
                 m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
+                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] < 0)
+                    m_lifeSpan = 0;
+                else
+                    m_lifeSpan = 1 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
                 m_sprite = Resources.Load<Sprite>("Symbols/Energy Symbol");
                 m_color = c_statusColor;
                 break;
             case "Disorienting ATK":
                 m_charScript.DisableRandomAction();
                 m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
+                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] < 0)
+                    m_lifeSpan = 0;
+                else
+                    m_lifeSpan = 1 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
                 m_sprite = Resources.Load<Sprite>("Symbols/Action Symbol");
                 m_color = c_statusColor;
                 break;

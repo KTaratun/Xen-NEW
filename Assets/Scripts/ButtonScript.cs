@@ -30,7 +30,8 @@ public class ButtonScript : MonoBehaviour {
 
     public void HoverTrue(BaseEventData eventData)
     {
-        if (m_boardScript && m_boardScript.m_isForcedMove && m_parent.tag != "Selector" || PanelScript.m_confirmPanel.m_inView && m_parent != PanelScript.m_confirmPanel)
+        if (m_boardScript && m_boardScript.m_isForcedMove && m_parent.tag != "Selector" || PanelScript.m_confirmPanel.m_inView && m_parent != PanelScript.m_confirmPanel ||
+            m_boardScript && m_boardScript.m_currCharScript.m_isAI)
             return;
 
         if (m_boardScript)
@@ -91,12 +92,12 @@ public class ButtonScript : MonoBehaviour {
                 {
                     m_boardScript.m_currCharScript.m_isFree = GetComponent<Button>();
                     m_boardScript.m_currCharScript.m_currAction = m_action;
-                    m_boardScript.m_currCharScript.ActionTargeting();
+                    m_boardScript.m_currCharScript.ActionTargeting(m_boardScript.m_currCharScript.m_tile);
                 }
                 else
                 {
                     m_cScript.m_currAction = m_action;
-                    m_cScript.ActionTargeting();
+                    m_cScript.ActionTargeting(m_cScript.m_tile);
                 }
             }
 
@@ -107,7 +108,7 @@ public class ButtonScript : MonoBehaviour {
 
     public void HoverFalse()
     {
-        if (gameObject.tag == "Action Button" && GetComponent<Button>().GetComponentInChildren<Text>().text == "EMPTY")
+        if (gameObject.tag == "Action Button" && GetComponent<Button>().GetComponentInChildren<Text>().text == "EMPTY" || m_boardScript && m_boardScript.m_currCharScript.m_isAI)
             return;
 
         if (GetComponent<Button>() && GetComponent<Button>().name == "Turn Panel Energy Button")
@@ -163,7 +164,8 @@ public class ButtonScript : MonoBehaviour {
     public void Select()
     {
         if (m_cScript != m_boardScript.m_currCharScript && GetComponent<Button>().GetComponent<Image>().color != PanelScript.b_isFree ||
-            m_boardScript && m_boardScript.m_isForcedMove || PanelScript.m_confirmPanel.m_inView && m_parent != PanelScript.m_confirmPanel)
+            m_boardScript && m_boardScript.m_isForcedMove || PanelScript.m_confirmPanel.m_inView && m_parent != PanelScript.m_confirmPanel ||
+            m_boardScript && m_boardScript.m_currCharScript.m_isAI)
             return;
 
         if (m_boardScript.m_currButton)
@@ -204,9 +206,11 @@ public class ButtonScript : MonoBehaviour {
 
         if (gameObject.tag == "Action Button")
         {
+            if (PanelScript.GetPanel("Choose Panel").m_inView)
+                m_boardScript.m_isForcedMove = null;
             m_boardScript.m_currButton.GetComponent<ButtonScript>().m_main.m_cScript = m_boardScript.m_currCharScript;
             m_boardScript.m_currButton.GetComponent<ButtonScript>().m_main.PopulatePanel();
-            m_boardScript.m_currCharScript.ActionTargeting();
+            m_boardScript.m_currCharScript.ActionTargeting(m_boardScript.m_currCharScript.m_tile);
         }
         else if (gameObject.name == "Move")
             m_boardScript.m_currCharScript.MovementSelection(0);
@@ -350,7 +354,7 @@ public class ButtonScript : MonoBehaviour {
                 statScript.DestroyStatus(m_parent.m_cScript.transform.root.gameObject);
             else if (actName == "Extension")
             {
-                statScript.m_lifeSpan += 2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                statScript.m_lifeSpan += 3 + charScript.m_tempStats[(int)CharacterScript.sts.TEC];
 
                 //for (int i = 0; i < statScript.m_statMod.Length; i++)
                 //{
@@ -470,9 +474,11 @@ public class ButtonScript : MonoBehaviour {
 
         if (_confirm == "Action")
         {
-            if (m_boardScript.m_selected == null)
-                return;
             gameObject.GetComponent<Button>().onClick.AddListener(() => m_cScript.ActionAnimation());
+        }
+        else if (_confirm == "Choose Panel")
+        {
+            gameObject.GetComponent<Button>().onClick.AddListener(() => CloseAll());
         }
         else if (_confirm == "Clear Team")
         {
@@ -482,10 +488,14 @@ public class ButtonScript : MonoBehaviour {
         }
         else if (_confirm == "Move")
         {
+            bool isForcedMove = false;
             if (m_boardScript.m_isForcedMove)
+            {
                 m_cScript = m_boardScript.m_isForcedMove.GetComponent<CharacterScript>();
+                isForcedMove = true;
+            }
 
-            gameObject.GetComponent<Button>().onClick.AddListener(() => m_cScript.Movement(m_boardScript.m_selected, false));
+            gameObject.GetComponent<Button>().onClick.AddListener(() => m_cScript.Movement(m_boardScript.m_selected, isForcedMove));
         }
         else if (_confirm == "New Action")
         {
@@ -560,6 +570,13 @@ public class ButtonScript : MonoBehaviour {
 
                 gameObject.GetComponent<Button>().onClick.AddListener(() => tMenuScript.Save());
         }
+    }
+
+    private void CloseAll()
+    {
+        m_boardScript.m_highlightedTile = null;
+        m_boardScript.m_selected = null;
+        PanelScript.CloseHistory();
     }
 
     public void ChangeScreen(string _screen)

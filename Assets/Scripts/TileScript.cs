@@ -18,7 +18,6 @@ public class TileScript : MonoBehaviour {
     private Color m_oldColor;
     public bool m_traversed; // Used for path planning and to determine future occupancy of a tile
     public TileScript m_parent; // Used for determining path for AI
-    private int m_depth;
     //private LineRenderer m_line;
 
     // Use this for initialization
@@ -198,9 +197,6 @@ public class TileScript : MonoBehaviour {
                         !_targetSelf && tScript == ownerCharScript.m_tile.GetComponent<TileScript>())
                         continue;
 
-                    //if (tScript.m_holding && tScript.m_holding.tag == "Player" && tScript.m_holding.GetComponent<CharacterScript>().m_effects[(int)StatusScript.effects.PROTECT])
-                    //    continue;
-
                     if (_targetingRestriction == targetRestriction.HORVERT && tScript.m_x != m_x && tScript.m_z != m_z)
                         continue;
 
@@ -239,12 +235,7 @@ public class TileScript : MonoBehaviour {
 
     private bool CheckIfBlocked(TileScript _target)
     {
-        //float laserWidth = 0.1f;
         float laserMaxLength = Vector3.Distance(transform.position, _target.gameObject.transform.position);
-        //
-        //Vector3[] initLaserPositions = new Vector3[2] { Vector3.zero, Vector3.zero };
-        //m_line.SetPositions(initLaserPositions);
-        //m_line.SetWidth(laserWidth, laserWidth);
 
         // REFACTOR: Don't instantiate during run time as much as possible
         Vector3 pos = transform.position;
@@ -265,7 +256,8 @@ public class TileScript : MonoBehaviour {
                 return false;
             else
             {
-                if (raycastHit.collider && raycastHit.collider.tag == "Player" && !raycastHit.collider.GetComponent<CharacterScript>().m_isAlive)
+                if (raycastHit.collider && raycastHit.collider.tag == "Player" && !raycastHit.collider.GetComponent<CharacterScript>().m_isAlive ||
+                    raycastHit.collider && raycastHit.collider.tag == "PowerUp")
                     return false;
                 else
                     return true;
@@ -273,10 +265,6 @@ public class TileScript : MonoBehaviour {
         }
 
         return false;
-
-        //m_line.SetPosition(0, transform.position);
-        //m_line.SetPosition(1, endPosition);
-
     }
 
     private TileScript Diagonal(TileScript _neighbor, TileScript _originalTile, int _neiInd)
@@ -366,7 +354,6 @@ public class TileScript : MonoBehaviour {
     {
         TileScript currTileScript = this;
         CharacterScript currCharScript = m_boardScript.m_currCharScript;
-        m_depth = 0;
 
         List<TileScript> branches = new List<TileScript>();
         List<TileScript> visited = new List<TileScript>();
@@ -375,12 +362,12 @@ public class TileScript : MonoBehaviour {
 
         branches.Add(currTileScript);
         visited.Add(currTileScript);
+        currTileScript.m_traversed = true;
 
         while (branches.Count > 0)
         {
             currTileScript = branches[0];
             branches.RemoveAt(0);
-            int newDepth = currTileScript.m_depth + 1;
 
             if (CaclulateDistance(currTileScript, _targetTile) < 2)
             {
@@ -395,19 +382,20 @@ public class TileScript : MonoBehaviour {
                 while (rand == -1 || order[rand] != -1)
                     rand = Random.Range(0, 4);
                 order[rand] = i;
-            } 
+            }
 
+            int spacesAvailable = 0;
             for (int i = 0; i < 4; i++)
             {
                 if (currTileScript.m_neighbors[order[i]] && !currTileScript.m_neighbors[order[i]].m_traversed &&
                     !currTileScript.m_neighbors[order[i]].m_holding)
                 {
                     TileScript nei = currTileScript.m_neighbors[order[i]];
-                    nei.m_depth = newDepth;
                     AddSORTED(branches, nei, _targetTile);
                     visited.Add(nei);
                     nei.m_traversed = true;
                     nei.m_parent = currTileScript;
+                    spacesAvailable++;
                 }
             }
         }
@@ -417,6 +405,8 @@ public class TileScript : MonoBehaviour {
         {
             path.Add(currTileScript);
             currTileScript = currTileScript.m_parent;
+            if (path.Count > 100)
+                currCharScript = currCharScript;
         }
 
         path.Reverse();

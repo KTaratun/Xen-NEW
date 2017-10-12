@@ -126,6 +126,50 @@ public class PlayerScript : MonoBehaviour {
         }
     }
 
+    public void GainRandomEnergyAI(int _num)
+    {
+        // No downside for having a lot of tech. Gives all eng to one color
+        int engInd = CheckTeamColors();
+        for (int h = 0; h < _num; h++)
+            m_energy[engInd] += _num;
+    }
+
+    public int CheckTeamColors()
+    {
+        int[] colors = new int[4];
+        for (int i = 0; i < m_characters.Count; i++)
+        {
+            if (m_characters[i].m_isAlive)
+            {
+                for (int j = 0; j < m_characters[i].m_color.Length; j++)
+                {
+                    if (m_characters[i].m_color[j] == 'G')
+                        colors[0]++;
+                    else if (m_characters[i].m_color[j] == 'R')
+                        colors[1]++;
+                    else if (m_characters[i].m_color[j] == 'W')
+                        colors[2]++;
+                    else if (m_characters[i].m_color[j] == 'B')
+                        colors[3]++;
+                }
+            }
+        }
+
+        int mostValuableColorInd = 0;
+        int currMost = colors[0];
+
+        for (int i = 1; i < 4; i++)
+        {
+            if (colors[i] > currMost)
+            {
+                mostValuableColorInd = i;
+                currMost = colors[i];
+            }
+        }
+
+        return mostValuableColorInd;
+    }
+
     public int TotalEnergy()
     {
         int total = 0;

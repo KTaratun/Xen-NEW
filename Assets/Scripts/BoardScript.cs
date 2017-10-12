@@ -72,7 +72,7 @@ public class BoardScript : MonoBehaviour {
         float w = Input.GetAxis("Mouse ScrollWheel");
         PanelScript actPan = PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)CharacterScript.HUDPan.ACT_PAN].GetComponent<PanelScript>();
 
-        if (Input.GetKeyDown(KeyCode.Q)) //Formally getmousebuttondown(1);
+        if (Input.GetKeyDown(KeyCode.Q) && !PanelScript.GetPanel("Choose Panel").m_inView) //Formally getmousebuttondown(1);
             OnRightClick();
         else if (Input.GetMouseButtonDown(0) && m_camera.GetComponent<CameraScript>().m_rotate)
             SceneManager.LoadScene("Menu");
@@ -80,7 +80,7 @@ public class BoardScript : MonoBehaviour {
             PanelScript.GetPanel("Options Panel").PopulatePanel();
         else if (Input.GetKeyDown(KeyCode.LeftShift) && m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] == 0)
             PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)CharacterScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0].GetComponent<ButtonScript>().Select();
-        else if (Input.GetKeyDown(KeyCode.Space))
+        else if (Input.GetKeyDown(KeyCode.Space) && !PanelScript.GetPanel("Choose Panel").m_inView)
         {
             if (m_currButton)
             {
@@ -465,38 +465,33 @@ public class BoardScript : MonoBehaviour {
         // TARGET RED TILE
 
         // For special case, multi targeting attacks
-        if (m_currCharScript.m_currAction.Length > 0 && tarRend.material.color == CharacterScript.c_attack)
+        if (m_currCharScript.m_currAction.Length > 0 && tarRend.material.color == CharacterScript.c_attack &&
+            CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.NON_RAD) >= 0)
         {
             string actName = DatabaseScript.GetActionData(m_currCharScript.m_currAction, DatabaseScript.actions.NAME);
+            string actRng = DatabaseScript.GetActionData(m_currCharScript.m_currAction, DatabaseScript.actions.RNG);
 
-            if (actName == "Slash ATK" || actName == "Cross ATK" || actName == "Dual ATK" || actName == "Piercing ATK" || actName == "Thrust ATK")
-            {
-                string actRng = DatabaseScript.GetActionData(m_currCharScript.m_currAction, DatabaseScript.actions.RNG);
+            bool targetSelf = true;
+            if (CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.TAR_SELF) >= 0)
+                targetSelf = false;
 
-                bool targetSelf = true;
-                if (actName == "Slash ATK" || actName == "Cross ATK" || actName == "Dual ATK")
-                    targetSelf = false;
+            TileScript.targetRestriction tR = TileScript.targetRestriction.NONE;
+            if (CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.TAR_RES) >= 0)
+                tR = (TileScript.targetRestriction)CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.TAR_RES);
 
-                TileScript.targetRestriction tR = TileScript.targetRestriction.NONE;
-                if (actName == "Piercing ATK" || actName == "Thrust ATK" || actName == "Slash ATK")
-                    tR = TileScript.targetRestriction.HORVERT;
-                else if (actName == "Cross ATK" || actName == "Dual ATK")
-                    tR = TileScript.targetRestriction.DIAGONAL;
+            bool isBlockable = false;
+            if (CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.TAR_RES) >= 0)
+                isBlockable = true;
 
-                bool isBlockable = false;
-                if (actName == "Slash ATK")
-                    isBlockable = true;
-
-                _target.FetchTilesWithinRange(int.Parse(actRng) + m_currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, targetSelf, tR, isBlockable);
-                m_oldTile = _target;
-                return;
-            }
+            _target.FetchTilesWithinRange(int.Parse(actRng) + m_currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, targetSelf, tR, isBlockable);
+            m_oldTile = _target;
+            return;
         }
 
         // For standard radius attacks
         int rad = m_currCharScript.m_currRadius + m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD];
 
-        if (m_currCharScript.m_currAction.Length > 0 && DatabaseScript.GetActionData(m_currCharScript.m_currAction, DatabaseScript.actions.NAME) == "Magnet ATK")
+        if (m_currCharScript.m_currAction.Length > 0 && CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.TAR_RES) >= 0)
             rad += m_currCharScript.m_tempStats[(int)CharacterScript.sts.TEC];
 
         if (rad > 0 && tarRend.material.color == CharacterScript.c_attack)
@@ -585,25 +580,34 @@ public class BoardScript : MonoBehaviour {
             //oldRenderer.material.color = m_currPlayer.GetComponent<CharacterScript>().m_teamColor;
         }
 
+        bool newRound = false;
         if (m_currRound.Count == 0)
+        {
             NewRound();
-        else
-            m_newTurn = true;
+            newRound = true;
+        }
 
         m_currCharScript = m_currRound[0].GetComponent<CharacterScript>();
         m_currRound.RemoveAt(0);
 
         while (m_currCharScript.m_effects[(int)StatusScript.effects.STUN] || !m_currCharScript.m_isAlive)
         {
-            m_currCharScript.m_turnPanels.Clear();
             StatusScript.UpdateStatus(m_currCharScript.gameObject, StatusScript.mode.TURN_END);
+            m_currCharScript.m_turnPanels[0].SetActive(false);
+            m_currCharScript.m_turnPanels.Clear();
 
             if (m_currRound.Count == 0)
+            {
                 NewRound();
+                newRound = true;
+            }
 
             m_currCharScript = m_currRound[0].GetComponent<CharacterScript>();
             m_currRound.RemoveAt(0);
         }
+
+        if (!newRound)
+            m_newTurn = true;
 
         m_currTile = m_currCharScript.m_tile;
 
