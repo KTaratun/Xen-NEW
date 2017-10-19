@@ -44,7 +44,6 @@ public class PlayerPrefScript : MonoBehaviour {
         _charScript.m_exp = int.Parse(PlayerPrefs.GetString(_key + ",exp"));
         _charScript.m_level = int.Parse(PlayerPrefs.GetString(_key + ",level"));
         _charScript.m_gender = int.Parse(PlayerPrefs.GetString(_key + ",gender"));
-        string d = PlayerPrefs.GetString(_key + ",AI");
         _charScript.m_isAI = bool.Parse(PlayerPrefs.GetString(_key + ",AI"));
 
         _charScript.m_isDiabled = new int[_charScript.m_actions.Length];

@@ -6,7 +6,7 @@ public class CameraScript : MonoBehaviour {
 
     public GameObject m_freeCam;
     public GameObject m_target;
-    public GameObject m_board;
+    public BoardScript m_boardScript;
     public bool m_rotate;
     //public float m_oldZ;
 
@@ -41,7 +41,7 @@ public class CameraScript : MonoBehaviour {
             Transform looker = m_freeCam.transform;
             looker.LookAt(m_target.transform);
 
-            if (m_board.GetComponent<BoardScript>().m_camIsFrozen)
+            if (m_boardScript.m_camIsFrozen)
             {
                 float zoomSpeed = 0.1f;
                 if (Vector3.Distance(transform.position, m_freeCam.transform.position) > 2)
@@ -86,10 +86,18 @@ public class CameraScript : MonoBehaviour {
             else if (w > 0 && Vector3.Distance(transform.position, m_freeCam.transform.position) > 1 || w < 0 && Vector3.Distance(transform.position, m_freeCam.transform.position) < maxDis)
                 transform.SetPositionAndRotation(new Vector3(transform.position.x + transform.forward.x * w * wheelSpeed, transform.position.y + transform.forward.y * w * wheelSpeed, transform.position.z + transform.forward.z * w * wheelSpeed), transform.rotation);
         }
+        transform.LookAt(m_freeCam.transform);
 
         float forwardMoveSpeed = 0.1f;
         float sideMoveSpeed = 0.1f;
         float wheelMovSpeed = 0.2f;
+
+        if (m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player")
+        {
+            Renderer oldRend = m_boardScript.m_selected.m_holding.transform.GetComponentInChildren<Renderer>();
+            if (oldRend.materials[2].shader != oldRend.materials[0].shader)
+                return;
+        }
 
         if (Input.GetMouseButton(2))
         {
@@ -107,10 +115,7 @@ public class CameraScript : MonoBehaviour {
         if (Input.GetKey(KeyCode.D))
             m_freeCam.transform.SetPositionAndRotation(new Vector3(m_freeCam.transform.position.x + transform.right.x * sideMoveSpeed, m_freeCam.transform.position.y, m_freeCam.transform.position.z + transform.right.z * sideMoveSpeed), Quaternion.identity);
         if (Input.GetKey(KeyCode.F))
-        {
-            BoardScript boardScript = m_board.GetComponent<BoardScript>();
-            m_target = boardScript.m_currCharScript.gameObject;
-        }
+            m_target = m_boardScript.m_currCharScript.gameObject;
 
         transform.LookAt(m_freeCam.transform);
     }

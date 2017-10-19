@@ -69,7 +69,7 @@ public class DatabaseScript : MonoBehaviour {
         return data[1];
     }
 
-    static public string ModifyActions(CharacterScript _char, string _action)
+    static public string ModifyActions(int _tec, string _action)
     {
         string newString = "";
         for (int i = 0; i < _action.Length; i++)
@@ -82,7 +82,7 @@ public class DatabaseScript : MonoBehaviour {
                     newString += ' ';
                     numConverted = 0;
                 }
-                int moddedNum = numConverted + _char.m_tempStats[(int)CharacterScript.sts.TEC];
+                int moddedNum = numConverted + _tec;
                 string moddedString = moddedNum.ToString();
                 newString += moddedString;
             }

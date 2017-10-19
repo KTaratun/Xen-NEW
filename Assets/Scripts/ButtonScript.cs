@@ -14,6 +14,7 @@ public class ButtonScript : MonoBehaviour {
     public PanelScript m_parent;
     public GameObject m_camera;
     public GameObject[] m_energyPanel;
+    public Color m_oldColor;
     public bool m_hovered;
     public string m_action;
 
@@ -30,12 +31,16 @@ public class ButtonScript : MonoBehaviour {
 
     public void HoverTrue(BaseEventData eventData)
     {
-        if (m_boardScript && m_boardScript.m_isForcedMove && m_parent.tag != "Selector" || PanelScript.m_confirmPanel.m_inView && m_parent != PanelScript.m_confirmPanel ||
+        if (m_boardScript && m_boardScript.m_isForcedMove && m_parent.tag != "Selector" ||
+            PanelScript.m_confirmPanel.m_inView && m_parent != PanelScript.m_confirmPanel ||
             m_boardScript && m_boardScript.m_currCharScript.m_isAI)
             return;
 
         if (m_boardScript)
             m_boardScript.m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Menu Sound 3"));
+
+        if (m_boardScript && GetComponent<Button>())
+            m_boardScript.m_hoverButton = GetComponent<Button>();
 
         // REFACTOR: Make this more like how status images are handled
         if (GetComponent<Button>() && GetComponent<Button>().name == "Turn Panel Energy Button")
@@ -63,7 +68,7 @@ public class ButtonScript : MonoBehaviour {
             return;
         }
 
-        if (m_boardScript && m_boardScript.m_currButton && GetComponent<Button>().GetComponent<Image>().color != PanelScript.b_isFree)
+        if (m_boardScript && m_boardScript.m_currButton)
             return;
 
         if (m_parent && m_parent.name == "Move Pass Panel")
@@ -108,6 +113,9 @@ public class ButtonScript : MonoBehaviour {
 
     public void HoverFalse()
     {
+        if (m_boardScript)
+            m_boardScript.m_hoverButton = null;
+
         if (gameObject.tag == "Action Button" && GetComponent<Button>().GetComponentInChildren<Text>().text == "EMPTY" || m_boardScript && m_boardScript.m_currCharScript.m_isAI)
             return;
 
@@ -140,8 +148,7 @@ public class ButtonScript : MonoBehaviour {
                 m_boardScript.m_currCharScript.m_currAction = "";
         }
 
-        if (m_boardScript && !m_boardScript.m_currButton && GetComponent<Image>().color != Color.cyan ||
-            GetComponent<Button>().GetComponent<Image>().color == PanelScript.b_isFree)
+        if (m_boardScript && !m_boardScript.m_currButton && GetComponent<Image>().color != Color.cyan)
         {
             TileScript selectedTileScript = null;
             if (GetComponent<Button>().GetComponent<Image>().color == PanelScript.b_isFree)
@@ -163,31 +170,27 @@ public class ButtonScript : MonoBehaviour {
 
     public void Select()
     {
-        if (m_cScript != m_boardScript.m_currCharScript && GetComponent<Button>().GetComponent<Image>().color != PanelScript.b_isFree ||
-            m_boardScript && m_boardScript.m_isForcedMove || PanelScript.m_confirmPanel.m_inView && m_parent != PanelScript.m_confirmPanel ||
+        if (m_cScript != m_boardScript.m_currCharScript && GetComponent<Button>().GetComponent<Image>().color == PanelScript.b_isDisallowed ||
+            m_cScript != m_boardScript.m_currCharScript && GetComponent<Button>().GetComponent<Image>().color == Color.white ||
+            m_boardScript && m_boardScript.m_isForcedMove && m_parent && m_parent.tag != "Selector" || 
+            PanelScript.m_confirmPanel.m_inView && m_parent != PanelScript.m_confirmPanel ||
             m_boardScript && m_boardScript.m_currCharScript.m_isAI)
             return;
 
+        TileScript selectedTileScript = m_boardScript.m_currCharScript.m_tile.GetComponent<TileScript>();
+        if (selectedTileScript.m_radius.Count > 0)
+            selectedTileScript.ClearRadius();
+
+        if (m_boardScript.m_highlightedTile)
+        {
+            selectedTileScript = m_boardScript.m_highlightedTile.GetComponent<TileScript>();
+            if (selectedTileScript.m_targetRadius.Count > 0)
+                selectedTileScript.ClearRadius();
+        }
+
         if (m_boardScript.m_currButton)
         {
-            if (!m_hovered)
-            {
-                TileScript selectedTileScript = m_boardScript.m_currCharScript.m_tile.GetComponent<TileScript>();
-                if (selectedTileScript.m_radius.Count > 0)
-                    selectedTileScript.ClearRadius();
-
-                if (m_boardScript.m_highlightedTile)
-                {
-                    selectedTileScript = m_boardScript.m_highlightedTile.GetComponent<TileScript>();
-                    if (selectedTileScript.m_targetRadius.Count > 0)
-                        selectedTileScript.ClearRadius();
-                }
-            }
-
-            if (m_boardScript.m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] == 2)
-                m_boardScript.m_currButton.GetComponent<Image>().color = PanelScript.b_isHalf;
-            else
-                m_boardScript.m_currButton.GetComponent<Image>().color = Color.white;
+            m_boardScript.m_currButton.GetComponent<Image>().color = m_boardScript.m_currButton.GetComponent<ButtonScript>().m_oldColor;
 
             if (gameObject == m_boardScript.m_currButton.gameObject)
             {
@@ -197,7 +200,8 @@ public class ButtonScript : MonoBehaviour {
                 return;
             }
         }
-        
+
+        m_oldColor = GetComponent<Image>().color;
         GetComponent<Image>().color = Color.cyan;
         m_boardScript.m_currButton = GetComponent<Button>();
         m_boardScript.m_currCharScript.m_currAction = m_action;
@@ -208,11 +212,15 @@ public class ButtonScript : MonoBehaviour {
         {
             if (PanelScript.GetPanel("Choose Panel").m_inView)
                 m_boardScript.m_isForcedMove = null;
+
+            if (!CharacterScript.CheckIfAttack(DatabaseScript.GetActionData(m_action, DatabaseScript.actions.NAME)))
+                PanelScript.GetPanel("ActionViewer Panel").m_panels[1].m_inView = false;
+
             m_boardScript.m_currButton.GetComponent<ButtonScript>().m_main.m_cScript = m_boardScript.m_currCharScript;
             m_boardScript.m_currButton.GetComponent<ButtonScript>().m_main.PopulatePanel();
             m_boardScript.m_currCharScript.ActionTargeting(m_boardScript.m_currCharScript.m_tile);
         }
-        else if (gameObject.name == "Move")
+        else if (gameObject.name == "Move" && !PanelScript.GetPanel("Choose Panel").m_inView)
             m_boardScript.m_currCharScript.MovementSelection(0);
     }
 
@@ -348,11 +356,9 @@ public class ButtonScript : MonoBehaviour {
         if (m_parent.name == "Status Selector")
         {
             StatusScript statScript = m_parent.m_cScript.GetComponents<StatusScript>()[m_parent.m_cScript.m_currStatus];
-            //if (actName == "Hack ATK")
-            //    StatusScript.NewStatus(m_boardScript.m_currPlayer, statScript.m_action);
-            if (actName == "Disrupting ATK") // actName == "Hack ATK" || used to be here
+            if (actName == "SUP(Delete)")
                 statScript.DestroyStatus(m_parent.m_cScript.transform.root.gameObject);
-            else if (actName == "Extension")
+            else if (actName == "SUP(Extension)")
             {
                 statScript.m_lifeSpan += 3 + charScript.m_tempStats[(int)CharacterScript.sts.TEC];
 
@@ -373,9 +379,9 @@ public class ButtonScript : MonoBehaviour {
         else if (m_parent.name == "Energy Selector")
         {
 
-            if (actName == "Prismatic ATK")
+            if (actName == "ATK(Prismatic)")
                     AddEnergy(2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
-            else if (actName == "Deplete ATK" || actName == "Syphon ATK")
+            else if (actName == "ATK(Deplete)" || actName == "ATK(Syphon)")
                 SubtractEnergy(2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC], m_main.m_cScript.m_player.m_energy);
         }
     }
@@ -418,11 +424,11 @@ public class ButtonScript : MonoBehaviour {
         PlayerScript playScript = charScript.m_player;
         int added = 0;
 
-        if (actName == "Syphon ATK" || actName == "Deplete ATK")
+        if (actName == "ATK(Syphon)" || actName == "ATK(Deplete)")
         {
             for (int i = 0; i < m_parent.m_images.Length; i++)
             {
-                if (actName == "Syphon ATK")
+                if (actName == "ATK(Syphon)")
                     playScript.m_energy[i] += m_main.m_cScript.m_player.m_energy[i] - int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
 
                 added += m_main.m_cScript.m_player.m_energy[i] - int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
@@ -437,7 +443,7 @@ public class ButtonScript : MonoBehaviour {
             }
 
         if (added > 2)
-            if (actName == "Prismatic ATK" || actName == "Syphon ATK" || actName == "Deplete ATK")
+            if (actName == "ATK(Prismatic)" || actName == "ATK(Syphon)" || actName == "ATK(Deplete)")
                 charScript.ReceiveDamage((added - 2).ToString(), Color.white);
 
         playScript.SetEnergyPanel(charScript);
@@ -447,7 +453,7 @@ public class ButtonScript : MonoBehaviour {
     public void ResetEnergySelection()
     {
         string actName = DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME);
-        if (actName == "Syphon ATK" || actName == "Deplete ATK")
+        if (actName == "ATK(Syphon)" || actName == "ATK(Deplete)")
             for (int i = 0; i < m_parent.m_images.Length; i++)
                 m_parent.m_images[i].GetComponentInChildren<Text>().text = m_main.m_cScript.m_player.m_energy[i].ToString();
         else
@@ -464,8 +470,8 @@ public class ButtonScript : MonoBehaviour {
 
     public void ConfirmationButton(string _confirm)
     {
-        if (m_boardScript && m_boardScript.m_isForcedMove && _confirm != "Move")
-            return;
+        //if (m_boardScript && m_boardScript.m_isForcedMove && _confirm != "Move" || PanelScript.GetPanel("Choose Panel").m_inView && _confirm == "Pass")
+        //    return;
 
         if (!m_main || PanelScript.GetRecentHistory() && PanelScript.GetRecentHistory().name != "Confirmation Panel")
             m_main = PanelScript.GetRecentHistory();
@@ -576,6 +582,9 @@ public class ButtonScript : MonoBehaviour {
     {
         m_boardScript.m_highlightedTile = null;
         m_boardScript.m_selected = null;
+        m_boardScript.m_isForcedMove = null;
+        m_boardScript.m_currTile.ClearRadius();
+        PanelScript.GetPanel("HUD Panel RIGHT").m_inView = false;
         PanelScript.CloseHistory();
     }
 

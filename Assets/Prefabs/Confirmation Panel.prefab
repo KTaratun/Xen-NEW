@@ -42,7 +42,7 @@ GameObject:
   - component: {fileID: 114166443152984292}
   m_Layer: 5
   m_Name: Confirmation Panel
-  m_TagString: Untagged
+  m_TagString: Selector
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -138,6 +138,7 @@ MonoBehaviour:
   m_panels: []
   m_text: []
   m_images: []
+  m_audio: {fileID: 0}
 --- !u!114 &114329306621514790
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -323,10 +324,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_boardScript: {fileID: 0}
   m_main: {fileID: 0}
-  m_character: {fileID: 0}
+  m_cScript: {fileID: 0}
   m_parent: {fileID: 114166443152984292}
   m_camera: {fileID: 0}
   m_energyPanel: []
+  m_oldColor: {r: 0, g: 0, b: 0, a: 0}
+  m_hovered: 0
   m_action: 
 --- !u!114 &114820070968894218
 MonoBehaviour:

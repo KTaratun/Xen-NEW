@@ -22,19 +22,22 @@ public class BoardScript : MonoBehaviour {
     public TileScript m_currTile; // The m_tile of the player who's turn is currently up
     public CharacterScript m_currCharScript; // A pointer to the character that's turn is currently up
     public List<GameObject> m_characters; // A list of all characters within the game
-    public GameObject[] m_players; 
+    public GameObject[] m_players;
     public List<GameObject> m_currRound; // A list of the players who have taken a turn in the current round
     public GameObject m_isForcedMove; // This is to keep track of whichever player is turning an action out of order
     public int m_livingPlayersInRound; // This is mainly for the turn panels. This tells them how far to move when I player finishes their turn.
     public bool m_camIsFrozen;
     public bool m_newTurn;
     public AudioSource m_audio;
+    public Button m_hoverButton;
     public Button m_currButton;
     public GameObject m_powerup;
+    public float m_actionEndTimer;
 
     // Use this for initialization
-    void Start ()
+    void Start()
     {
+        m_actionEndTimer = 0;
         m_audio = gameObject.AddComponent<AudioSource>();
 
         m_newTurn = false;
@@ -49,7 +52,7 @@ public class BoardScript : MonoBehaviour {
         // If the user didn't assign a m_tile size in the editor, auto adjust the m_tiles to fit the board
         if (m_height == 0 && m_width == 0)
         {
-            m_width = (int) (r.bounds.size.x / m_tile.GetComponent<Renderer>().bounds.size.x);
+            m_width = (int)(r.bounds.size.x / m_tile.GetComponent<Renderer>().bounds.size.x);
             m_height = (int)(r.bounds.size.z / m_tile.GetComponent<Renderer>().bounds.size.z);
         }
 
@@ -59,16 +62,33 @@ public class BoardScript : MonoBehaviour {
         CharacterInit();
         NewTurn();
     }
-	
-	// Update is called once per frame
-	void Update ()
+
+    // Update is called once per frame
+    void Update()
     {
         Inputs();
         Hover();
+
+        if (m_actionEndTimer > 0)
+        {
+            m_actionEndTimer += Time.deltaTime;
+            if (m_actionEndTimer > 2)
+            {
+                m_actionEndTimer = 0;
+                m_camIsFrozen = false;
+            }
+        }
     }
 
     void Inputs()
     {
+        if (m_selected && m_selected.m_holding && m_selected.m_holding.tag == "Player")
+        {
+            Renderer oldRend = m_selected.m_holding.transform.GetComponentInChildren<Renderer>();
+            if (oldRend.materials[2].shader != oldRend.materials[0].shader)
+                return;
+        }
+
         float w = Input.GetAxis("Mouse ScrollWheel");
         PanelScript actPan = PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)CharacterScript.HUDPan.ACT_PAN].GetComponent<PanelScript>();
 
@@ -201,7 +221,7 @@ public class BoardScript : MonoBehaviour {
         m_selected = null;
         if (m_currButton)
         {
-            m_currButton.GetComponent<Image>().color = Color.white;
+            m_currButton.GetComponent<Image>().color = m_currButton.GetComponent<ButtonScript>().m_oldColor;
             m_currButton = null;
             TileScript selectedTileScript = m_currCharScript.m_tile.GetComponent<TileScript>();
             if (selectedTileScript.m_radius.Count > 0)
@@ -224,8 +244,6 @@ public class BoardScript : MonoBehaviour {
 
         PanelScript actPreviewScript = PanelScript.GetPanel("ActionPreview");
         actPreviewScript.m_inView = false;
-
-        Renderer sRend = currTScript.m_radius[0].GetComponent<Renderer>();
 
         if (m_highlightedTile)
             m_highlightedTile.ClearRadius();
@@ -366,16 +384,14 @@ public class BoardScript : MonoBehaviour {
     public void Hover()
     {
         // Don't hover under these conditions
-        if (PanelScript.m_confirmPanel.m_inView || m_camIsFrozen || PanelScript.GetPanel("Choose Panel").m_inView && !m_currButton ||
-            m_selected && m_selected.GetComponent<TileScript>().m_holding && m_selected.GetComponent<TileScript>().m_holding.tag == "Player")
-            return;
-        else if (!m_currCharScript || PanelScript.CheckIfPanelOpen())
+        if (m_camIsFrozen && !m_currButton || !m_currCharScript || PanelScript.CheckIfPanelOpen())
         {
-            if (m_oldTile)
+            if (m_oldTile && !m_selected)
             {
                 Renderer oTR = m_oldTile.GetComponent<Renderer>();
                 if (oTR.material.color.a != 0)
                     oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a - 0.5f);
+
                 m_oldTile = null;
             }
             return;
@@ -388,8 +404,18 @@ public class BoardScript : MonoBehaviour {
 
         if (!Physics.Raycast(ray, out hit))
         {
-            if (m_highlightedTile && m_highlightedTile.m_holding)
-                DeselectHighlightedTile();
+            if (m_highlightedTile)
+            {
+                Renderer oTR = m_highlightedTile.GetComponent<Renderer>();
+                if (oTR.material.color.a != 0)
+                    oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a - 0.5f);
+                if (m_highlightedTile.m_targetRadius.Count > 0)
+                    m_highlightedTile.ClearRadius();
+                if (m_highlightedTile.m_holding)
+                    DeselectHighlightedTile();
+
+                m_highlightedTile = null;
+            }
 
             PanelScript.GetPanel("StatusViewer Panel").m_inView = false;
             return;
@@ -413,7 +439,7 @@ public class BoardScript : MonoBehaviour {
         }
 
         // If you hit a character/character tile, show their info
-        if (charScript && PanelScript.GetPanel("HUD Panel RIGHT").m_inView == false)
+        if (charScript)
             HighlightCharacter(charScript);
 
         if (tScript)
@@ -423,8 +449,8 @@ public class BoardScript : MonoBehaviour {
         if (charScript && tScript.gameObject.GetComponent<Renderer>().material.color == new Color(1, 0, 0, 1) ||
             charScript && tScript.gameObject.GetComponent<Renderer>().material.color == Color.yellow)
         {
-            PanelScript.GetPanel("ActionPreview").m_cScript = charScript;
-            PanelScript.GetPanel("ActionPreview").PopulatePanel();
+            PanelScript.GetPanel("ActionViewer Panel").m_panels[1].m_cScript = charScript;
+            PanelScript.GetPanel("ActionViewer Panel").m_panels[1].PopulatePanel();
         }
 
         if (m_highlightedTile && tScript != m_highlightedTile)
@@ -465,10 +491,9 @@ public class BoardScript : MonoBehaviour {
         // TARGET RED TILE
 
         // For special case, multi targeting attacks
-        if (m_currCharScript.m_currAction.Length > 0 && tarRend.material.color == CharacterScript.c_attack &&
+        if (m_currCharScript.m_currAction.Length > 0 && tarRend.material.color == TileScript.c_attack &&
             CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.NON_RAD) >= 0)
         {
-            string actName = DatabaseScript.GetActionData(m_currCharScript.m_currAction, DatabaseScript.actions.NAME);
             string actRng = DatabaseScript.GetActionData(m_currCharScript.m_currAction, DatabaseScript.actions.RNG);
 
             bool targetSelf = true;
@@ -479,9 +504,9 @@ public class BoardScript : MonoBehaviour {
             if (CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.TAR_RES) >= 0)
                 tR = (TileScript.targetRestriction)CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.TAR_RES);
 
-            bool isBlockable = false;
-            if (CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.TAR_RES) >= 0)
-                isBlockable = true;
+            bool isBlockable = true;
+            if (CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.IS_NOT_BLOCK) >= 0)
+                isBlockable = false;
 
             _target.FetchTilesWithinRange(int.Parse(actRng) + m_currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, targetSelf, tR, isBlockable);
             m_oldTile = _target;
@@ -490,12 +515,16 @@ public class BoardScript : MonoBehaviour {
 
         // For standard radius attacks
         int rad = m_currCharScript.m_currRadius + m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD];
+        bool tarSelf = true;
 
-        if (m_currCharScript.m_currAction.Length > 0 && CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.TAR_RES) >= 0)
+        if (m_currCharScript.m_currAction.Length > 0 && CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.RAD_MOD) >= 0)
             rad += m_currCharScript.m_tempStats[(int)CharacterScript.sts.TEC];
 
-        if (rad > 0 && tarRend.material.color == CharacterScript.c_attack)
-            _target.FetchTilesWithinRange(rad, Color.yellow, true, TileScript.targetRestriction.NONE, true);
+        if (m_currCharScript.m_currAction.Length > 0 && CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.TAR_SELF) >= 0)
+            tarSelf = false;
+
+        if (rad > 0 && tarRend.material.color == TileScript.c_attack)
+            _target.FetchTilesWithinRange(rad, Color.yellow, tarSelf, TileScript.targetRestriction.NONE, true);
         else
             tarRend.material.color = new Color(tarRend.material.color.r, tarRend.material.color.g, tarRend.material.color.b, tarRend.material.color.a + 0.5f);
 
@@ -504,6 +533,9 @@ public class BoardScript : MonoBehaviour {
 
     public void HighlightCharacter(CharacterScript _character)
     {
+        if (PanelScript.GetPanel("HUD Panel RIGHT").m_inView)
+            return;
+
         if (_character && _character != m_currCharScript && _character.m_isAlive)
         {
             // Change color of turn panel to indicate where the character is in the turn order
@@ -522,14 +554,18 @@ public class BoardScript : MonoBehaviour {
 
     private void DeselectHighlightedTile()
     {
+        PanelScript.GetPanel("ActionViewer Panel").m_panels[1].m_inView = false;
+
+        if (m_selected && m_selected.m_holding && m_selected.m_holding.tag == "Player" && 
+            m_selected.m_holding.transform.GetComponentInChildren<Renderer>().materials[2].shader != m_selected.m_holding.transform.GetComponentInChildren<Renderer>().materials[0].shader || 
+            PanelScript.GetPanel("Choose Panel").m_inView)
+            return;
+
         PanelScript hudPanScript = PanelScript.GetPanel("HUD Panel RIGHT");
-        PanelScript actPreviewScript = PanelScript.GetPanel("ActionPreview");
 
-        TileScript m_highlightedTileScript = m_highlightedTile.GetComponent<TileScript>();
-
-        if (m_highlightedTileScript.m_holding.GetComponent<CharacterScript>())
+        if (m_highlightedTile.m_holding.GetComponent<CharacterScript>())
         {
-            CharacterScript colScript = m_highlightedTileScript.m_holding.GetComponent<CharacterScript>();
+            CharacterScript colScript = m_highlightedTile.m_holding.GetComponent<CharacterScript>();
 
             for (int i = 0; i < colScript.m_turnPanels.Count; i++)
             {
@@ -542,7 +578,6 @@ public class BoardScript : MonoBehaviour {
         }
         hudPanScript.m_inView = false;
         m_highlightedTile = null;
-        actPreviewScript.m_inView = false;
     }
 
     public void NewTurn()
@@ -576,6 +611,7 @@ public class BoardScript : MonoBehaviour {
         {
             Renderer oldRend = m_currCharScript.gameObject.transform.GetComponentInChildren<Renderer>();
             oldRend.materials[1].shader = oldRend.materials[0].shader;
+            oldRend.materials[2].shader = oldRend.materials[0].shader;
             //Renderer oldRenderer = m_currPlayer.GetComponent<Renderer>();
             //oldRenderer.material.color = m_currPlayer.GetComponent<CharacterScript>().m_teamColor;
         }
@@ -622,6 +658,7 @@ public class BoardScript : MonoBehaviour {
         camScript.m_target = m_currCharScript.gameObject;
 
         Renderer rend = m_currCharScript.gameObject.transform.GetComponentInChildren<Renderer>();
+        rend.materials[2].shader = rend.materials[0].shader;
         rend.materials[1].shader = Resources.Load<Shader>("Outlined-Silhouette Only (NOT MINE)");
 
         if (m_currCharScript.m_isAI)

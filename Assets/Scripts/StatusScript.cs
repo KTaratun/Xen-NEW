@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class StatusScript : MonoBehaviour {
 
     public enum mode { TURN_END, ROUND_END, NONE }
-    public enum effects { SCARRING, BLEED, BYPASS, HINDER, IMMOBILE, WARD, STUN, DELAY, REFLECT, TOT }
+    public enum effects { SCARRING, BLEED, REGEN, BYPASS, HINDER, IMMOBILE, WARD, STUN, DELAY, REFLECT, TOT }
 
     static public Color c_buffColor = Color.cyan;
     static public Color c_debuffColor = new Color(1, .7f, 0, 1);
@@ -52,168 +52,179 @@ public class StatusScript : MonoBehaviour {
         m_name = actName;
         m_action = _action;
         m_charScript = _ownerScript;
-        m_effect = actEffect;
+        int tecVal = _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+        m_effect = DatabaseScript.ModifyActions(tecVal, actEffect);
 
         switch (actName)
         {
-            case "Accelerating ATK":
+            case "ATK(Accelerate)":
                 m_statMod[(int)CharacterScript.sts.MOV] = 1;
                 m_mode = mode.TURN_END;
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                if (tecVal == -3)
                     m_lifeSpan = 0;
                 else
-                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_lifeSpan = 2 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
                 m_color = c_buffColor;
                 break;
-            case "Arm ATK":
+            case "ATK(Arm)":
                 m_statMod[(int)CharacterScript.sts.DMG] = -1;
                 m_mode = mode.TURN_END;
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                if (tecVal == -3)
                     m_lifeSpan = 0;
                 else
-                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_lifeSpan = 2 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
                 m_color = c_debuffColor;
                 break;
-            case "Bleed ATK":
+            case "ATK(Rust)":
                 m_charScript.m_effects[(int)effects.BLEED] = true;
                 m_statMod[(int)CharacterScript.sts.HP] = 2;
                 m_mode = mode.TURN_END;
-                m_lifeSpan = 3 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                m_lifeSpan = 3 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Life Symbol");
-                m_color = c_debuffColor;
+                m_color = c_statusColor;
                 break;
-            case "Blinding ATK":
+            case "ATK(Sight)":
                 m_statMod[(int)CharacterScript.sts.RNG] = -2;
                 m_mode = mode.ROUND_END;
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                if (tecVal == -3)
                     m_lifeSpan = 0;
                 else
-                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_lifeSpan = 2 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Range Symbol");
                 m_color = c_debuffColor;
                 break;
-            case "Boost":
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+            case "SUP(Boost)":
+                if (tecVal == -3)
                     m_statMod[(int)CharacterScript.sts.DMG] = 0;
                 else
-                    m_statMod[(int)CharacterScript.sts.DMG] = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_statMod[(int)CharacterScript.sts.DMG] = 2 + tecVal;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
                 m_color = c_buffColor;
                 break;
-            case "Charge":
+            case "SUP(Charge)":
                 m_statMod[(int)CharacterScript.sts.TEC] = 1;
                 m_mode = mode.TURN_END;
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                if (tecVal == -3)
                     m_lifeSpan = 0;
                 else
-                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_lifeSpan = 2 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Tech Symbol");
                 m_color = c_buffColor;
                 break;
-            case "Crush":
+            case "SUP(Crush)":
                 m_statMod[(int)CharacterScript.sts.DEF] = -2;
                 m_mode = mode.TURN_END;
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                if (tecVal == -3)
                     m_lifeSpan = 0;
                 else
-                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_lifeSpan = 2 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
                 m_color = c_debuffColor;
                 break;
-            case "Delay ATK":
+            case "ATK(Break)":
                 m_charScript.m_effects[(int)effects.DELAY] = true;
                 m_mode = mode.TURN_END;
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] < 0)
+                if (tecVal < 0)
                     m_lifeSpan = 0;
                 else
-                    m_lifeSpan = 1 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_lifeSpan = 1 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Energy Symbol");
                 m_color = c_statusColor;
                 break;
-            case "Disorienting ATK":
+            case "ATK(Crash)":
                 m_charScript.DisableRandomAction();
                 m_mode = mode.TURN_END;
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] < 0)
+                if (tecVal < 0)
                     m_lifeSpan = 0;
                 else
-                    m_lifeSpan = 1 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_lifeSpan = 1 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Action Symbol");
                 m_color = c_statusColor;
                 break;
-            case "Explosive":
+            case "SUP(Explosive)":
                 m_statMod[(int)CharacterScript.sts.RAD] = 1;
                 m_mode = mode.TURN_END;
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                if (tecVal == -3)
                     m_lifeSpan = 0;
                 else
-                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_lifeSpan = 2 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Radius Symbol");
                 m_color = c_buffColor;
                 break;
-            case "Fortifying ATK":
+            case "ATK(Fortify)":
                 m_statMod[(int)CharacterScript.sts.DEF] = 1;
                 m_mode = mode.TURN_END;
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                if (tecVal == -3)
                     m_lifeSpan = 0;
                 else
-                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_lifeSpan = 2 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
                 m_color = c_buffColor;
                 break;
-            case "Hindering ATK":
+            case "ATK(Hinder)":
                 m_charScript.m_effects[(int)effects.HINDER] = true;
                 m_mode = mode.TURN_END;
-                m_lifeSpan = 1;
+                if (tecVal < -1)
+                    m_lifeSpan = 0;
+                else
+                    m_lifeSpan = 2 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Tech Symbol");
                 m_color = c_statusColor;
                 break;
-            case "Immobilizing ATK":
-                m_charScript.m_effects[(int)effects.IMMOBILE] = true;
+            case "ATK(Immobilize)":
+                m_statMod[(int)CharacterScript.sts.MOV] = -4 - tecVal;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
-                m_color = c_statusColor;
+                m_color = c_debuffColor;
                 break;
-            case "Leg ATK":
+            case "ATK(Leg)":
                 m_statMod[(int)CharacterScript.sts.MOV] = -1;
                 m_mode = mode.TURN_END;
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                if (tecVal == -3)
                     m_lifeSpan = 0;
                 else
-                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_lifeSpan = 2 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
                 m_color = c_debuffColor;
                 break;
-            case "Nullifying ATK":
+            case "ATK(Disrupt)":
                 m_statMod[(int)CharacterScript.sts.TEC] = -1;
                 m_mode = mode.TURN_END;
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                if (tecVal < -1)
                     m_lifeSpan = 0;
                 else
-                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_lifeSpan = 2 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Tech Symbol");
                 m_color = c_debuffColor;
                 break;
-            case "Passage":
-                m_statMod[(int)CharacterScript.sts.MOV] = 4 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+            case "SUP(Passage)":
+                m_statMod[(int)CharacterScript.sts.MOV] = 4 + tecVal;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
                 m_color = c_buffColor;
                 break;
-            case "Prepare":
+            case "SUP(Defense)":
                 m_statMod[(int)CharacterScript.sts.DEF] = 1;
                 m_mode = mode.TURN_END;
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                if (tecVal == -3)
                     m_lifeSpan = 0;
                 else
-                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_lifeSpan = 2 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
                 m_color = c_buffColor;
+                break;
+            case "ATK(Nullify)":
+                m_statMod[(int)CharacterScript.sts.TEC] = -3 - tecVal;
+                m_mode = mode.TURN_END;
+                m_lifeSpan = 1;
+                m_sprite = Resources.Load<Sprite>("Symbols/Tech Symbol");
+                m_color = c_debuffColor;
                 break;
             //case "Protect":
             //    m_charScript.m_effects[(int)effects.PROTECT] = true;
@@ -222,79 +233,93 @@ public class StatusScript : MonoBehaviour {
             //    m_sprite = Resources.Load<Sprite>("Symbols/Hit Symbol");
             //    m_color = c_statusColor;
             //    break;
-            case "Reflect":
+            case "SUP(Secure)":
                 m_charScript.m_effects[(int)effects.REFLECT] = true;
                 m_mode = mode.TURN_END;
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                if (tecVal == -3)
                     m_lifeSpan = 0;
                 else
-                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_lifeSpan = 2 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Tech Symbol");
                 m_color = c_statusColor;
                 break;
-            case "Scarring ATK":
+            case "ATK(Ruin)":
                 m_charScript.m_effects[(int)effects.SCARRING] = true;
                 m_mode = mode.TURN_END;
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                if (tecVal == -3)
                     m_lifeSpan = 0;
                 else
-                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_lifeSpan = 2 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Life Symbol");
-                m_color = c_statusColor;
+                m_color = c_debuffColor;
                 break;
-            case "Smoke ATK":
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+            case "ATK(Maintain)":
+                m_charScript.m_effects[(int)effects.REGEN] = true;
+                m_statMod[(int)CharacterScript.sts.HP] = 1;
+                m_mode = mode.TURN_END;
+                if (tecVal < -1)
+                    m_lifeSpan = 0;
+                else
+                    m_lifeSpan = 2 + tecVal;
+                m_sprite = Resources.Load<Sprite>("Symbols/Life Symbol");
+                m_color = c_buffColor;
+                break;
+            case "ATK(Smoke)":
+                if (tecVal == -3)
                     m_statMod[(int)CharacterScript.sts.MOV] = 0;
                 else
-                    m_statMod[(int)CharacterScript.sts.MOV] = -2 - _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_statMod[(int)CharacterScript.sts.MOV] = -2 - tecVal;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Move Symbol");
                 m_color = c_debuffColor;
                 break;
-            case "Spot":
-                m_statMod[(int)CharacterScript.sts.RNG] = 4 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+            case "SUP(Spot)":
+                m_statMod[(int)CharacterScript.sts.RNG] = 4 + tecVal;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Range Symbol");
                 m_color = c_buffColor;
                 break;
-            case "Targeting ATK":
-                m_statMod[(int)CharacterScript.sts.RNG] = 3 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+            case "ATK(Target)":
+                if (tecVal == -3)
+                    m_statMod[(int)CharacterScript.sts.RNG] = 0;
+                else
+                    m_statMod[(int)CharacterScript.sts.RNG] = +2 + tecVal;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 2;
                 m_sprite = Resources.Load<Sprite>("Symbols/Range Symbol");
                 m_color = c_buffColor;
                 break;
-            case "Stun ATK":
+            case "ATK(Lock)":
                 m_charScript.m_effects[(int)effects.STUN] = true;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Action Symbol");
                 m_color = c_statusColor;
                 break;
-            case "Ward ATK":
-                m_charScript.m_effects[(int)effects.WARD] = true;
+            case "ATK(Ward)":
+                m_statMod[(int)CharacterScript.sts.DMG] = -3 - tecVal;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1;
                 m_sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
-                m_color = c_statusColor;
+                m_color = c_debuffColor;
                 break;
-            case "Weakening ATK":
+            case "ATK(Weaken)":
                 m_statMod[(int)CharacterScript.sts.DEF] = -1;
                 m_mode = mode.TURN_END;
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+                if (tecVal == -3)
                     m_lifeSpan = 0;
                 else
-                    m_lifeSpan = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_lifeSpan = 2 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
                 m_color = c_debuffColor;
                 break;
-            case "Winding ATK":
-                if (_casterScript.m_tempStats[(int)CharacterScript.sts.TEC] == -3)
+            case "ATK(Rev)":
+                if (tecVal == -3)
                     m_statMod[(int)CharacterScript.sts.DMG] = 0;
                 else
-                    m_statMod[(int)CharacterScript.sts.DMG] = 2 + _casterScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                    m_statMod[(int)CharacterScript.sts.DMG] = 2 + tecVal;
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 2;
                 m_sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
@@ -361,31 +386,34 @@ public class StatusScript : MonoBehaviour {
     {
         switch (m_name)
         {
-            case "Scarring ATK":
+            case "ATK(Ruin)":
                 m_charScript.m_effects[(int)effects.SCARRING] = false;
                 break;
-            case "Bleed ATK":
+            case "ATK(Rust)":
                 m_charScript.m_effects[(int)effects.BLEED] = false;
                 break;
-            case "Hindering ATK":
+            case "ATK(Hinder)":
                 m_charScript.m_effects[(int)effects.HINDER] = false;
                 break;
-            case "Immobilizing ATK":
+            case "ATK(Immobilize)":
                 m_charScript.m_effects[(int)effects.IMMOBILE] = false;
                 break;
-            case "Ward ATK":
+            case "ATK(Ward)":
                 m_charScript.m_effects[(int)effects.WARD] = false;
                 break;
-            case "Stun ATK":
+            case "ATK(Lock)":
                 m_charScript.m_effects[(int)effects.STUN] = false;
                 break;
-            case "Delay ATK":
+            case "ATK(Break)":
                 m_charScript.m_effects[(int)effects.DELAY] = false;
                 break;
-            case "Reflect":
+            case "SUP(Secure)":
                 m_charScript.m_effects[(int)effects.REFLECT] = false;
                 break;
-            case "Disorienting ATK":
+            case "Maintain":
+                m_charScript.m_effects[(int)effects.REGEN] = false;
+                break;
+            case "ATK(Crash)":
                 List<int> viableActs = new List<int>();
                 for (int i = 0; i < m_charScript.m_isDiabled.Length; i++)
                     if (m_charScript.m_isDiabled[i] == 1)
@@ -403,14 +431,53 @@ public class StatusScript : MonoBehaviour {
 
     static public void PerformEffect(StatusScript _status, CharacterScript _charScript)
     {
+        TextMesh tMesh = _charScript.m_popupText.GetComponent<TextMesh>();
         switch (_status.m_name)
         {
-            case "Bleed ATK":
-                TextMesh tMesh = _charScript.m_popupText.GetComponent<TextMesh>();
+            case "ATK(Rust)":
                 _charScript.ReceiveDamage((int.Parse(tMesh.text) + _status.m_statMod[(int)CharacterScript.sts.HP]).ToString(), Color.white);
+                break;
+            case "ATK(Maintain)":
+                _charScript.HealHealth(int.Parse(tMesh.text) + _status.m_statMod[(int)CharacterScript.sts.HP]);
                 break;
             default:
                 break;
         }
+    }
+
+    public void InvertEffect()
+    {
+        if (m_color == c_statusColor)
+            return;
+        else if (m_color == c_buffColor)
+            m_color = c_debuffColor;
+        else if (m_color == c_debuffColor)
+            m_color = c_buffColor;
+
+        for (int i = 0; i < m_statMod.Length; i++)
+            if (m_statMod[i] != 0)
+            {
+                m_statMod[i] -= m_statMod[i] * 2;
+                break;
+            }
+
+        string newString = "";
+        for (int i = 0; i < m_effect.Length; i++)
+        {
+            if (m_effect[i] == '-')
+                newString += '+';
+            else if (m_effect[i] == '+')
+                newString += '-';
+            else
+                newString += m_effect[i];
+        }
+        m_effect = newString;
+
+        ApplyStatus(m_charScript.gameObject);
+    }
+
+    static public void ShareStatus()
+    {
+
     }
 }

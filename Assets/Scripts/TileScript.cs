@@ -8,6 +8,11 @@ public class TileScript : MonoBehaviour {
     public enum nbors { left, right, top, bottom };
     public enum targetRestriction { NONE, HORVERT, DIAGONAL};
 
+    static public Color c_attack = new Color(1, 0, 0, 0.5f);
+    static public Color c_action = new Color(0, 1, 0, 0.5f);
+    static public Color c_move = new Color(0, 0, 1, 0.5f);
+    static public Color c_neutral = new Color(1, 1, 1, 0.5f);
+
     public GameObject m_holding;
     public TileScript[] m_neighbors;
     public List<TileScript> m_radius;
@@ -37,7 +42,7 @@ public class TileScript : MonoBehaviour {
 
     public void OnMouseDown()
     {
-        if (PanelScript.CheckIfPanelOpen() || m_boardScript.m_camIsFrozen)
+        if (PanelScript.CheckIfPanelOpen() || m_boardScript.m_camIsFrozen || m_boardScript.m_hoverButton)
             return;
 
         TileScript currTileScript = m_boardScript.m_currTile.GetComponent<TileScript>();
@@ -47,18 +52,41 @@ public class TileScript : MonoBehaviour {
         if (m_holding && currTileScript.m_radius.Count > 0 && renderer.material.color == new Color(1, 1, 1, 0.5f))
             return;
 
-        if (m_boardScript.m_selected != this)
+        if (renderer.material.color == c_neutral && m_boardScript.m_selected != this && !PanelScript.GetPanel("Choose Panel").m_inView)
         {
-            if (m_holding && m_holding.tag == "Player" && m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player")
+            if (m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player")
             {
-                m_boardScript.HighlightCharacter(m_holding.GetComponent<CharacterScript>());
-                Color temp = gameObject.GetComponent<Renderer>().material.color;
-                gameObject.GetComponent<Renderer>().material.color = m_boardScript.m_selected.GetComponent<Renderer>().material.color;
-                gameObject.GetComponent<TileScript>().m_oldColor = temp;
-                m_boardScript.m_selected.GetComponent<Renderer>().material.color = temp;
-                m_boardScript.m_oldTile = this;
+                Renderer oldRend = m_boardScript.m_selected.m_holding.transform.GetComponentInChildren<Renderer>();
+                oldRend.materials[1].shader = oldRend.materials[0].shader;
+                oldRend.materials[2].shader = oldRend.materials[0].shader;
+
+                PanelScript.GetPanel("HUD Panel RIGHT").m_inView = false;
+            }
+            if (m_holding && m_holding.tag == "Player")
+            {
+                Renderer rend = m_holding.transform.GetComponentInChildren<Renderer>();
+                rend.materials[2].shader = Resources.Load<Shader>("Outlined-Silhouette Only (NOT MINE)");
+
+                //m_boardScript.HighlightCharacter(m_holding.GetComponent<CharacterScript>());
+                //Color temp = gameObject.GetComponent<Renderer>().material.color;
+                //gameObject.GetComponent<Renderer>().material.color = m_boardScript.m_selected.GetComponent<Renderer>().material.color;
+                //gameObject.GetComponent<TileScript>().m_oldColor = temp;
+                //m_boardScript.m_selected.GetComponent<Renderer>().material.color = temp;
+                //m_boardScript.m_oldTile = this;
             }
             m_boardScript.m_selected = this;
+        }
+        else if (renderer.material.color == c_neutral && m_boardScript.m_selected == this && !PanelScript.GetPanel("Choose Panel").m_inView)
+        {
+            if (m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player")
+            {
+                Renderer oldRend = m_boardScript.m_selected.m_holding.transform.GetComponentInChildren<Renderer>();
+                oldRend.materials[1].shader = oldRend.materials[0].shader;
+                oldRend.materials[2].shader = oldRend.materials[0].shader;
+
+                PanelScript.GetPanel("HUD Panel RIGHT").m_inView = false;
+            }
+            m_boardScript.m_selected = null;
         }
         else
             m_boardScript.m_selected = this;
@@ -126,7 +154,7 @@ public class TileScript : MonoBehaviour {
         // Handle attacks with radius
         TileScript originalTileScript = this;
 
-        if (ownerCharScript.m_currAction.Length > 0 && _color != CharacterScript.c_move)
+        if (ownerCharScript.m_currAction.Length > 0 && _color != c_move)
         {
             string range = DatabaseScript.GetActionData(ownerCharScript.m_currAction, DatabaseScript.actions.RNG);
             string radius = DatabaseScript.GetActionData(ownerCharScript.m_currAction, DatabaseScript.actions.RAD);
@@ -193,7 +221,7 @@ public class TileScript : MonoBehaviour {
                     }
 
                     // if color is movement color and the current tile is holding someone
-                    if (_color == CharacterScript.c_move && tScript.m_holding && tScript.m_holding.tag != "PowerUp" || 
+                    if (_color == c_move && tScript.m_holding && tScript.m_holding.tag != "PowerUp" || 
                         !_targetSelf && tScript == ownerCharScript.m_tile.GetComponent<TileScript>())
                         continue;
 
@@ -353,7 +381,6 @@ public class TileScript : MonoBehaviour {
     public List<TileScript> AITilePlanning(TileScript _targetTile)
     {
         TileScript currTileScript = this;
-        CharacterScript currCharScript = m_boardScript.m_currCharScript;
 
         List<TileScript> branches = new List<TileScript>();
         List<TileScript> visited = new List<TileScript>();
@@ -405,8 +432,6 @@ public class TileScript : MonoBehaviour {
         {
             path.Add(currTileScript);
             currTileScript = currTileScript.m_parent;
-            if (path.Count > 100)
-                currCharScript = currCharScript;
         }
 
         path.Reverse();

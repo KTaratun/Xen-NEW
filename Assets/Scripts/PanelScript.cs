@@ -96,12 +96,6 @@ public class PanelScript : MonoBehaviour {
             if (m_history.Count > 0)
                 m_history[m_history.Count - 1].m_inView = true;
         }
-
-        if (m_main && m_main.name == "Board" && name == "Action Panel")
-        {
-            BoardScript bScript = m_main.GetComponent<BoardScript>();
-            CharacterScript cScript = bScript.m_currCharScript;
-        }
     }
 
     static public void MenuPanelInit(string _canvasName)
@@ -150,40 +144,13 @@ public class PanelScript : MonoBehaviour {
                 }
             }
         }
-        else if (name == "ActionPreview")
-        {
-            BoardScript bScript = m_main.GetComponent<BoardScript>();
-            CharacterScript currScript = bScript.m_currCharScript;
-
-            int def = m_cScript.m_tempStats[(int)CharacterScript.sts.DEF];
-            int dmg = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.DMG)) + currScript.m_tempStats[(int)CharacterScript.sts.DMG];
-            string actName = DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.NAME);
-
-            if (actName == "Bypass ATK" || actName == "Forceful ATK")
-            {
-                if (actName == "Bypass ATK")
-                    def -= 2 + currScript.m_tempStats[(int)CharacterScript.sts.TEC];
-                else if (actName == "Forceful ATK")
-                    def -= 1 + currScript.m_tempStats[(int)CharacterScript.sts.TEC];
-                if (def < 0)
-                    def = 0;
-            }
-            else if (actName == "Burst ATK" || actName == "Power ATK" || actName == "Devastating ATK")
-                dmg += currScript.m_tempStats[(int)CharacterScript.sts.TEC];
-
-            dmg -= def;
-
-            if (m_cScript.m_tempStats[(int)CharacterScript.sts.HP] >= m_cScript.m_tempStats[(int)CharacterScript.sts.HP] - dmg)
-                m_text[0].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP].ToString() + " -> " + (m_cScript.m_tempStats[(int)CharacterScript.sts.HP] - dmg).ToString();
-            else
-                m_text[0].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP].ToString() + " -> " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP].ToString();
-        }
         else if (name == "ActionViewer Panel")
         {
             string actName = DatabaseScript.GetActionData(m_cScript.m_currAction, DatabaseScript.actions.NAME);
             string[] actStats = m_cScript.m_currAction.Split('|');
             string[] currStat = actStats[1].Split(':');
-            m_text[0].text = currStat[1];
+            PanelScript actView = m_panels[0];
+            actView.m_text[0].text = currStat[1];
 
             currStat = actStats[2].Split(':');
             Button energy = GetComponentInChildren<Button>();
@@ -191,40 +158,45 @@ public class PanelScript : MonoBehaviour {
             engScript.SetTotalEnergy(currStat[1]);
 
             currStat = actStats[3].Split(':');
-            int finalDmg = (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG]);
+            if (CharacterScript.CheckIfAttack(actName))
+            {
+                int finalDmg = (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.DMG]);
 
-            if (actName == "Burst ATK" || actName == "Power ATK" || actName == "Devastating ATK")
-                finalDmg += m_cScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                if (CharacterScript.UniqueActionProperties(m_cScript.m_currAction, CharacterScript.uniAct.DMG_MOD) >= 0)
+                    finalDmg += m_cScript.m_tempStats[(int)CharacterScript.sts.TEC];
 
-            if (finalDmg > 0)
-                m_text[2].text = "DMG: " + finalDmg;
+                if (finalDmg > 0)
+                    actView.m_text[2].text = "DMG: " + finalDmg;
+                else
+                    actView.m_text[2].text = "DMG: 0";
+            }
             else
-                m_text[2].text = "DMG: 0";
+                actView.m_text[2].text = "DMG: 0";
 
             currStat = actStats[4].Split(':');
             int finalRng = (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RNG]);
 
-            if (actName == "Pull ATK" || actName == "Snipe ATK" || actName == "Lunge ATK" || actName == "Redirect ATK" || actName == "Thrust ATK")
+            if (CharacterScript.UniqueActionProperties(m_cScript.m_currAction, CharacterScript.uniAct.RNG_MOD) >= 0)
                 finalRng += m_cScript.m_tempStats[(int)CharacterScript.sts.TEC];
 
             if (finalRng > 0)
-                m_text[3].text = "RNG: " + finalRng;
+                actView.m_text[3].text = "RNG: " + finalRng;
             else
-                m_text[3].text = "RNG: 0";
+                actView.m_text[3].text = "RNG: 0";
 
             currStat = actStats[5].Split(':');
             int finalRad = (int.Parse(currStat[1]) + m_cScript.m_tempStats[(int)CharacterScript.sts.RAD]);
 
-            if (actName == "Magnet ATK")
+            if (CharacterScript.UniqueActionProperties(m_cScript.m_currAction, CharacterScript.uniAct.RAD_MOD) >= 0)
                 finalRad += m_cScript.m_tempStats[(int)CharacterScript.sts.TEC];
 
             if (finalRad > 0)
-                m_text[4].text = "RAD: " + finalRad;
+                actView.m_text[4].text = "RAD: " + finalRad;
             else
-                m_text[4].text = "RAD: 0";
+                actView.m_text[4].text = "RAD: 0";
 
             currStat = actStats[6].Split(':');
-            m_text[6].text = DatabaseScript.ModifyActions(m_cScript, currStat[1]);
+            actView.m_text[6].text = DatabaseScript.ModifyActions(m_cScript.m_tempStats[(int)CharacterScript.sts.TEC], currStat[1]);
         }
         else if (name == "Character Panel")
         {
@@ -318,6 +290,30 @@ public class PanelScript : MonoBehaviour {
             // Fill out Status Panel
             statPan.m_cScript = m_cScript;
             statPan.PopulatePanel();
+        }
+        else if (name == "DamagePreview")
+        {
+            BoardScript bScript = m_main.GetComponent<PanelScript>().m_main.GetComponent<BoardScript>();
+            CharacterScript currScript = bScript.m_currCharScript;
+
+            int def = m_cScript.m_tempStats[(int)CharacterScript.sts.DEF];
+            int dmg = int.Parse(DatabaseScript.GetActionData(currScript.m_currAction, DatabaseScript.actions.DMG)) + currScript.m_tempStats[(int)CharacterScript.sts.DMG];
+
+            if (CharacterScript.UniqueActionProperties(currScript.m_currAction, CharacterScript.uniAct.BYPASS) >= 0)
+            {
+                def -= CharacterScript.UniqueActionProperties(currScript.m_currAction, CharacterScript.uniAct.BYPASS) + currScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                if (def < 0)
+                    def = 0;
+            }
+            else if (CharacterScript.UniqueActionProperties(currScript.m_currAction, CharacterScript.uniAct.DMG_MOD) >= 0)
+                dmg += currScript.m_tempStats[(int)CharacterScript.sts.TEC];
+
+            dmg -= def;
+
+            if (m_cScript.m_tempStats[(int)CharacterScript.sts.HP] >= m_cScript.m_tempStats[(int)CharacterScript.sts.HP] - dmg)
+                m_text[0].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP].ToString() + " -> " + (m_cScript.m_tempStats[(int)CharacterScript.sts.HP] - dmg).ToString();
+            else
+                m_text[0].text = "HP: " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP].ToString() + " -> " + m_cScript.m_tempStats[(int)CharacterScript.sts.HP].ToString();
         }
         else if (name == "HUD Panel LEFT" || name == "HUD Panel RIGHT")
         {
@@ -548,7 +544,6 @@ public class PanelScript : MonoBehaviour {
             string name = DatabaseScript.GetActionData(m_cScript.m_actions[i], DatabaseScript.actions.NAME);
             string eng = DatabaseScript.GetActionData(m_cScript.m_actions[i], DatabaseScript.actions.ENERGY);
 
-            Text text = m_buttons[i].GetComponentInChildren<Text>();
             ButtonScript buttScript = m_buttons[i].GetComponent<ButtonScript>();
             buttScript.m_action = m_cScript.m_actions[i];
             buttScript.SetTotalEnergy(eng);
@@ -577,17 +572,17 @@ public class PanelScript : MonoBehaviour {
             // ACTION PREVENTION
             // REFACTOR
             if (m_cScript.m_effects[(int)StatusScript.effects.WARD] && CharacterScript.CheckIfAttack(name) ||
-                m_cScript.m_effects[(int)StatusScript.effects.DELAY] && PlayerScript.CheckIfGains(eng) && eng.Length == 2 ||
-                currCharActName == "Redirect ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name) ||
-                currCharActName == "Redirect ATK" && currCharScript != m_cScript && eng.Length > 2 ||
-                currCharActName == "Copy ATK" && currCharScript != m_cScript && !CharacterScript.CheckIfAttack(name) ||
-                currCharActName == "Copy ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name) && CharacterScript.CheckActionLevel(eng) > currCharScript.m_tempStats[(int)CharacterScript.sts.TEC] ||
-                currCharActName == "Hack ATK" && currCharScript != m_cScript && PlayerScript.CheckIfGains(eng) ||
+                m_cScript.m_effects[(int)StatusScript.effects.DELAY] && PlayerScript.CheckIfGains(eng) && eng.Length >= 2 ||
+                currCharActName == "SUP(Redirect)" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name) ||
+                currCharActName == "SUP(Redirect)" && currCharScript != m_cScript && eng.Length > 1 ||
+                currCharActName == "ATK(Copy)" && currCharScript != m_cScript && !CharacterScript.CheckIfAttack(name) ||
+                currCharActName == "ATK(Copy)" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name) && CharacterScript.CheckActionLevel(eng) > 2 ||
+                currCharActName == "ATK(Hack)" && currCharScript != m_cScript && PlayerScript.CheckIfGains(eng) ||
                 m_cScript.m_effects[(int)StatusScript.effects.HINDER] && !CharacterScript.CheckIfAttack(name) ||
                 disabled)
                 m_buttons[i].GetComponent<Image>().color = b_isDisallowed;
-            else if (currCharActName == "Redirect ATK" && currCharScript != m_cScript && !CharacterScript.CheckIfAttack(name) && eng.Length <= 2 ||
-                currCharActName == "Copy ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name) && CharacterScript.CheckActionLevel(eng) <= currCharScript.m_tempStats[(int)CharacterScript.sts.TEC])
+            else if (currCharActName == "SUP(Redirect)" && currCharScript != m_cScript && !CharacterScript.CheckIfAttack(name) && eng.Length <= 2 ||
+                currCharActName == "ATK(Copy)" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name) && CharacterScript.CheckActionLevel(eng) <= 2)
             {
                 m_buttons[i].GetComponent<Image>().color = b_isFree;
                 m_buttons[i].onClick.AddListener(() => currCharScript.ActionTargeting(currCharScript.m_tile));
@@ -596,7 +591,7 @@ public class PanelScript : MonoBehaviour {
                 else
                     m_buttons[i].interactable = false;
             }
-            else if (currCharActName == "Hack ATK" && currCharScript != m_cScript && !PlayerScript.CheckIfGains(eng))
+            else if (currCharActName == "ATK(Hack)" && currCharScript != m_cScript && !PlayerScript.CheckIfGains(eng))
             {
                     m_buttons[i].GetComponent<Image>().color = b_isSpecial;
                     m_buttons[i].onClick.AddListener(() => m_cScript.DisableSelectedAction(ind));
@@ -605,7 +600,7 @@ public class PanelScript : MonoBehaviour {
             else
             {
                 m_buttons[i].GetComponent<Image>().color = new Color(1, 1, 1, 1);
-                if (m_cScript.m_player.CheckEnergy(eng) && m_cScript.m_hasActed[(int)CharacterScript.trn.ACT] < 3)
+                if (m_cScript.m_player.CheckEnergy(eng) && m_cScript.m_hasActed[(int)CharacterScript.trn.ACT] < 3 && !GetPanel("Choose Panel").m_inView)
                 {
                     m_buttons[i].interactable = true;
                     if (m_cScript.m_player.CheckEnergy(eng) && m_cScript.m_hasActed[(int)CharacterScript.trn.ACT] == 2)
@@ -674,21 +669,21 @@ public class PanelScript : MonoBehaviour {
                 // REFACTOR
                 if (m_cScript.m_effects[(int)StatusScript.effects.WARD] && CharacterScript.CheckIfAttack(name[1]) ||
                     m_cScript.m_effects[(int)StatusScript.effects.DELAY] && PlayerScript.CheckIfGains(eng[1]) && eng[1].Length == 2 ||
-                    currCharActName == "Redirect ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) ||
-                    currCharActName == "Redirect ATK" && currCharScript != m_cScript && eng[1].Length > 2 ||
-                    currCharActName == "Copy ATK" && currCharScript != m_cScript && !CharacterScript.CheckIfAttack(name[1]) ||
-                    currCharActName == "Copy ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) && CharacterScript.CheckActionLevel(eng[1]) > currCharScript.m_tempStats[(int)CharacterScript.sts.TEC] ||
+                    currCharActName == "SUP(Redirect)" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) ||
+                    currCharActName == "SUP(Redirect)" && currCharScript != m_cScript && eng[1].Length > 2 ||
+                    currCharActName == "ATK(Copy)" && currCharScript != m_cScript && !CharacterScript.CheckIfAttack(name[1]) ||
+                    currCharActName == "ATK(Copy)" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) && CharacterScript.CheckActionLevel(eng[1]) > currCharScript.m_tempStats[(int)CharacterScript.sts.TEC] ||
                     m_cScript.m_effects[(int)StatusScript.effects.HINDER] && !CharacterScript.CheckIfAttack(name[1]) ||
                     disabled)
                     buttons[i].GetComponent<Image>().color = b_isDisallowed;
-                else if (currCharActName == "Redirect ATK" && currCharScript != m_cScript && !CharacterScript.CheckIfAttack(name[1]) && eng[1].Length <= 2 ||
-                    currCharActName == "Copy ATK" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) && CharacterScript.CheckActionLevel(eng[1]) <= currCharScript.m_tempStats[(int)CharacterScript.sts.TEC])
+                else if (currCharActName == "SUP(Redirect)" && currCharScript != m_cScript && !CharacterScript.CheckIfAttack(name[1]) && eng[1].Length <= 2 ||
+                    currCharActName == "ATK(Copy)" && currCharScript != m_cScript && CharacterScript.CheckIfAttack(name[1]) && CharacterScript.CheckActionLevel(eng[1]) <= currCharScript.m_tempStats[(int)CharacterScript.sts.TEC])
                 {
                     buttons[i].GetComponent<Image>().color = b_isFree;
                     buttons[i].onClick.AddListener(() => currCharScript.ActionTargeting(currCharScript.m_tile));
                     buttons[i].interactable = true;
                 }
-                else if (currCharActName == "Hack ATK" && currCharScript != m_cScript)
+                else if (currCharActName == "ATK(Hack)" && currCharScript != m_cScript)
                 {
                     if (!PlayerScript.CheckIfGains(eng[1]) && !disabled)
                     {
@@ -786,8 +781,12 @@ public class PanelScript : MonoBehaviour {
                     transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y + m_slideSpeed, transform.position.z), transform.rotation);
             }
             else
-                if (recTrans.offsetMax.y > -500)
-                transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y - m_slideSpeed, transform.position.z), transform.rotation);
+            {
+                if (recTrans.offsetMax.y > -500 && name != "DamagePreview")
+                    transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y - m_slideSpeed, transform.position.z), transform.rotation);
+                else if (recTrans.offsetMax.y > 400)
+                    transform.SetPositionAndRotation(new Vector3(transform.position.x, transform.position.y - m_slideSpeed, transform.position.z), transform.rotation);
+            }   
         }
     }
 
@@ -811,8 +810,6 @@ public class PanelScript : MonoBehaviour {
 
         if (pan == null)
             return;
-
-        CharacterScript c = pan.GetComponentInChildren<ButtonScript>().m_cScript;
 
         //if (bScript.m_currRound.Count >= 8 && bScript.m_newTurn) //notListed.Count > 0 && notListed.Count + count > bScript.m_currRound.Count
         //{
