@@ -110,94 +110,19 @@ public class CharacterScript : ObjectScript {
             m_tempStats[i] = m_stats[i];
     }
 
+
     // Update is called once per frame
-    void Update()
+    new void Update()
     {
+        base.Update();
         if (m_boardScript)
         {
-            MovementUpdate();
-            EndTurn(false);
+            //MovementUpdate();
             UpdateOverheadItems();
 
             if (m_boardScript.m_currCharScript == this && Input.GetKeyDown(KeyCode.P))
                 AITurn();
         }
-    }
-
-    private void MovementUpdate()
-    {
-        if (m_tile && transform.position != m_tile.transform.position)
-        {
-            if (m_anim.GetCurrentAnimatorStateInfo(0).fullPathHash == Animator.StringToHash("Base.Melee") ||
-                m_anim.GetCurrentAnimatorStateInfo(0).fullPathHash == Animator.StringToHash("Base.Ranged"))
-                return;
-
-            // Determine how much the character will be moving this update
-            float charAcceleration = 0.02f;
-            float charSpeed = 0.015f;
-            float charMovement = Vector3.Distance(transform.position, m_tile.transform.position) * charAcceleration + charSpeed;
-            transform.LookAt(m_tile.transform);
-            transform.SetPositionAndRotation(new Vector3(transform.position.x + transform.forward.x * charMovement, transform.position.y, transform.position.z + transform.forward.z * charMovement), transform.rotation);
-            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = gameObject;
-
-            // Check to see if character is close enough to the point
-            float snapDistance = 0.007f;
-            float dis = Vector3.Distance(transform.position, m_tile.transform.position);
-            if (dis < snapDistance)
-            { 
-                // Snap them to the point and detach camera from player
-                transform.SetPositionAndRotation(m_tile.transform.position, transform.rotation);
-                CameraScript cam = m_boardScript.m_camera.GetComponent<CameraScript>();
-                cam.m_target = null;
-
-                if (m_tile.m_holding && m_tile.m_holding.tag == "PowerUp")
-                    m_tile.m_holding.GetComponent<PowerupScript>().OnPickup(this);
-
-                // Reset tile
-                m_tile.m_holding = gameObject;
-                m_boardScript.m_currButton = null;
-                m_tile.m_traversed = false;
-                if (m_isAlive)
-                    m_anim.Play("Idle Melee", -1, 0);
-
-                m_boardScript.m_camIsFrozen = false;
-
-                if (m_isAI && m_currAction.Length > 0 && m_targets.Count > 0 && !m_boardScript.m_isForcedMove)
-                {
-                    m_boardScript.m_selected = m_targets[0].GetComponent<CharacterScript>().m_tile;
-                    transform.LookAt(m_boardScript.m_selected.transform);
-                    if (TileScript.CaclulateDistance(m_tile, m_boardScript.m_selected) > 1)
-                        m_anim.Play("Ranged", -1, 0);
-                    else
-                        m_anim.Play("Melee", -1, 0);
-
-                    print(m_name + " has started attacking.\n");
-                }
-                else if (m_isAI && m_currAction.Length > 0 || m_isAI && m_targets.Count > 0)
-                    return;
-
-                m_boardScript.m_isForcedMove = null;
-                print(m_name + " has finished moving.\n");
-            }
-        }
-    }
-
-    public void EndTurn(bool _isForced)
-    {
-        if (m_anim.GetCurrentAnimatorStateInfo(0).fullPathHash == Animator.StringToHash("Base.Idle Melee") ||
-            m_anim.GetCurrentAnimatorStateInfo(0).fullPathHash == Animator.StringToHash("Base.Death"))
-            if (m_boardScript.m_currCharScript == this && m_hasActed[(int)trn.MOV] + m_hasActed[(int)trn.ACT] > 3 && 
-                !m_boardScript.m_isForcedMove && !m_boardScript.m_camIsFrozen && !PanelScript.GetPanel("Choose Panel").m_inView)
-            {
-                print(m_name + " has ended their turn.\n");
-
-                PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[(int)trn.MOV].interactable = true;
-                StatusScript.UpdateStatus(gameObject, StatusScript.mode.TURN_END);
-                m_hasActed[(int)trn.MOV] = 0;
-                m_hasActed[(int)trn.ACT] = 0;
-                m_currAction = "";
-                m_boardScript.NewTurn();
-            }
     }
 
     private void UpdateOverheadItems()
@@ -264,11 +189,8 @@ public class CharacterScript : ObjectScript {
         }
     }
 
-    private void OnMouseDown()
-    {
-        m_tile.OnMouseDown();
-    }
 
+    // Movement
     public void MovementSelection(int _forceMove)
     {
         int move = 0;
@@ -281,23 +203,11 @@ public class CharacterScript : ObjectScript {
         m_tile.FetchTilesWithinRange(move, new Color (0, 0, 1, 0.5f), false, TileScript.targetRestriction.NONE, false);
     }
 
-    public void Movement(TileScript newScript, bool _isForced)
+    public void CharStartMoving(TileScript newScript, bool _isForced)
     {
-        if (m_tile == newScript || newScript == null)
-            return;
-
-        m_tile.m_holding = null;
-        if (!_isForced)
-            m_boardScript.m_selected = null;
-
-        m_tile.ClearRadius();
-        m_tile = newScript;
-        m_boardScript.m_camIsFrozen = true;
         if (m_isAlive)
             m_anim.Play("Running Melee", -1, 0);
 
-        if (this == m_boardScript.m_currCharScript)
-            m_boardScript.m_currTile = m_tile;
         if (!_isForced)
         {
             m_hasActed[(int)trn.MOV] += 2;
@@ -310,6 +220,33 @@ public class CharacterScript : ObjectScript {
         print(m_name + " has started moving.\n");
     }
 
+    public void CharFinishMoving()
+    {
+        if (m_tile.m_holding && m_tile.m_holding.tag == "PowerUp")
+            m_tile.m_holding.GetComponent<PowerupScript>().OnPickup(this);
+
+        if (m_isAlive)
+            m_anim.Play("Idle Melee", -1, 0);
+
+        if (m_isAI && m_currAction.Length > 0 && m_targets.Count > 0 && !m_boardScript.m_isForcedMove)
+        {
+            m_boardScript.m_selected = m_targets[0].GetComponent<CharacterScript>().m_tile;
+            transform.LookAt(m_boardScript.m_selected.transform);
+            if (TileScript.CaclulateDistance(m_tile, m_boardScript.m_selected) > 1)
+                m_anim.Play("Ranged", -1, 0);
+            else
+                m_anim.Play("Melee", -1, 0);
+
+            print(m_name + " has started attacking.\n");
+        }
+        else if (m_isAI && m_currAction.Length > 0 || m_isAI && m_targets.Count > 0)
+            return;
+
+        print(m_name + " has finished moving.\n");
+    }
+
+
+    // Action
     public void ActionTargeting(TileScript _tile)
     {
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
@@ -436,10 +373,7 @@ public class CharacterScript : ObjectScript {
         UpdateStatusImages();
 
         PanelScript.GetPanel("HUD Panel LEFT").PopulatePanel();
-        if (PanelScript.GetPanel("Choose Panel").m_inView)
-            PanelScript.GetPanel("HUD Panel RIGHT").PopulatePanel();
-        else
-            PanelScript.GetPanel("HUD Panel RIGHT").m_inView = false;
+        PanelScript.GetPanel("HUD Panel RIGHT").PopulatePanel();
 
         PanelScript.GetPanel("ActionViewer Panel").m_inView = false;
         if (!PanelScript.GetPanel("Choose Panel").m_inView)
@@ -506,96 +440,6 @@ public class CharacterScript : ObjectScript {
             m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_selected.gameObject;
         else
             m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_targets[0];
-    }
-
-    static public bool CheckIfAttack(string _action)
-    {
-        if (_action[0] == 'A' && _action[1] == 'T' && _action[2] == 'K')
-            return true;
-        else
-            return false;
-    }
-
-    public void ReceiveDamage(string _dmg, Color _color)
-    {
-        TextMesh textMesh = m_popupText.GetComponent<TextMesh>();
-        m_popupText.SetActive(true);
-        textMesh.color = _color;
-
-        int parsedDMG;
-        if (int.TryParse(_dmg, out parsedDMG))
-        {
-            if (m_tempStats[(int)sts.HP] - parsedDMG <= 0)
-                Dead();
-            else
-                m_tempStats[(int)sts.HP] -= parsedDMG;
-        }
-
-        int res = 0;
-        if (int.TryParse(_dmg, out res) && int.Parse(_dmg) > -1)
-            textMesh.text = (int.Parse(textMesh.text) + int.Parse(_dmg)).ToString();
-        else
-            textMesh.text = _dmg;
-    }
-
-    public void Dead()
-    {
-        m_tempStats[(int)sts.HP] = 0;
-        for (int i = 0; i < m_turnPanels.Count; i++)
-            m_turnPanels[i].GetComponent<Image>().color = new Color(1, .5f, .5f, 1);
-
-        m_isAlive = false;
-        m_healthBar.transform.parent.gameObject.SetActive(false);
-        m_statusSymbol.SetActive(true);
-
-        StatusScript.DestroyAll(gameObject);
-        //GetComponentInChildren<Renderer>().material.color = new Color(.5f, .5f, .5f, 1);
-        m_anim.Play("Death", -1, 0);
-        
-    }
-
-    public void Revive(int _hp)
-    {
-        if (m_isAlive)
-            return;
-
-        HealHealth(_hp);
-
-        for (int i = 0; i < m_turnPanels.Count; i++)
-            m_turnPanels[i].GetComponent<Image>().color = m_teamColor;
-
-        m_isAlive = true;
-        m_healthBar.transform.parent.gameObject.SetActive(true);
-        m_statusSymbol.SetActive(false);
-
-        //GetComponentInChildren<Renderer>().material.color = Color.white;
-
-    }
-
-    public void HealHealth(int _hp)
-    {
-        if (m_effects[(int)StatusScript.effects.SCARRING])
-            return;
-
-        TextMesh textMesh = m_popupText.GetComponent<TextMesh>();
-        m_popupText.SetActive(true);
-        textMesh.color = Color.green;
-
-        if (m_tempStats[(int)sts.HP] + _hp > m_stats[(int)sts.HP])
-        {
-            _hp = m_stats[(int)sts.HP] - m_tempStats[(int)sts.HP];
-            m_tempStats[(int)sts.HP] = m_stats[(int)sts.HP];
-        }
-        else
-            m_tempStats[(int)sts.HP] += _hp;
-
-        textMesh.text = _hp.ToString();
-
-        if (this == m_boardScript.m_currCharScript)
-        {
-            PanelScript actPanScript = PanelScript.GetPanel("HUD Panel LEFT");
-            actPanScript.PopulatePanel();
-        }
     }
 
     public void Ability(GameObject _currTarget, string _name)
@@ -776,15 +620,15 @@ public class CharacterScript : ObjectScript {
                     targetScript.MovementSelection(3 + m_tempStats[(int)sts.TEC]);
                 }
                 break;
+            case "SUP(Reboot)":
+                targetScript.Revive(5 + m_tempStats[(int)sts.TEC]);
+                break;
             case "ATK(Smash)":
                 Knockback(targetScript, tileScript, 3 + m_tempStats[(int)sts.TEC]);
                 break;
             //case "ATK(Purge)":
             //    StatusScript.DestroyAll(_currTarget);
             //    break;
-            case "SUP(Reboot)":
-                targetScript.Revive(10 + m_tempStats[(int)sts.TEC]);
-                break;
            //case "ATK(Virus)":
            //    StatusScript.ShareStatus();
            //    break;
@@ -798,36 +642,208 @@ public class CharacterScript : ObjectScript {
         }
     }
 
-    private void PullTowards(CharacterScript _targetScript, TileScript _towards, int _maxDis)
+
+    // Health/Damage
+    public void ReceiveDamage(string _dmg, Color _color)
     {
-        TileScript targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
-        TileScript nei = null;
+        TextMesh textMesh = m_popupText.GetComponent<TextMesh>();
+        m_popupText.SetActive(true);
+        textMesh.color = _color;
 
-        while (_maxDis > 0)
+        int parsedDMG;
+        if (int.TryParse(_dmg, out parsedDMG))
         {
-            if (targetTileScript.m_x < _towards.m_x && targetTileScript.m_neighbors[(int)TileScript.nbors.right])
-                nei = targetTileScript.m_neighbors[(int)TileScript.nbors.right].GetComponent<TileScript>();
-            else if (targetTileScript.m_x > _towards.m_x && targetTileScript.m_neighbors[(int)TileScript.nbors.left])
-                nei = targetTileScript.m_neighbors[(int)TileScript.nbors.left].GetComponent<TileScript>();
-            else if (targetTileScript.m_z < _towards.m_z && targetTileScript.m_neighbors[(int)TileScript.nbors.top])
-                nei = targetTileScript.m_neighbors[(int)TileScript.nbors.top].GetComponent<TileScript>();
-            else if (targetTileScript.m_z > _towards.m_z && targetTileScript.m_neighbors[(int)TileScript.nbors.bottom])
-                nei = targetTileScript.m_neighbors[(int)TileScript.nbors.bottom].GetComponent<TileScript>();
+            if (m_tempStats[(int)sts.HP] - parsedDMG <= 0)
+                Dead();
             else
-                nei = null;
-
-            if (nei && !nei.m_holding && !nei.m_traversed || nei && nei.m_holding && nei.m_holding.tag == "PowerUp" && !nei.m_traversed)
-            {
-                _targetScript.Movement(nei, true);
-                targetTileScript = nei;
-                _maxDis--;
-                if (targetTileScript == _towards)
-                    _towards.m_traversed = true;
-
-                continue;
-            }
-            break;
+                m_tempStats[(int)sts.HP] -= parsedDMG;
         }
+
+        int res = 0;
+        if (int.TryParse(_dmg, out res) && int.Parse(_dmg) > -1)
+            textMesh.text = (int.Parse(textMesh.text) + int.Parse(_dmg)).ToString();
+        else
+            textMesh.text = _dmg;
+    }
+
+    public void Dead()
+    {
+        m_tempStats[(int)sts.HP] = 0;
+        for (int i = 0; i < m_turnPanels.Count; i++)
+            m_turnPanels[i].GetComponent<Image>().color = new Color(1, .5f, .5f, 1);
+
+        m_isAlive = false;
+        m_healthBar.transform.parent.gameObject.SetActive(false);
+        m_statusSymbol.SetActive(true);
+
+        StatusScript.DestroyAll(gameObject);
+        //GetComponentInChildren<Renderer>().material.color = new Color(.5f, .5f, .5f, 1);
+        m_anim.Play("Death", -1, 0);
+        
+    }
+
+    public void HealHealth(int _hp)
+    {
+        if (m_effects[(int)StatusScript.effects.SCARRING])
+            return;
+
+        TextMesh textMesh = m_popupText.GetComponent<TextMesh>();
+        m_popupText.SetActive(true);
+        textMesh.color = Color.green;
+
+        if (m_tempStats[(int)sts.HP] + _hp > m_stats[(int)sts.HP])
+        {
+            _hp = m_stats[(int)sts.HP] - m_tempStats[(int)sts.HP];
+            m_tempStats[(int)sts.HP] = m_stats[(int)sts.HP];
+        }
+        else
+            m_tempStats[(int)sts.HP] += _hp;
+
+        textMesh.text = _hp.ToString();
+
+        if (this == m_boardScript.m_currCharScript)
+        {
+            PanelScript actPanScript = PanelScript.GetPanel("HUD Panel LEFT");
+            actPanScript.PopulatePanel();
+        }
+    }
+
+    public void Revive(int _hp)
+    {
+        if (m_isAlive)
+            return;
+
+        HealHealth(_hp);
+
+        for (int i = 0; i < m_turnPanels.Count; i++)
+            m_turnPanels[i].GetComponent<Image>().color = m_teamColor;
+
+        m_isAlive = true;
+        m_healthBar.transform.parent.gameObject.SetActive(true);
+        m_statusSymbol.SetActive(false);
+
+        //GetComponentInChildren<Renderer>().material.color = Color.white;
+
+    }
+
+
+    // Ability functions
+    static public int UniqueActionProperties(string _action, uniAct _uniAct)
+    {
+        string actName = DatabaseScript.GetActionData(_action, DatabaseScript.actions.NAME);
+
+        // Only DMG MOD
+        if (actName == "ATK(Burst)" || actName == "ATK(Destroy)" || actName == "ATK(Power)" || actName == "ATK(Corrupt)")
+        {
+            if (_uniAct == uniAct.DMG_MOD)
+                return 1;
+        }
+        // Only SOLO BUFF
+        else if (actName == "ATK(Accelerate)" || actName == "ATK(Fortify)" || actName == "ATK(Rev)" || 
+            actName == "ATK(Salvage)" || actName == "ATK(Target)")
+        {
+            if (_uniAct == uniAct.SOLO_BUFF)
+                return 1;
+        }
+        // Only RNG MOD
+        else if (actName == "ATK(Copy)" || actName == "ATK(Leak)" || actName == "ATK(Snipe)")
+        {
+            if (_uniAct == uniAct.RNG_MOD)
+                return 1;
+        }
+        // Only HOR RNG MOD
+        else if (actName == "ATK(Lunge)" || actName == "ATK(Pull)")
+        {
+            if (_uniAct == uniAct.TAR_RES)
+                return (int)TileScript.targetRestriction.HORVERT;
+            else if (_uniAct == uniAct.RNG_MOD)
+                return 1;
+        }
+        // Only BYPASS
+        else if (actName == "ATK(Bypass)" || actName == "ATK(Force)")
+        {
+            if (_uniAct == uniAct.BYPASS)
+                return 1;
+        }
+        // ONLY TEAM BUFF
+        else if (actName == "ATK(Maintain)")
+        {
+            if (_uniAct == uniAct.TEAM_BUFF)
+                return 1;
+        }
+
+        else if (actName == "SUP(Channel)")
+        {
+            if (_uniAct == uniAct.NO_RNG)
+                return 1;
+        }
+        else if (actName == "ATK(Synch)")
+        {
+            if (_uniAct == uniAct.TEAM_BUFF)
+                return 1;
+            else if (_uniAct == uniAct.TAR_SELF)
+                return 0;
+        }
+        else if (actName == "ATK(Diagonal)")
+        {
+            if (_uniAct == uniAct.TAR_RES)
+                return (int)TileScript.targetRestriction.DIAGONAL;
+            else if (_uniAct == uniAct.IS_NOT_BLOCK)
+                return 0;
+            if (_uniAct == uniAct.TAR_SELF)
+                return 0;
+            if (_uniAct == uniAct.NON_RAD)
+                return 1;
+        }
+        else if (actName == "ATK(Cross)")
+        {
+            if (_uniAct == uniAct.TAR_RES)
+                return (int)TileScript.targetRestriction.DIAGONAL;
+            else if (_uniAct == uniAct.DMG_MOD)
+                return 1;
+            if (_uniAct == uniAct.TAR_SELF)
+                return 0;
+            if (_uniAct == uniAct.NON_RAD)
+                return 1;
+        }
+        else if (actName == "ATK(Magnet)")
+        {
+            if (_uniAct == uniAct.RAD_MOD)
+                return 1;
+        }
+        else if (actName == "ATK(Piercing)")
+        {
+            if (_uniAct == uniAct.TAR_RES)
+                return (int)TileScript.targetRestriction.HORVERT;
+            else if (_uniAct == uniAct.IS_NOT_BLOCK)
+                return 0;
+            if (_uniAct == uniAct.NON_RAD)
+                return 1;
+        }
+        else if (actName == "ATK(Slash)")
+        {
+            if (_uniAct == uniAct.TAR_SELF)
+                return 0;
+            if (_uniAct == uniAct.TAR_RES)
+                return (int)TileScript.targetRestriction.HORVERT;
+            if (_uniAct == uniAct.IS_NOT_BLOCK)
+                return 1;
+            if (_uniAct == uniAct.NON_RAD)
+                return 1;
+        }
+        else if (actName == "ATK(Thrust)")
+        {
+            if (_uniAct == uniAct.TAR_RES)
+                return (int)TileScript.targetRestriction.HORVERT;
+            else if (_uniAct == uniAct.IS_NOT_BLOCK)
+                return 0;
+            else if (_uniAct == uniAct.RNG_MOD)
+                return 1;
+            if (_uniAct == uniAct.NON_RAD)
+                return 1;
+        }
+
+        return -1;
     }
 
     private void Knockback(CharacterScript _targetScript, TileScript _away, int _force)
@@ -850,7 +866,7 @@ public class CharacterScript : ObjectScript {
 
             if (nei && !nei.m_holding || nei && nei.m_holding && nei.m_holding.tag == "PowerUp")
             {
-                _targetScript.Movement(nei, true);
+                _targetScript.StartMoving(nei, true);
                 targetTileScript = nei;
                 _force--;
                 continue;
@@ -869,145 +885,43 @@ public class CharacterScript : ObjectScript {
         }
     }
 
-    private void EnergyConversion(string _energy)
+    private void PullTowards(ObjectScript _targetScript, TileScript _towards, int _maxDis)
     {
-        // Assign _energy symbols
-        for (int i = 0; i < _energy.Length; i++)
-        {
-            if (_energy[i] == 'g')
-                m_player.m_energy[0] += 1;
-            else if (_energy[i] == 'r')
-                m_player.m_energy[1] += 1;
-            else if (_energy[i] == 'w')
-                m_player.m_energy[2] += 1;
-            else if (_energy[i] == 'b')
-                m_player.m_energy[3] += 1;
-            else if (_energy[i] == 'G')
-                m_player.m_energy[0] -= 1;
-            else if (_energy[i] == 'R')
-                m_player.m_energy[1] -= 1;
-            else if (_energy[i] == 'W')
-                m_player.m_energy[2] -= 1;
-            else if (_energy[i] == 'B')
-                m_player.m_energy[3] -= 1;
-        }
+        TileScript targetTileScript = _targetScript.m_tile.GetComponent<TileScript>();
+        TileScript nei = null;
 
-        SetPopupSpheres(_energy);
-        m_player.SetEnergyPanel(this);
-    }
-
-    public void SetPopupSpheres(string _energy)
-    {
-        GameObject[] colorSpheres = m_popupSpheres;
-        if (_energy.Length == 0)
+        while (_maxDis > 0)
         {
-            _energy = m_color;
-            colorSpheres = m_colorDisplay;
-        }
-
-        GameObject spheres = null;
-        if (_energy.Length == 1)
-        {
-            colorSpheres[0].SetActive(true);
-            spheres = colorSpheres[0];
-        }
-        else if (_energy.Length == 2)
-        {
-            colorSpheres[1].SetActive(true);
-            spheres = colorSpheres[1];
-        }
-        else if (_energy.Length == 3)
-        {
-            colorSpheres[2].SetActive(true);
-            spheres = colorSpheres[2];
-        }
-        else if (_energy.Length == 4)
-        {
-            colorSpheres[3].SetActive(true);
-            spheres = colorSpheres[3];
-        }
-
-        Color color = Color.white;
-
-        SphereCollider[] orbs = spheres.GetComponentsInChildren<SphereCollider>();
-        int j = 0;
-
-        for (int i = 0; i < orbs.Length; i++)
-        {
-            Renderer orbRend = orbs[i].GetComponent<Renderer>();
-
-            
-            if (orbs[i].name == "Sphere Outline")
-                orbRend.material.color = new Color(0, 0, 0, 1);
+            TileScript[] neighbors = targetTileScript.m_neighbors;
+            if (targetTileScript.m_x < _towards.m_x && neighbors[(int)TileScript.nbors.right] && !neighbors[(int)TileScript.nbors.right].m_holding && !neighbors[(int)TileScript.nbors.right].m_traversed ||
+                targetTileScript.m_x < _towards.m_x && neighbors[(int)TileScript.nbors.right] && neighbors[(int)TileScript.nbors.right].m_holding && neighbors[(int)TileScript.nbors.right].m_holding.tag == "PowerUp" && !neighbors[(int)TileScript.nbors.right].m_traversed)
+                nei = targetTileScript.m_neighbors[(int)TileScript.nbors.right].GetComponent<TileScript>();
+            else if (targetTileScript.m_x > _towards.m_x && neighbors[(int)TileScript.nbors.left] && !neighbors[(int)TileScript.nbors.left].m_holding && !neighbors[(int)TileScript.nbors.left].m_traversed ||
+                targetTileScript.m_x > _towards.m_x && neighbors[(int)TileScript.nbors.left] && neighbors[(int)TileScript.nbors.left].m_holding && neighbors[(int)TileScript.nbors.left].m_holding.tag == "PowerUp" && !neighbors[(int)TileScript.nbors.left].m_traversed)
+                nei = targetTileScript.m_neighbors[(int)TileScript.nbors.left].GetComponent<TileScript>();
+            else if (targetTileScript.m_z < _towards.m_z && neighbors[(int)TileScript.nbors.top] && !neighbors[(int)TileScript.nbors.top].m_holding && !neighbors[(int)TileScript.nbors.top].m_traversed ||
+                targetTileScript.m_z < _towards.m_z && neighbors[(int)TileScript.nbors.top] && neighbors[(int)TileScript.nbors.top].m_holding && neighbors[(int)TileScript.nbors.top].m_holding.tag == "PowerUp" && !neighbors[(int)TileScript.nbors.top].m_traversed)
+                nei = targetTileScript.m_neighbors[(int)TileScript.nbors.top].GetComponent<TileScript>();
+            else if (targetTileScript.m_z > _towards.m_z && neighbors[(int)TileScript.nbors.bottom] && !neighbors[(int)TileScript.nbors.bottom].m_holding && !neighbors[(int)TileScript.nbors.bottom].m_traversed ||
+                targetTileScript.m_z > _towards.m_z && neighbors[(int)TileScript.nbors.bottom] && neighbors[(int)TileScript.nbors.bottom].m_holding && neighbors[(int)TileScript.nbors.bottom].m_holding.tag == "PowerUp" && !neighbors[(int)TileScript.nbors.bottom].m_traversed)
+                nei = targetTileScript.m_neighbors[(int)TileScript.nbors.bottom].GetComponent<TileScript>();
             else
-            {
-                if (_energy[j] == 'g' || _energy[j] == 'G')
-                    color = c_green;
-                else if (_energy[j] == 'r' || _energy[j] == 'R')
-                    color = c_red;
-                else if (_energy[j] == 'w' || _energy[j] == 'W')
-                    color = c_white;
-                else if (_energy[j] == 'b' || _energy[j] == 'B')
-                    color = c_blue;
-                
-                orbRend.material.color = color;
-                j++;
-            }
+                nei = null;
 
+            if (nei)
+            {
+                _targetScript.StartMoving(nei, true);
+                targetTileScript = nei;
+                _maxDis--;
+                if (targetTileScript == _towards)
+                    _towards.m_traversed = true;
+
+                continue;
+            }
+            break;
         }
     }
-
-    public void SelectorInit(CharacterScript _targetScript, string _pan)
-    {
-        string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
-        PanelScript selector = PanelScript.GetPanel("Status Selector");
-        if (_pan == "Status Selector")
-        {
-            selector = PanelScript.GetPanel("Status Selector");
-            if (actName == "SUP(Delete)")
-                selector.m_text[0].text = "Choose a status to remove";
-            if (actName == "SUP(Extension)" || actName == "Modification")
-                selector.m_text[0].text = "Choose a status to boost";
-        }
-        else if (_pan == "Energy Selector")
-        {
-            selector = PanelScript.GetPanel("Energy Selector");
-
-            if (actName == "ATK(Syphon)" || actName == "ATK(Deplete)")
-            {
-                if (actName == "ATK(Syphon)")
-                    selector.m_text[0].text = "Choose energy to steal";
-                else if (actName == "ATK(Deplete)")
-                    selector.m_text[0].text = "Choose energy to remove";
-
-                for (int i = 0; i < selector.m_images.Length; i++)
-                {
-                    Text t = selector.m_images[i].GetComponentInChildren<Text>();
-                    t.text = _targetScript.m_player.m_energy[i].ToString();
-                }
-            }
-            else if (actName == "ATK(Prismatic)") // if channel
-            {
-                selector.m_text[0].text = "Choose energy to gain";
-                for (int i = 0; i < selector.m_images.Length; i++)
-                    selector.m_images[i].GetComponentInChildren<Text>().text = "0";
-            }
-        }
-
-        selector.m_cScript = _targetScript;
-        selector.PopulatePanel();
-
-        m_tile.GetComponent<TileScript>().ClearRadius();
-        m_boardScript.m_isForcedMove = gameObject;
-    }
-
-    // The only reason why this exists is because statusscript needs a way to get to HUD LEFT
-    public void UpdateStatusImages()
-    {
-        if (this == m_boardScript.m_currCharScript)
-            PanelScript.GetPanel("HUD Panel LEFT").PopulatePanel();
-    }
-
+    
     public void DisableRandomAction()
     {
         List<int> viableActs = new List<int>();
@@ -1031,14 +945,8 @@ public class CharacterScript : ObjectScript {
         PanelScript.CloseHistory();
     }
 
-    static public int CheckActionLevel(string _action)
-    {
-        if (_action[0] == 'g' || _action[0] == 'r' || _action[0] == 'w' || _action[0] == 'b')
-            return 0;
 
-        return _action.Length;
-    }
-
+    // AI
     public void AITurn()
     {
         if (!m_anim)
@@ -1085,7 +993,7 @@ public class CharacterScript : ObjectScript {
             m_targets = mostViable.m_targets;
             m_currAction = mostViable.m_action;
             if (mostViable.m_position)
-                Movement(mostViable.m_position, false);
+                StartMoving(mostViable.m_position, false);
             else
             {
                 m_boardScript.m_selected = m_targets[0].GetComponent<CharacterScript>().m_tile;
@@ -1103,7 +1011,7 @@ public class CharacterScript : ObjectScript {
         {
             m_currAction = "";
             if (mostViable)
-                Movement(mostViable.m_position, false);
+                StartMoving(mostViable.m_position, false);
             else
                 m_boardScript.m_camIsFrozen = false;
             m_hasActed[0] = 3;
@@ -1223,6 +1131,130 @@ public class CharacterScript : ObjectScript {
         return mostViable;
     }
 
+
+    // Utilities
+    private void OnMouseDown()
+    {
+        m_tile.OnMouseDown();
+    }
+
+    public void HighlightCharacter()
+    {
+        if (PanelScript.GetPanel("HUD Panel RIGHT").m_inView)
+            return;
+
+        if (this != m_boardScript.m_currCharScript && m_isAlive)
+        {
+            // Change color of turn panel to indicate where the character is in the turn order
+            for (int i = 0; i < m_turnPanels.Count; i++)
+            {
+                Image turnPanImage = m_turnPanels[i].GetComponent<Image>();
+                turnPanImage.color = Color.cyan;
+            }
+
+            // Reveal right HUD with highlighted character's data
+            PanelScript hudPanScript = PanelScript.GetPanel("HUD Panel RIGHT");
+            hudPanScript.m_cScript = this;
+            hudPanScript.PopulatePanel();
+        }
+    }
+
+    public void SelectorInit(CharacterScript _targetScript, string _pan)
+    {
+        string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
+        PanelScript selector = PanelScript.GetPanel("Status Selector");
+        if (_pan == "Status Selector")
+        {
+            selector = PanelScript.GetPanel("Status Selector");
+            if (actName == "SUP(Delete)")
+                selector.m_text[0].text = "Choose a status to remove";
+            if (actName == "SUP(Extension)" || actName == "Modification")
+                selector.m_text[0].text = "Choose a status to boost";
+        }
+        else if (_pan == "Energy Selector")
+        {
+            selector = PanelScript.GetPanel("Energy Selector");
+
+            if (actName == "ATK(Syphon)" || actName == "ATK(Deplete)")
+            {
+                if (actName == "ATK(Syphon)")
+                    selector.m_text[0].text = "Choose energy to steal";
+                else if (actName == "ATK(Deplete)")
+                    selector.m_text[0].text = "Choose energy to remove";
+
+                for (int i = 0; i < selector.m_images.Length; i++)
+                {
+                    Text t = selector.m_images[i].GetComponentInChildren<Text>();
+                    t.text = _targetScript.m_player.m_energy[i].ToString();
+                }
+            }
+            else if (actName == "ATK(Prismatic)") // if channel
+            {
+                selector.m_text[0].text = "Choose energy to gain";
+                for (int i = 0; i < selector.m_images.Length; i++)
+                    selector.m_images[i].GetComponentInChildren<Text>().text = "0";
+            }
+        }
+
+        selector.m_cScript = _targetScript;
+        selector.PopulatePanel();
+
+        m_tile.GetComponent<TileScript>().ClearRadius();
+        m_boardScript.m_isForcedMove = gameObject;
+    }
+
+    static public bool CheckIfAttack(string _action)
+    {
+        if (_action[0] == 'A' && _action[1] == 'T' && _action[2] == 'K')
+            return true;
+        else
+            return false;
+    }
+    
+    // The only reason why this exists is because statusscript needs a way to get to HUD LEFT
+    public void UpdateStatusImages()
+    {
+        if (this == m_boardScript.m_currCharScript)
+            PanelScript.GetPanel("HUD Panel LEFT").PopulatePanel();
+    }
+
+    private void EnergyConversion(string _energy)
+    {
+        // Gain or use energy
+
+        // Assign _energy symbols
+        for (int i = 0; i < _energy.Length; i++)
+        {
+            if (_energy[i] == 'g')
+                m_player.m_energy[0] += 1;
+            else if (_energy[i] == 'r')
+                m_player.m_energy[1] += 1;
+            else if (_energy[i] == 'w')
+                m_player.m_energy[2] += 1;
+            else if (_energy[i] == 'b')
+                m_player.m_energy[3] += 1;
+            else if (_energy[i] == 'G')
+                m_player.m_energy[0] -= 1;
+            else if (_energy[i] == 'R')
+                m_player.m_energy[1] -= 1;
+            else if (_energy[i] == 'W')
+                m_player.m_energy[2] -= 1;
+            else if (_energy[i] == 'B')
+                m_player.m_energy[3] -= 1;
+        }
+
+        SetPopupSpheres(_energy);
+        m_player.SetEnergyPanel(this);
+    }
+
+    static public int CheckActionLevel(string _action)
+    {
+        if (_action[0] == 'g' || _action[0] == 'r' || _action[0] == 'w' || _action[0] == 'b')
+            return 0;
+
+        return _action.Length;
+    }
+
     public void SortActions()
     {
         for (int i = 0; i < m_actions.Length; i++)
@@ -1251,121 +1283,64 @@ public class CharacterScript : ObjectScript {
             return _eng.Length;
     }
 
-    static public int UniqueActionProperties(string _action, uniAct _uniAct)
+    public void SetPopupSpheres(string _energy)
     {
-        string actName = DatabaseScript.GetActionData(_action, DatabaseScript.actions.NAME);
-
-        // Only DMG MOD
-        if (actName == "ATK(Burst)" || actName == "ATK(Destroy)" || actName == "ATK(Power)" || actName == "ATK(Corrupt)")
+        GameObject[] colorSpheres = m_popupSpheres;
+        if (_energy.Length == 0)
         {
-            if (_uniAct == uniAct.DMG_MOD)
-                return 1;
-        }
-        // Only SOLO BUFF
-        else if (actName == "ATK(Accelerate)" || actName == "ATK(Fortify)" || actName == "ATK(Rev)" || 
-            actName == "ATK(Salvage)" || actName == "ATK(Target)")
-        {
-            if (_uniAct == uniAct.SOLO_BUFF)
-                return 1;
-        }
-        // Only RNG MOD
-        else if (actName == "ATK(Copy)" || actName == "ATK(Leak)" || actName == "ATK(Snipe)")
-        {
-            if (_uniAct == uniAct.RNG_MOD)
-                return 1;
-        }
-        // Only HOR RNG MOD
-        else if (actName == "ATK(Lunge)" || actName == "ATK(Pull)")
-        {
-            if (_uniAct == uniAct.TAR_RES)
-                return (int)TileScript.targetRestriction.HORVERT;
-            else if (_uniAct == uniAct.RNG_MOD)
-                return 1;
-        }
-        // Only BYPASS
-        else if (actName == "ATK(Bypass)" || actName == "ATK(Force)")
-        {
-            if (_uniAct == uniAct.BYPASS)
-                return 1;
-        }
-        // ONLY TEAM BUFF
-        else if (actName == "ATK(Maintain)")
-        {
-            if (_uniAct == uniAct.TEAM_BUFF)
-                return 1;
+            _energy = m_color;
+            colorSpheres = m_colorDisplay;
         }
 
-        else if (actName == "SUP(Channel)")
+        GameObject spheres = null;
+        if (_energy.Length == 1)
         {
-            if (_uniAct == uniAct.NO_RNG)
-                return 1;
+            colorSpheres[0].SetActive(true);
+            spheres = colorSpheres[0];
         }
-        else if (actName == "ATK(Synch)")
+        else if (_energy.Length == 2)
         {
-            if (_uniAct == uniAct.TEAM_BUFF)
-                return 1;
-            else if (_uniAct == uniAct.TAR_SELF)
-                return 0;
+            colorSpheres[1].SetActive(true);
+            spheres = colorSpheres[1];
         }
-        else if (actName == "ATK(Diagonal)")
+        else if (_energy.Length == 3)
         {
-            if (_uniAct == uniAct.TAR_RES)
-                return (int)TileScript.targetRestriction.DIAGONAL;
-            else if (_uniAct == uniAct.IS_NOT_BLOCK)
-                return 0;
-            if (_uniAct == uniAct.TAR_SELF)
-                return 0;
-            if (_uniAct == uniAct.NON_RAD)
-                return 1;
+            colorSpheres[2].SetActive(true);
+            spheres = colorSpheres[2];
         }
-        else if (actName == "ATK(Cross)")
+        else if (_energy.Length == 4)
         {
-            if (_uniAct == uniAct.TAR_RES)
-                return (int)TileScript.targetRestriction.DIAGONAL;
-            else if (_uniAct == uniAct.DMG_MOD)
-                return 1;
-            if (_uniAct == uniAct.TAR_SELF)
-                return 0;
-            if (_uniAct == uniAct.NON_RAD)
-                return 1;
-        }
-        else if (actName == "ATK(Magnet)")
-        {
-            if (_uniAct == uniAct.RAD_MOD)
-                return 1;
-        }
-        else if (actName == "ATK(Piercing)")
-        {
-            if (_uniAct == uniAct.TAR_RES)
-                return (int)TileScript.targetRestriction.HORVERT;
-            else if (_uniAct == uniAct.IS_NOT_BLOCK)
-                return 0;
-            if (_uniAct == uniAct.NON_RAD)
-                return 1;
-        }
-        else if (actName == "ATK(Slash)")
-        {
-            if (_uniAct == uniAct.TAR_SELF)
-                return 0;
-            if (_uniAct == uniAct.TAR_RES)
-                return (int)TileScript.targetRestriction.HORVERT;
-            if (_uniAct == uniAct.IS_NOT_BLOCK)
-                return 1;
-            if (_uniAct == uniAct.NON_RAD)
-                return 1;
-        }
-        else if (actName == "ATK(Thrust)")
-        {
-            if (_uniAct == uniAct.TAR_RES)
-                return (int)TileScript.targetRestriction.HORVERT;
-            else if (_uniAct == uniAct.IS_NOT_BLOCK)
-                return 0;
-            else if (_uniAct == uniAct.RNG_MOD)
-                return 1;
-            if (_uniAct == uniAct.NON_RAD)
-                return 1;
+            colorSpheres[3].SetActive(true);
+            spheres = colorSpheres[3];
         }
 
-        return -1;
+        Color color = Color.white;
+
+        SphereCollider[] orbs = spheres.GetComponentsInChildren<SphereCollider>();
+        int j = 0;
+
+        for (int i = 0; i < orbs.Length; i++)
+        {
+            Renderer orbRend = orbs[i].GetComponent<Renderer>();
+
+            
+            if (orbs[i].name == "Sphere Outline")
+                orbRend.material.color = new Color(0, 0, 0, 1);
+            else
+            {
+                if (_energy[j] == 'g' || _energy[j] == 'G')
+                    color = c_green;
+                else if (_energy[j] == 'r' || _energy[j] == 'R')
+                    color = c_red;
+                else if (_energy[j] == 'w' || _energy[j] == 'W')
+                    color = c_white;
+                else if (_energy[j] == 'b' || _energy[j] == 'B')
+                    color = c_blue;
+                
+                orbRend.material.color = color;
+                j++;
+            }
+
+        }
     }
 }

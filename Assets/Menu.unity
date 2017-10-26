@@ -43260,11 +43260,6 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 719920516}
     m_Modifications:
-    - target: {fileID: 114216969406876858, guid: 5947d95051c41554ca20de173ea849b6,
-        type: 2}
-      propertyPath: m_panels.Array.size
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 224208652956871242, guid: 5947d95051c41554ca20de173ea849b6,
         type: 2}
       propertyPath: m_LocalPosition.x

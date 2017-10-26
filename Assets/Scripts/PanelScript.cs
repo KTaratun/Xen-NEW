@@ -880,10 +880,7 @@ public class PanelScript : MonoBehaviour {
     {
         m_panels[_ind].gameObject.SetActive(true);
 
-        if (_charScript.m_turnPanels.Count > 0)
-            _charScript.m_turnPanels[0] = m_panels[_ind].gameObject;
-        else
-            _charScript.m_turnPanels.Add(m_panels[_ind].gameObject);
+        _charScript.m_turnPanels.Add(m_panels[_ind].gameObject);
 
         if (_charScript.m_effects[(int)StatusScript.effects.STUN] && _ind == 0)
             m_panels[_ind].GetComponent<Image>().color = new Color(1, .5f, .5f, 1);

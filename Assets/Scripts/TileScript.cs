@@ -52,7 +52,8 @@ public class TileScript : MonoBehaviour {
         if (m_holding && currTileScript.m_radius.Count > 0 && renderer.material.color == new Color(1, 1, 1, 0.5f))
             return;
 
-        if (renderer.material.color == c_neutral && m_boardScript.m_selected != this && !PanelScript.GetPanel("Choose Panel").m_inView)
+        if (renderer.material.color == c_neutral && m_boardScript.m_selected != this && !PanelScript.GetPanel("Choose Panel").m_inView &&
+            m_boardScript.m_currCharScript && m_holding != m_boardScript.m_currCharScript.gameObject)
         {
             if (m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player")
             {
@@ -66,17 +67,11 @@ public class TileScript : MonoBehaviour {
             {
                 Renderer rend = m_holding.transform.GetComponentInChildren<Renderer>();
                 rend.materials[2].shader = Resources.Load<Shader>("Outlined-Silhouette Only (NOT MINE)");
-
-                //m_boardScript.HighlightCharacter(m_holding.GetComponent<CharacterScript>());
-                //Color temp = gameObject.GetComponent<Renderer>().material.color;
-                //gameObject.GetComponent<Renderer>().material.color = m_boardScript.m_selected.GetComponent<Renderer>().material.color;
-                //gameObject.GetComponent<TileScript>().m_oldColor = temp;
-                //m_boardScript.m_selected.GetComponent<Renderer>().material.color = temp;
-                //m_boardScript.m_oldTile = this;
             }
             m_boardScript.m_selected = this;
         }
-        else if (renderer.material.color == c_neutral && m_boardScript.m_selected == this && !PanelScript.GetPanel("Choose Panel").m_inView)
+        else if (renderer.material.color == c_neutral && m_boardScript.m_selected == this && !PanelScript.GetPanel("Choose Panel").m_inView &&
+            m_boardScript.m_currCharScript && m_holding != m_boardScript.m_currCharScript.gameObject)
         {
             if (m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player")
             {

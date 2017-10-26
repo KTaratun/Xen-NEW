@@ -213,8 +213,13 @@ public class ButtonScript : MonoBehaviour {
             if (PanelScript.GetPanel("Choose Panel").m_inView)
                 m_boardScript.m_isForcedMove = null;
 
-            if (!CharacterScript.CheckIfAttack(DatabaseScript.GetActionData(m_action, DatabaseScript.actions.NAME)))
-                PanelScript.GetPanel("ActionViewer Panel").m_panels[1].m_inView = false;
+            PanelScript.GetPanel("ActionViewer Panel").m_panels[1].m_inView = false;
+
+            if (m_oldColor == PanelScript.b_isSpecial)
+            {
+                m_boardScript.m_selected.ClearRadius();
+                return;
+            }
 
             m_boardScript.m_currButton.GetComponent<ButtonScript>().m_main.m_cScript = m_boardScript.m_currCharScript;
             m_boardScript.m_currButton.GetComponent<ButtonScript>().m_main.PopulatePanel();
@@ -470,9 +475,6 @@ public class ButtonScript : MonoBehaviour {
 
     public void ConfirmationButton(string _confirm)
     {
-        //if (m_boardScript && m_boardScript.m_isForcedMove && _confirm != "Move" || PanelScript.GetPanel("Choose Panel").m_inView && _confirm == "Pass")
-        //    return;
-
         if (!m_main || PanelScript.GetRecentHistory() && PanelScript.GetRecentHistory().name != "Confirmation Panel")
             m_main = PanelScript.GetRecentHistory();
         m_parent.PopulatePanel();
@@ -501,7 +503,7 @@ public class ButtonScript : MonoBehaviour {
                 isForcedMove = true;
             }
 
-            gameObject.GetComponent<Button>().onClick.AddListener(() => m_cScript.Movement(m_boardScript.m_selected, isForcedMove));
+            gameObject.GetComponent<Button>().onClick.AddListener(() => m_cScript.StartMoving(m_boardScript.m_selected, isForcedMove));
         }
         else if (_confirm == "New Action")
         {
@@ -586,6 +588,7 @@ public class ButtonScript : MonoBehaviour {
         m_boardScript.m_currTile.ClearRadius();
         PanelScript.GetPanel("HUD Panel RIGHT").m_inView = false;
         PanelScript.CloseHistory();
+        PanelScript.GetPanel("HUD Panel LEFT").PopulatePanel();
     }
 
     public void ChangeScreen(string _screen)
