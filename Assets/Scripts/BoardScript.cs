@@ -19,7 +19,6 @@ public class BoardScript : MonoBehaviour {
     public TileScript m_selected; // Last pressed tile
     public TileScript m_highlightedTile; // Currently hovered over tile
     public TileScript m_oldTile; // A pointer to the previously hovered over m_tile
-    public TileScript m_currTile; // The m_tile of the player who's turn is currently up
     public CharacterScript m_currCharScript; // A pointer to the character that's turn is currently up
     public List<GameObject> m_characters; // A list of all characters within the game
     public GameObject[] m_players;
@@ -177,6 +176,7 @@ public class BoardScript : MonoBehaviour {
             }
     }
     
+
     // Update is called once per frame
     void Update()
     {
@@ -339,6 +339,8 @@ public class BoardScript : MonoBehaviour {
         currTScript.ClearRadius();
     }
 
+
+    // Hover
     public void Hover()
     {
         // Don't hover under these conditions
@@ -404,7 +406,7 @@ public class BoardScript : MonoBehaviour {
             charScript.HighlightCharacter();
 
         if (tScript)
-            HandleTile(tScript);
+            tScript.HandleTile();
 
         // If you hit a character/character tile and while you are aiming with an attack, show the new health after a hit
         if (charScript && tScript.gameObject.GetComponent<Renderer>().material.color == new Color(1, 0, 0, 1) ||
@@ -431,66 +433,6 @@ public class BoardScript : MonoBehaviour {
             PanelScript.GetPanel("StatusViewer Panel").PopulatePanel();
         }
     }
-    
-    private void HandleTile(TileScript _target)
-    {
-        if (m_oldTile)
-        {
-            Renderer oTR = m_oldTile.GetComponent<Renderer>();
-            if (oTR.material.color == Color.yellow)
-                m_oldTile.ClearRadius();
-            else if (oTR.material.color.a != 0)
-                oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a - 0.5f);
-
-            // Hacky fix for when you spawn colored m_tiles for range and your cursor starts on one of the m_tiles. If it has no alpha and isn't white
-            if (oTR.material.color.a == 0f && oTR.material.color.r + oTR.material.color.g + oTR.material.color.b != 3)
-                oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a + 0.5f);
-        }
-
-        Renderer tarRend = _target.gameObject.GetComponent<Renderer>();
-
-        // TARGET RED TILE
-
-        // For special case, multi targeting attacks
-        if (m_currCharScript.m_currAction.Length > 0 && tarRend.material.color == TileScript.c_attack &&
-            CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.NON_RAD) >= 0)
-        {
-            string actRng = DatabaseScript.GetActionData(m_currCharScript.m_currAction, DatabaseScript.actions.RNG);
-
-            bool targetSelf = true;
-            if (CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.TAR_SELF) >= 0)
-                targetSelf = false;
-
-            TileScript.targetRestriction tR = TileScript.targetRestriction.NONE;
-            if (CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.TAR_RES) >= 0)
-                tR = (TileScript.targetRestriction)CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.TAR_RES);
-
-            bool isBlockable = true;
-            if (CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.IS_NOT_BLOCK) >= 0)
-                isBlockable = false;
-
-            _target.FetchTilesWithinRange(int.Parse(actRng) + m_currCharScript.m_tempStats[(int)CharacterScript.sts.RNG], Color.yellow, targetSelf, tR, isBlockable);
-            m_oldTile = _target;
-            return;
-        }
-
-        // For standard radius attacks
-        int rad = m_currCharScript.m_currRadius + m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD];
-        bool tarSelf = true;
-
-        if (m_currCharScript.m_currAction.Length > 0 && CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.RAD_MOD) >= 0)
-            rad += m_currCharScript.m_tempStats[(int)CharacterScript.sts.TEC];
-
-        if (m_currCharScript.m_currAction.Length > 0 && CharacterScript.UniqueActionProperties(m_currCharScript.m_currAction, CharacterScript.uniAct.TAR_SELF) >= 0)
-            tarSelf = false;
-
-        if (rad > 0 && tarRend.material.color == TileScript.c_attack)
-            _target.FetchTilesWithinRange(rad, Color.yellow, tarSelf, TileScript.targetRestriction.NONE, true);
-        else
-            tarRend.material.color = new Color(tarRend.material.color.r, tarRend.material.color.g, tarRend.material.color.b, tarRend.material.color.a + 0.5f);
-
-        m_oldTile = _target;
-    }
 
     private void DeselectHighlightedTile()
     {
@@ -516,10 +458,13 @@ public class BoardScript : MonoBehaviour {
                     turnPanImage.color = new Color(colScript.m_teamColor.r + 0.3f, colScript.m_teamColor.g + 0.3f, colScript.m_teamColor.b + 0.3f, 1);
             }
         }
+
         hudPanScript.m_inView = false;
         m_highlightedTile = null;
     }
 
+
+    // Turn
     public void NewTurn()
     {
         PlayerScript winningTeam = null;
@@ -584,8 +529,6 @@ public class BoardScript : MonoBehaviour {
 
         if (!newRound)
             m_newTurn = true;
-
-        m_currTile = m_currCharScript.m_tile;
 
         if (m_currCharScript.m_turnPanels.Count > 0)
             m_currCharScript.m_turnPanels.RemoveAt(0);
@@ -698,12 +641,6 @@ public class BoardScript : MonoBehaviour {
         SpawnItem();
     }
 
-    public void SpawnItem()
-    {
-        GameObject pUP = Instantiate(m_powerup);
-        pUP.GetComponent<ObjectScript>().PlaceRandomly(this);
-    }
-
     public void GameOver(PlayerScript _winningTeam)
     {
         PanelScript roundPan = PanelScript.GetPanel("Round End Panel");
@@ -719,5 +656,13 @@ public class BoardScript : MonoBehaviour {
         PanelScript.CloseHistory();
         PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)CharacterScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[1].GetComponent<Image>().color = Color.white;
         m_currButton = null;
+    }
+
+
+    // Utilities
+    public void SpawnItem()
+    {
+        GameObject pUP = Instantiate(m_powerup);
+        pUP.GetComponent<ObjectScript>().PlaceRandomly(this);
     }
 }

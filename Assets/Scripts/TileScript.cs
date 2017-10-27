@@ -21,14 +21,14 @@ public class TileScript : MonoBehaviour {
     public int m_z;
     public BoardScript m_boardScript;
     private Color m_oldColor;
-    public bool m_traversed; // Used for path planning and to determine future occupancy of a tile
+    public GameObject m_traversed; // Used for path planning and to determine future occupancy of a tile
     public TileScript m_parent; // Used for determining path for AI
     //private LineRenderer m_line;
 
     // Use this for initialization
     void Start()
     {
-        m_traversed = false;
+        m_traversed = null;
         m_radius = new List<TileScript>();
         m_oldColor = Color.black;
 
@@ -45,11 +45,10 @@ public class TileScript : MonoBehaviour {
         if (PanelScript.CheckIfPanelOpen() || m_boardScript.m_camIsFrozen || m_boardScript.m_hoverButton)
             return;
 
-        TileScript currTileScript = m_boardScript.m_currTile.GetComponent<TileScript>();
         Renderer renderer = GetComponent<Renderer>();
 
         // Prevent players from being clicked on bringing up menus during move or attack
-        if (m_holding && currTileScript.m_radius.Count > 0 && renderer.material.color == new Color(1, 1, 1, 0.5f))
+        if (m_holding && m_boardScript.m_currCharScript.m_tile.m_radius.Count > 0 && renderer.material.color == new Color(1, 1, 1, 0.5f))
             return;
 
         if (renderer.material.color == c_neutral && m_boardScript.m_selected != this && !PanelScript.GetPanel("Choose Panel").m_inView &&
@@ -93,16 +92,15 @@ public class TileScript : MonoBehaviour {
         if (renderer.material.color == Color.blue) // If tile is blue when clicked, perform movement code
         {
             Button[] buttons = PanelScript.m_confirmPanel.GetComponentsInChildren<Button>();
-            buttons[1].GetComponent<ButtonScript>().m_cScript = m_boardScript.m_currCharScript;
+            buttons[1].GetComponent<ButtonScript>().m_object = m_boardScript.m_currCharScript.gameObject;
             buttons[1].GetComponent<ButtonScript>().ConfirmationButton("Move");
         }
         // If selecting a tile that is holding a character while using an action
-        else if (renderer.material.color == Color.red && m_holding && m_holding.tag == "Player" || 
-            renderer.material.color == Color.green && m_holding && m_holding.tag == "Player" ||
+        else if (renderer.material.color == Color.red || renderer.material.color == Color.green ||
             renderer.material.color == Color.yellow) // Otherwise if color is red, perform action code
         {
             Button[] buttons = PanelScript.m_confirmPanel.GetComponentsInChildren<Button>();
-            buttons[1].GetComponent<ButtonScript>().m_cScript = m_boardScript.m_currCharScript;
+            buttons[1].GetComponent<ButtonScript>().m_object = m_boardScript.m_currCharScript.gameObject;
             buttons[1].GetComponent<ButtonScript>().ConfirmationButton("Action");
         }
         else if (m_holding && m_holding.tag == "Player" && !m_boardScript.m_isForcedMove)
@@ -134,6 +132,65 @@ public class TileScript : MonoBehaviour {
             //    charViewPanScript.PopulatePanel();
             //}
         }
+    }
+
+    public void HandleTile()
+    {
+        CharacterScript currChar = m_boardScript.m_currCharScript;
+        TileScript oldTile = m_boardScript.m_oldTile;
+
+        if (oldTile)
+        {
+            Renderer oTR = oldTile.GetComponent<Renderer>();
+            if (oTR.material.color == Color.yellow)
+                oldTile.ClearRadius();
+            else if (oTR.material.color.a != 0)
+                oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a - 0.5f);
+
+            // Hacky fix for when you spawn colored m_tiles for range and your cursor starts on one of the m_tiles. If it has no alpha and isn't white
+            if (oTR.material.color.a == 0f && oTR.material.color.r + oTR.material.color.g + oTR.material.color.b != 3)
+                oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a + 0.5f);
+        }
+
+        Renderer tarRend = gameObject.GetComponent<Renderer>();
+
+        // TARGET RED TILE
+
+        // For special case, multi targeting attacks
+        if (currChar.m_currAction.Length > 0 && tarRend.material.color == c_attack && CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.NON_RAD) >= 0 ||
+            currChar.m_currAction.Length > 0 && tarRend.material.color == c_attack && int.Parse(DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RAD)) > 0)
+        {
+            HandleRadius();
+            return;
+        }
+
+        tarRend.material.color = new Color(tarRend.material.color.r, tarRend.material.color.g, tarRend.material.color.b, tarRend.material.color.a + 0.5f);
+        m_boardScript.m_oldTile = this;
+    }
+
+    public void HandleRadius()
+    {
+        CharacterScript currChar = m_boardScript.m_currCharScript;
+        string actRng = DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RNG);
+
+        int rad = currChar.m_currRadius + currChar.m_tempStats[(int)CharacterScript.sts.RAD];
+        if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.NON_RAD) >= 0)
+            rad = int.Parse(actRng) + currChar.m_tempStats[(int)CharacterScript.sts.RNG];
+
+        bool targetSelf = true;
+        if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.TAR_SELF) >= 0)
+            targetSelf = false;
+
+        targetRestriction tR = targetRestriction.NONE;
+        if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.TAR_RES) >= 0)
+            tR = (targetRestriction)CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.TAR_RES);
+
+        bool isBlockable = true;
+        if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.IS_NOT_BLOCK) >= 0)
+            isBlockable = false;
+
+        FetchTilesWithinRange(rad, Color.yellow, targetSelf, tR, isBlockable);
+        m_boardScript.m_oldTile = this;
     }
 
     public void FetchTilesWithinRange(int _range, Color _color, bool _targetSelf, targetRestriction _targetingRestriction, bool _isBlockable)
@@ -216,7 +273,8 @@ public class TileScript : MonoBehaviour {
                     }
 
                     // if color is movement color and the current tile is holding someone
-                    if (_color == c_move && tScript.m_holding && tScript.m_holding.tag != "PowerUp" || 
+                    if (m_holding && m_holding.tag == "Player" && _color == c_move && tScript.m_holding && tScript.m_holding.tag != "PowerUp" ||
+                        m_holding && m_holding.tag == "PowerUp" && _color == c_move && tScript.m_holding && tScript.m_holding.tag != "Player" ||
                         !_targetSelf && tScript == ownerCharScript.m_tile.GetComponent<TileScript>())
                         continue;
 
@@ -254,6 +312,138 @@ public class TileScript : MonoBehaviour {
                 workingList.RemoveAt(0);
             }
         }
+    }
+
+    // Reset all tiles to their original color REFACTOR: maybe make this a static class or remove the argument?
+    public void ClearRadius()
+    {
+        List<TileScript> radTiles = m_radius;
+
+        if (m_targetRadius.Count > 0)
+            radTiles = m_targetRadius;
+
+        for (int i = 0; i < radTiles.Count; i++)
+        {
+            TileScript radTileScript = radTiles[i].GetComponent<TileScript>();
+            Renderer sRend = radTileScript.GetComponent<Renderer>();
+
+            if (radTileScript.m_oldColor == Color.black)
+                sRend.material.color = new Color(1, 1, 1, 0f);
+            else
+            {
+                sRend.material.color = radTileScript.m_oldColor;
+                radTileScript.m_oldColor = Color.black;
+            }
+        }
+        radTiles.Clear();
+    }
+
+    public List<TileScript> AITilePlanning(TileScript _targetTile)
+    {
+        TileScript currTileScript = this;
+
+        List<TileScript> branches = new List<TileScript>();
+        List<TileScript> visited = new List<TileScript>();
+        List<TileScript> path = new List<TileScript>();
+        TileScript adjacentTile = null;
+
+        branches.Add(currTileScript);
+        visited.Add(currTileScript);
+        currTileScript.m_traversed = m_holding;
+
+        while (branches.Count > 0)
+        {
+            currTileScript = branches[0];
+            branches.RemoveAt(0);
+
+            if (CaclulateDistance(currTileScript, _targetTile) < 2)
+            {
+                adjacentTile = currTileScript;
+                break;
+            }
+
+            int[] order = { -1, -1, -1, -1 };
+            for (int i = 0; i < order.Length; i++)
+            {
+                int rand = -1;
+                while (rand == -1 || order[rand] != -1)
+                    rand = Random.Range(0, 4);
+                order[rand] = i;
+            }
+
+            int spacesAvailable = 0;
+            for (int i = 0; i < 4; i++)
+            {
+                if (currTileScript.m_neighbors[order[i]] && !currTileScript.m_neighbors[order[i]].m_traversed &&
+                    !currTileScript.m_neighbors[order[i]].m_holding)
+                {
+                    TileScript nei = currTileScript.m_neighbors[order[i]];
+                    AddSORTED(branches, nei, _targetTile);
+                    visited.Add(nei);
+                    nei.m_traversed = m_holding;
+                    nei.m_parent = currTileScript;
+                    spacesAvailable++;
+                }
+            }
+        }
+
+        currTileScript = adjacentTile;
+        while (currTileScript && currTileScript.m_parent)
+        {
+            path.Add(currTileScript);
+            currTileScript = currTileScript.m_parent;
+        }
+
+        path.Reverse();
+
+        for (int i = 0; i < visited.Count; i++)
+        {
+            visited[i].m_traversed = null;
+            visited[i].m_parent = null;
+        }
+
+        return path;
+    }
+
+    private void AddSORTED(List<TileScript> _list, TileScript _tScript, TileScript _target)
+    {
+        if (_list.Count > 0)
+            for (int i = 0; i < _list.Count; i++)
+            {
+                if (CaclulateDistance(_tScript, _target) < CaclulateDistance(_list[i], _target))
+                {
+                    _list.Insert(i, _tScript);
+                    break;
+                }
+                else if (i == _list.Count - 1)
+                {
+                    _list.Add(_tScript);
+                    break;
+                }
+            }
+        else
+            _list.Add(_tScript);
+    }
+
+
+    // Utilities
+    static public int CaclulateDistance(TileScript _targetOne, TileScript _targetTwo)
+    {
+        return Mathf.Abs(_targetOne.m_x - _targetTwo.m_x) + Mathf.Abs(_targetOne.m_z - _targetTwo.m_z);
+    }
+
+    static public bool CheckForEmptyNeighbor(TileScript _tile)
+    {
+        for (int i = 0; i < _tile.m_neighbors.Length; i++)
+        {
+            if (!_tile.m_neighbors[i])
+                continue;
+
+            TileScript nei = _tile.m_neighbors[i].GetComponent<TileScript>();
+            if (!nei.m_holding)
+                return true;
+        }
+        return false;
     }
 
     private bool CheckIfBlocked(TileScript _target)
@@ -328,135 +518,5 @@ public class TileScript : MonoBehaviour {
         }
 
         return null;
-    }
-
-    static public bool CheckForEmptyNeighbor(TileScript _tile)
-    {
-        for (int i = 0; i < _tile.m_neighbors.Length; i++)
-        {
-            if (!_tile.m_neighbors[i])
-                continue;
-
-            TileScript nei = _tile.m_neighbors[i].GetComponent<TileScript>();
-            if (!nei.m_holding)
-                return true;
-        }
-        return false;
-    }
-
-    // Reset all tiles to their original color REFACTOR: maybe make this a static class or remove the argument?
-    public void ClearRadius()
-    {
-        List<TileScript> radTiles = m_radius;
-
-        if (m_targetRadius.Count > 0)
-            radTiles = m_targetRadius;
-
-        for (int i = 0; i < radTiles.Count; i++)
-        {
-            TileScript radTileScript = radTiles[i].GetComponent<TileScript>();
-            Renderer sRend = radTileScript.GetComponent<Renderer>();
-
-            if (radTileScript.m_oldColor == Color.black)
-                sRend.material.color = new Color(1, 1, 1, 0f);
-            else
-            {
-                sRend.material.color = radTileScript.m_oldColor;
-                radTileScript.m_oldColor = Color.black;
-            }
-        }
-        radTiles.Clear();
-    }
-
-    static public int CaclulateDistance(TileScript _targetOne, TileScript _targetTwo)
-    {
-        return Mathf.Abs(_targetOne.m_x - _targetTwo.m_x) + Mathf.Abs(_targetOne.m_z - _targetTwo.m_z);
-    }
-
-    public List<TileScript> AITilePlanning(TileScript _targetTile)
-    {
-        TileScript currTileScript = this;
-
-        List<TileScript> branches = new List<TileScript>();
-        List<TileScript> visited = new List<TileScript>();
-        List<TileScript> path = new List<TileScript>();
-        TileScript adjacentTile = null;
-
-        branches.Add(currTileScript);
-        visited.Add(currTileScript);
-        currTileScript.m_traversed = true;
-
-        while (branches.Count > 0)
-        {
-            currTileScript = branches[0];
-            branches.RemoveAt(0);
-
-            if (CaclulateDistance(currTileScript, _targetTile) < 2)
-            {
-                adjacentTile = currTileScript;
-                break;
-            }
-
-            int[] order = { -1, -1, -1, -1 };
-            for (int i = 0; i < order.Length; i++)
-            {
-                int rand = -1;
-                while (rand == -1 || order[rand] != -1)
-                    rand = Random.Range(0, 4);
-                order[rand] = i;
-            }
-
-            int spacesAvailable = 0;
-            for (int i = 0; i < 4; i++)
-            {
-                if (currTileScript.m_neighbors[order[i]] && !currTileScript.m_neighbors[order[i]].m_traversed &&
-                    !currTileScript.m_neighbors[order[i]].m_holding)
-                {
-                    TileScript nei = currTileScript.m_neighbors[order[i]];
-                    AddSORTED(branches, nei, _targetTile);
-                    visited.Add(nei);
-                    nei.m_traversed = true;
-                    nei.m_parent = currTileScript;
-                    spacesAvailable++;
-                }
-            }
-        }
-
-        currTileScript = adjacentTile;
-        while (currTileScript && currTileScript.m_parent)
-        {
-            path.Add(currTileScript);
-            currTileScript = currTileScript.m_parent;
-        }
-
-        path.Reverse();
-
-        for (int i = 0; i < visited.Count; i++)
-        {
-            visited[i].m_traversed = false;
-            visited[i].m_parent = null;
-        }
-
-        return path;
-    }
-
-    private void AddSORTED(List<TileScript> _list, TileScript _tScript, TileScript _target)
-    {
-        if (_list.Count > 0)
-            for (int i = 0; i < _list.Count; i++)
-            {
-                if (CaclulateDistance(_tScript, _target) < CaclulateDistance(_list[i], _target))
-                {
-                    _list.Insert(i, _tScript);
-                    break;
-                }
-                else if (i == _list.Count - 1)
-                {
-                    _list.Add(_tScript);
-                    break;
-                }
-            }
-        else
-            _list.Add(_tScript);
     }
 }

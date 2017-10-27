@@ -31,11 +31,9 @@ public class PowerupScript : ObjectScript {
 	}
 	
 	// Update is called once per frame
-	void Update ()
+	new void Update ()
     {
-        // if (m_name == powerups.ALL_ENG)
-        //     Rainbow
-
+        base.Update();
         m_transform.LookAt(2 * m_transform.position - m_boardScript.m_camera.transform.position);
 
         if (m_upward)
@@ -210,14 +208,15 @@ public class PowerupScript : ObjectScript {
         else if (m_name == powerups.RNG)
             _char.m_stats[(int)CharacterScript.sts.RNG]++;
         else if (m_name == powerups.HP)
-        {
-            if (_char.m_tempStats[(int)CharacterScript.sts.HP] <= _char.m_stats[(int)CharacterScript.sts.HP] - 3)
-                _char.m_tempStats[(int)CharacterScript.sts.HP] += 3;
-            else
-                _char.m_tempStats[(int)CharacterScript.sts.HP] = _char.m_stats[(int)CharacterScript.sts.HP];
-        }
+            _char.HealHealth(3);
         else if (m_name == powerups.SPD)
             _char.m_tempStats[(int)CharacterScript.sts.SPD] += 3;
+        else if (m_name == powerups.WEAK)
+            _char.m_stats[(int)CharacterScript.sts.DEF]--;
+        else if (m_name == powerups.HURT)
+            _char.ReceiveDamage(3.ToString(), Color.white);
+        else if (m_name == powerups.SLOW)
+            _char.m_tempStats[(int)CharacterScript.sts.SPD] -= 3;
 
         StatusScript.ApplyStatus(_char.gameObject);
 

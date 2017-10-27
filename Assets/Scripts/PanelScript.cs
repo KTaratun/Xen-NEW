@@ -367,7 +367,7 @@ public class PanelScript : MonoBehaviour {
 
             if (name == "HUD Panel LEFT")
             {
-                m_panels[(int)CharacterScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0].GetComponent<ButtonScript>().m_cScript = m_cScript;
+                m_panels[(int)CharacterScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0].GetComponent<ButtonScript>().m_object = m_cScript.gameObject;
                 if (m_cScript.m_effects[(int)StatusScript.effects.IMMOBILE])
                 {
                     m_panels[(int)CharacterScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0].GetComponent<Image>().color = b_isDisallowed;
@@ -547,7 +547,7 @@ public class PanelScript : MonoBehaviour {
             ButtonScript buttScript = m_buttons[i].GetComponent<ButtonScript>();
             buttScript.m_action = m_cScript.m_actions[i];
             buttScript.SetTotalEnergy(eng);
-            buttScript.m_cScript = m_cScript;
+            buttScript.m_object = m_cScript.gameObject;
             Text t = m_buttons[i].GetComponentInChildren<Text>();
             t.text = name;
 
@@ -895,7 +895,7 @@ public class PanelScript : MonoBehaviour {
             Button button = m_panels[_ind].GetComponentInChildren<Button>();
             ButtonScript buttScript = button.GetComponent<ButtonScript>();
             buttScript.SetTotalEnergy(_charScript.m_color);
-            buttScript.m_cScript = _charScript;
+            buttScript.m_object = _charScript.gameObject;
         }
     }
 

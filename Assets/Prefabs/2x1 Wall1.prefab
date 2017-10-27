@@ -204,6 +204,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc2641e48cf63d2459f460d7ac5491fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_currHealth: 0
+  m_totalHealth: 0
+  m_meshRend:
+  - {fileID: 23135981669590590}
+  - {fileID: 23870726968483628}
   m_tile: {fileID: 0}
   m_boardScript: {fileID: 0}
   m_width: 2

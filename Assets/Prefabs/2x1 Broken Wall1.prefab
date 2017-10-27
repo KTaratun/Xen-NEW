@@ -23,7 +23,7 @@ GameObject:
   - component: {fileID: 65867892395242210}
   m_Layer: 0
   m_Name: 2x1 Broken Wall1
-  m_TagString: Untagged
+  m_TagString: Environment
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -204,6 +204,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc2641e48cf63d2459f460d7ac5491fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_currHealth: 0
+  m_totalHealth: 0
+  m_meshRend:
+  - {fileID: 23412006056453782}
+  - {fileID: 23787068543423986}
   m_tile: {fileID: 0}
   m_boardScript: {fileID: 0}
   m_width: 2

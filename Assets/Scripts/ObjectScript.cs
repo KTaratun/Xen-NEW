@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class ObjectScript : MonoBehaviour {
 
+    public int m_currHealth;
+    public int m_totalHealth;
+    public MeshRenderer[] m_meshRend;
     public TileScript m_tile;
     public BoardScript m_boardScript;
     public int m_width;
@@ -12,6 +15,8 @@ public class ObjectScript : MonoBehaviour {
     // Use this for initialization
     void Start ()
     {
+        m_totalHealth = 5;
+        m_currHealth = m_totalHealth;
         m_width = 1;
         m_facing = TileScript.nbors.bottom;
 	}
@@ -21,33 +26,48 @@ public class ObjectScript : MonoBehaviour {
     {
         if (m_boardScript)
         {
-            if (m_tile && transform.position != m_tile.transform.position)
+            Vector3 myPos = new Vector3(transform.position.x, 0, transform.position.z);
+            Vector3 newPos = new Vector3(m_tile.transform.position.x, 0, m_tile.transform.position.z);
+            if (m_tile && myPos != newPos)
             {
                 MovementUpdate();
-                if (transform.position == m_tile.transform.position)
-                    FinishMoving();
+                myPos = new Vector3(transform.position.x, 0, transform.position.z);
+                if (myPos == newPos)
+                    MovingFinish();
             }
         }
 	}
 
-    public void StartMoving(TileScript newScript, bool _isForced)
+
+    // Movement
+    public void MovementSelection(int _forceMove)
+    {
+        int move = 0;
+
+        if (_forceMove > 0)
+            move = _forceMove;
+        else if (gameObject.tag == "Player")
+            move = GetComponent<CharacterScript>().m_tempStats[(int)CharacterScript.sts.MOV];
+
+        m_tile.FetchTilesWithinRange(move, new Color(0, 0, 1, 0.5f), false, TileScript.targetRestriction.NONE, false);
+    }
+
+    virtual public void MovingStart(TileScript newScript, bool _isForced)
     {
         if (m_tile == newScript || newScript == null)
             return;
 
         m_tile.m_holding = null;
-        if (!_isForced)
-            m_boardScript.m_selected = null;
-
         m_tile.ClearRadius();
         m_tile = newScript;
         m_boardScript.m_camIsFrozen = true;
 
-        if (this == m_boardScript.m_currCharScript)
-            m_boardScript.m_currTile = m_tile;
+        //m_tile.m_holding = gameObject;
 
-        if (gameObject.tag == "Player")
-            GetComponent<CharacterScript>().CharStartMoving(newScript, _isForced);
+        if (!_isForced)
+            m_boardScript.m_selected = null;
+
+        PanelScript.CloseHistory();
     }
 
     public void MovementUpdate()
@@ -56,34 +76,62 @@ public class ObjectScript : MonoBehaviour {
         float charAcceleration = 0.02f;
         float charSpeed = 0.015f;
         float charMovement = Vector3.Distance(transform.position, m_tile.transform.position) * charAcceleration + charSpeed;
+
         transform.LookAt(m_tile.transform);
         transform.SetPositionAndRotation(new Vector3(transform.position.x + transform.forward.x * charMovement, transform.position.y, transform.position.z + transform.forward.z * charMovement), transform.rotation);
         m_boardScript.m_camera.GetComponent<CameraScript>().m_target = gameObject;
 
         // Check to see if character is close enough to the point
         float snapDistance = 0.007f;
-        float dis = Vector3.Distance(transform.position, m_tile.transform.position);
+        Vector3 myPos = new Vector3(transform.position.x, 0, transform.position.z);
+        Vector3 newPos = new Vector3(m_tile.transform.position.x, 0, m_tile.transform.position.z);
+        float dis = Vector3.Distance(myPos, newPos);
+
         if (dis < snapDistance)
-            transform.SetPositionAndRotation(m_tile.transform.position, transform.rotation);
+            transform.SetPositionAndRotation(new Vector3(m_tile.transform.position.x, transform.position.y, m_tile.transform.position.z), transform.rotation);
     }
 
-    public void FinishMoving()
+    virtual public void MovingFinish()
     {
-        CameraScript cam = m_boardScript.m_camera.GetComponent<CameraScript>();
-        cam.m_target = null;
+        m_boardScript.m_camera.GetComponent<CameraScript>().m_target = null;
 
-        // Reset tile
-        m_tile.m_holding = gameObject;
+        if (gameObject.tag == "PowerUp" && m_tile.m_holding && m_tile.m_holding.tag == "Player")
+            GetComponent<PowerupScript>().OnPickup(m_tile.m_holding.GetComponent<CharacterScript>());
+        else
+            m_tile.m_holding = gameObject;
+
         m_boardScript.m_currButton = null;
-        m_tile.m_traversed = false;
-
         m_boardScript.m_camIsFrozen = false;
         m_boardScript.m_isForcedMove = null;
-
-        if (gameObject.tag == "Player")
-            GetComponent<CharacterScript>().CharFinishMoving();
     }
 
+
+    // Damage
+    public void ReceiveDamage(string _dmg, Color _color)
+    {
+        if (gameObject.tag == "Environment")
+        {
+            int parsedDMG;
+            if (int.TryParse(_dmg, out parsedDMG))
+            {
+                if (m_currHealth - parsedDMG <= 0)
+                {
+                    m_tile.m_holding = null;
+                    gameObject.SetActive(false);
+                }
+                else
+                {
+                    m_currHealth -= parsedDMG;
+                    float ratio = m_currHealth / m_totalHealth;
+                    for (int i = 0; i < m_meshRend.Length; i++)
+                        m_meshRend[i].material.color = new Color(1, ratio, ratio, 1);
+                }
+            }
+        }
+    }
+
+
+    // Placement
     public void RandomRotation()
     {
         int randomRot = Random.Range(0, 5);
@@ -133,5 +181,4 @@ public class ObjectScript : MonoBehaviour {
         transform.SetPositionAndRotation(m_boardScript.m_tiles[randX + randZ * m_boardScript.m_width].transform.position, transform.rotation);
         m_tile = m_boardScript.m_tiles[randX + randZ * m_boardScript.m_width];
     }
-
 }

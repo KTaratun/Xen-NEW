@@ -10,7 +10,7 @@ public class ButtonScript : MonoBehaviour {
     // Get rid of board
     public BoardScript m_boardScript;
     public PanelScript m_main;
-    public CharacterScript m_cScript;
+    public GameObject m_object;
     public PanelScript m_parent;
     public GameObject m_camera;
     public GameObject[] m_energyPanel;
@@ -45,12 +45,12 @@ public class ButtonScript : MonoBehaviour {
         // REFACTOR: Make this more like how status images are handled
         if (GetComponent<Button>() && GetComponent<Button>().name == "Turn Panel Energy Button")
         {
-            CharacterScript charScript = m_cScript.GetComponent<CharacterScript>();
+            CharacterScript charScript = m_object.GetComponent<CharacterScript>();
 
             //Image turnPanImage = charScript.turnPanel.GetComponent<Image>();
             //turnPanImage.color = Color.cyan;
             
-            Renderer charRenderer = m_cScript.GetComponentInChildren<Renderer>();
+            Renderer charRenderer = charScript.GetComponentInChildren<Renderer>();
             charRenderer.material.color = Color.cyan;
             PanelScript hudPanScript = PanelScript.GetPanel("HUD Panel RIGHT");
             hudPanScript.m_cScript = charScript;
@@ -74,7 +74,7 @@ public class ButtonScript : MonoBehaviour {
         if (m_parent && m_parent.name == "Move Pass Panel")
         {
             m_hovered = true;
-            m_cScript = m_boardScript.m_currCharScript;
+            m_object = m_boardScript.m_currCharScript.gameObject;
             if (gameObject.name == "Move")
                 m_boardScript.m_currCharScript.MovementSelection(0);
             return;
@@ -101,8 +101,9 @@ public class ButtonScript : MonoBehaviour {
                 }
                 else
                 {
-                    m_cScript.m_currAction = m_action;
-                    m_cScript.ActionTargeting(m_cScript.m_tile);
+                    CharacterScript charScript = m_object.GetComponent<CharacterScript>();
+                    charScript.m_currAction = m_action;
+                    charScript.ActionTargeting(charScript.m_tile);
                 }
             }
 
@@ -123,8 +124,8 @@ public class ButtonScript : MonoBehaviour {
         {
             //Image turnPanImage = charScript.turnPanel.GetComponent<Image>();
             //turnPanImage.color = Color.cyan;
-            Renderer charRenderer = m_cScript.gameObject.GetComponentInChildren<Renderer>();
-            charRenderer.material.color = m_cScript.m_teamColor;
+            Renderer charRenderer = m_object.GetComponentInChildren<Renderer>();
+            charRenderer.material.color = m_object.GetComponent<CharacterScript>().m_teamColor;
             PanelScript hudPanScript = PanelScript.GetPanel("HUD Panel RIGHT");
             hudPanScript.m_inView = false;
             
@@ -154,7 +155,7 @@ public class ButtonScript : MonoBehaviour {
             if (GetComponent<Button>().GetComponent<Image>().color == PanelScript.b_isFree)
                 selectedTileScript = m_boardScript.m_currCharScript.m_tile;
             else
-                selectedTileScript = m_cScript.m_tile;
+                selectedTileScript = m_object.GetComponent<CharacterScript>().m_tile;
 
             if (selectedTileScript.m_radius.Count > 0)
                 selectedTileScript.ClearRadius();
@@ -170,8 +171,8 @@ public class ButtonScript : MonoBehaviour {
 
     public void Select()
     {
-        if (m_cScript != m_boardScript.m_currCharScript && GetComponent<Button>().GetComponent<Image>().color == PanelScript.b_isDisallowed ||
-            m_cScript != m_boardScript.m_currCharScript && GetComponent<Button>().GetComponent<Image>().color == Color.white ||
+        if (m_object != m_boardScript.m_currCharScript.gameObject && GetComponent<Button>().GetComponent<Image>().color == PanelScript.b_isDisallowed ||
+            m_object != m_boardScript.m_currCharScript.gameObject && GetComponent<Button>().GetComponent<Image>().color == Color.white ||
             m_boardScript && m_boardScript.m_isForcedMove && m_parent && m_parent.tag != "Selector" || 
             PanelScript.m_confirmPanel.m_inView && m_parent != PanelScript.m_confirmPanel ||
             m_boardScript && m_boardScript.m_currCharScript.m_isAI)
@@ -350,7 +351,7 @@ public class ButtonScript : MonoBehaviour {
     public void SetCameraTarget()
     {
         CameraScript camScript = m_camera.GetComponent<CameraScript>();
-        camScript.m_target = m_cScript.gameObject;
+        camScript.m_target = m_object;
     }
 
     public void SelectorButton()
@@ -482,7 +483,7 @@ public class ButtonScript : MonoBehaviour {
 
         if (_confirm == "Action")
         {
-            gameObject.GetComponent<Button>().onClick.AddListener(() => m_cScript.ActionAnimation());
+            gameObject.GetComponent<Button>().onClick.AddListener(() => m_object.GetComponent<CharacterScript>().ActionStart());
         }
         else if (_confirm == "Choose Panel")
         {
@@ -499,11 +500,11 @@ public class ButtonScript : MonoBehaviour {
             bool isForcedMove = false;
             if (m_boardScript.m_isForcedMove)
             {
-                m_cScript = m_boardScript.m_isForcedMove.GetComponent<CharacterScript>();
+                m_object = m_boardScript.m_isForcedMove;
                 isForcedMove = true;
             }
 
-            gameObject.GetComponent<Button>().onClick.AddListener(() => m_cScript.StartMoving(m_boardScript.m_selected, isForcedMove));
+            gameObject.GetComponent<Button>().onClick.AddListener(() => m_object.GetComponent<ObjectScript>().MovingStart(m_boardScript.m_selected, isForcedMove));
         }
         else if (_confirm == "New Action")
         {
@@ -585,7 +586,7 @@ public class ButtonScript : MonoBehaviour {
         m_boardScript.m_highlightedTile = null;
         m_boardScript.m_selected = null;
         m_boardScript.m_isForcedMove = null;
-        m_boardScript.m_currTile.ClearRadius();
+        m_boardScript.m_currCharScript.m_tile.ClearRadius();
         PanelScript.GetPanel("HUD Panel RIGHT").m_inView = false;
         PanelScript.CloseHistory();
         PanelScript.GetPanel("HUD Panel LEFT").PopulatePanel();
