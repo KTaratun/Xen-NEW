@@ -98,5 +98,5 @@ MonoBehaviour:
   - {fileID: 23140161351215772}
   m_tile: {fileID: 0}
   m_boardScript: {fileID: 0}
-  m_width: 0
+  m_width: 1
   m_facing: 0

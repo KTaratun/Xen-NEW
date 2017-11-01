@@ -15,16 +15,15 @@ public class ObjectScript : MonoBehaviour {
     // Use this for initialization
     void Start ()
     {
-        m_totalHealth = 5;
+        m_totalHealth = 5 * m_width;
         m_currHealth = m_totalHealth;
-        m_width = 1;
         m_facing = TileScript.nbors.bottom;
 	}
 	
 	// Update is called once per frame
 	protected void Update ()
     {
-        if (m_boardScript)
+        if (m_boardScript && gameObject.tag == "Player")
         {
             Vector3 myPos = new Vector3(transform.position.x, 0, transform.position.z);
             Vector3 newPos = new Vector3(m_tile.transform.position.x, 0, m_tile.transform.position.z);
@@ -78,8 +77,10 @@ public class ObjectScript : MonoBehaviour {
         float charMovement = Vector3.Distance(transform.position, m_tile.transform.position) * charAcceleration + charSpeed;
 
         transform.LookAt(m_tile.transform);
+        transform.localEulerAngles = new Vector3(0, transform.localEulerAngles.y, 0);
         transform.SetPositionAndRotation(new Vector3(transform.position.x + transform.forward.x * charMovement, transform.position.y, transform.position.z + transform.forward.z * charMovement), transform.rotation);
-        m_boardScript.m_camera.GetComponent<CameraScript>().m_target = gameObject;
+        if (m_boardScript.m_currCharScript)
+            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = gameObject;
 
         // Check to see if character is close enough to the point
         float snapDistance = 0.007f;
@@ -93,7 +94,8 @@ public class ObjectScript : MonoBehaviour {
 
     virtual public void MovingFinish()
     {
-        m_boardScript.m_camera.GetComponent<CameraScript>().m_target = null;
+        if (m_boardScript.m_currCharScript)
+            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = null;
 
         if (gameObject.tag == "PowerUp" && m_tile.m_holding && m_tile.m_holding.tag == "Player")
             GetComponent<PowerupScript>().OnPickup(m_tile.m_holding.GetComponent<CharacterScript>());
@@ -101,13 +103,17 @@ public class ObjectScript : MonoBehaviour {
             m_tile.m_holding = gameObject;
 
         m_boardScript.m_currButton = null;
-        m_boardScript.m_camIsFrozen = false;
-        m_boardScript.m_isForcedMove = null;
+
+        if (m_boardScript.m_currCharScript)
+        {
+            m_boardScript.m_camIsFrozen = false;
+            m_boardScript.m_isForcedMove = null;
+        }
     }
 
 
     // Damage
-    public void ReceiveDamage(string _dmg, Color _color)
+    virtual public void ReceiveDamage(string _dmg, Color _color)
     {
         if (gameObject.tag == "Environment")
         {
@@ -122,7 +128,7 @@ public class ObjectScript : MonoBehaviour {
                 else
                 {
                     m_currHealth -= parsedDMG;
-                    float ratio = m_currHealth / m_totalHealth;
+                    float ratio = (float)m_currHealth / (float)m_totalHealth;
                     for (int i = 0; i < m_meshRend.Length; i++)
                         m_meshRend[i].material.color = new Color(1, ratio, ratio, 1);
                 }
@@ -180,5 +186,12 @@ public class ObjectScript : MonoBehaviour {
         script.m_holding = gameObject;
         transform.SetPositionAndRotation(m_boardScript.m_tiles[randX + randZ * m_boardScript.m_width].transform.position, transform.rotation);
         m_tile = m_boardScript.m_tiles[randX + randZ * m_boardScript.m_width];
+    }
+
+
+    // Utilities
+    private void OnMouseDown()
+    {
+        m_tile.OnMouseDown();
     }
 }

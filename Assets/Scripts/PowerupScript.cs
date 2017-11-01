@@ -22,6 +22,7 @@ public class PowerupScript : ObjectScript {
     private bool m_upward;
     public Color m_color;
     public string m_effect;
+    public ParticleSystem m_particle;
 
     // Use this for initialization
     void Start ()
@@ -184,6 +185,8 @@ public class PowerupScript : ObjectScript {
 
             mRend.material.color = StatusScript.c_debuffColor;
         }
+
+        m_particle.startColor = m_color;
     }
 
     public void OnPickup(CharacterScript _char)

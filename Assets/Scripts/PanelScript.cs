@@ -609,6 +609,7 @@ public class PanelScript : MonoBehaviour {
                 else
                     m_buttons[i].interactable = false;
             }
+
             activeCount++;
         }
 

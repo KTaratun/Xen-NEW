@@ -32,10 +32,17 @@ public class BoardScript : MonoBehaviour {
     public Button m_currButton;
     public GameObject m_powerup;
     public float m_actionEndTimer;
+    public bool m_battle;
+    public FieldScript m_field;
 
     // Use this for initialization
     void Start()
     {
+        if (m_field)
+            m_battle = false;
+        else
+            m_battle = true;
+
         m_actionEndTimer = 0;
         m_audio = gameObject.AddComponent<AudioSource>();
 
@@ -58,8 +65,9 @@ public class BoardScript : MonoBehaviour {
         InitBoardTiles();
         AssignNeighbors();
         EnvironmentInit();
-        CharacterInit();
-        NewTurn();
+
+        if (m_battle)
+            BattleOverview();
     }
 
     public void InitBoardTiles()
@@ -140,11 +148,11 @@ public class BoardScript : MonoBehaviour {
                 {
                     // Set up character
                     GameObject newChar = Instantiate(m_character[int.Parse(PlayerPrefs.GetString(key + ",gender"))]);
-                    newChar.name = name;
                     CharacterScript cScript = newChar.GetComponent<CharacterScript>();
-
+                    newChar.name = name;
+                    
                     cScript = PlayerPrefScript.LoadChar(key, cScript);
-
+                    
                     if (i == 0)
                         cScript.m_teamColor = new Color(1, .5f, 0, 1);
                     else if (i == 1)
@@ -153,19 +161,19 @@ public class BoardScript : MonoBehaviour {
                         cScript.m_teamColor = new Color(.8f, 1, 0, 1);
                     else if (i == 3)
                         cScript.m_teamColor = Color.magenta;
-
+                    
                     newChar.GetComponentInChildren<Renderer>().materials[0].color = cScript.m_teamColor;
                     newChar.GetComponentInChildren<Renderer>().materials[1].color = cScript.m_teamColor;
-
+                    
                     cScript.SetPopupSpheres("");
                     m_characters.Add(newChar);
-
+                    
                     if (cScript.m_hasActed.Length == 0)
                         cScript.m_hasActed = new int[2];
-
+                    
                     cScript.m_hasActed[0] = 0;
                     cScript.m_hasActed[1] = 0;
-
+                    
                     // Link to player
                     PlayerScript playScript = m_players[i].GetComponent<PlayerScript>();
                     cScript.m_player = playScript;
@@ -180,25 +188,23 @@ public class BoardScript : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
+        if (!m_battle)
+            return;
+
         Inputs();
         Hover();
         EndOfActionTimer();
         EndTurn();
     }
 
-    void EndOfActionTimer()
+    public void OnCollisionEnter(Collision collision)
     {
-        if (m_actionEndTimer > 0)
+        if (!m_battle && collision.collider.gameObject == m_field.m_mainChar.gameObject)
         {
-            m_actionEndTimer += Time.deltaTime;
-            if (m_actionEndTimer > 2)
-            {
-                m_actionEndTimer = 0;
-                m_camIsFrozen = false;
+            if (m_field)
+                m_field.MainCharJoinBattle();
 
-                if (!m_selected)
-                    PanelScript.GetPanel("HUD Panel RIGHT").m_inView = false;
-            }
+            BattleOverview();
         }
     }
 
@@ -216,8 +222,14 @@ public class BoardScript : MonoBehaviour {
 
         if (Input.GetKeyDown(KeyCode.Q) && !PanelScript.GetPanel("Choose Panel").m_inView) //Formally getmousebuttondown(1);
             OnRightClick();
-        else if (Input.GetMouseButtonDown(0) && m_camera.GetComponent<CameraScript>().m_rotate)
-            SceneManager.LoadScene("Menu");
+        else if (Input.GetMouseButtonDown(0))
+        {
+            PanelScript rEndPan = PanelScript.GetPanel("Round End Panel");
+            if (rEndPan.m_inView && rEndPan.m_text[0].text == "BATTLE START")
+                StartBattle();
+            else if (rEndPan.m_inView && rEndPan.m_text[0].text[rEndPan.m_text[0].text.Length - 1] == 'S')
+                SceneManager.LoadScene("Menu");
+        }
         else if (Input.GetKeyDown(KeyCode.Escape))
             PanelScript.GetPanel("Options Panel").PopulatePanel();
         else if (Input.GetKeyDown(KeyCode.LeftShift) && m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] == 0)
@@ -337,6 +349,25 @@ public class BoardScript : MonoBehaviour {
             m_highlightedTile.ClearRadius();
 
         currTScript.ClearRadius();
+    }
+
+    void EndOfActionTimer()
+    {
+        if (m_actionEndTimer > 0)
+        {
+            m_actionEndTimer += Time.deltaTime;
+            if (m_actionEndTimer > 2)
+            {
+                m_actionEndTimer = 0;
+                m_camIsFrozen = false;
+
+                if (!m_selected)
+                    PanelScript.GetPanel("HUD Panel RIGHT").m_inView = false;
+
+                if (m_currRound.Count == m_livingPlayersInRound - 1 && m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] == 0)
+                    m_camera.GetComponent<CameraScript>().m_target = m_currCharScript.gameObject;
+            }
+        }
     }
 
 
@@ -465,6 +496,28 @@ public class BoardScript : MonoBehaviour {
 
 
     // Turn
+    public void BattleOverview()
+    {
+        CharacterInit();
+        CameraScript cam = m_camera.GetComponent<CameraScript>();
+        cam.m_rotate = true;
+        cam.m_zoomIn = false;
+        m_camIsFrozen = true;
+        cam.m_target = gameObject;
+        PanelScript.GetPanel("Round End Panel").m_inView = true;
+        if (PanelScript.GetPanel("Round End Panel").m_text.Length > 0)
+            PanelScript.GetPanel("Round End Panel").m_text[0].text = "BATTLE START";
+        m_battle = true;
+    }
+
+    public void StartBattle()
+    {
+        m_camera.GetComponent<CameraScript>().m_rotate = false;
+        PanelScript.GetPanel("HUD Panel LEFT").m_inView = true;
+        PanelScript.GetPanel("Round Panel").m_inView = true;
+        NewTurn();
+    }
+
     public void NewTurn()
     {
         PlayerScript winningTeam = null;
@@ -537,8 +590,11 @@ public class BoardScript : MonoBehaviour {
         HUDLeftScript.m_cScript = m_currCharScript;
         HUDLeftScript.PopulatePanel();
 
-        CameraScript camScript = m_camera.GetComponent<CameraScript>();
-        camScript.m_target = m_currCharScript.gameObject;
+        if (!newRound)
+        {
+            CameraScript camScript = m_camera.GetComponent<CameraScript>();
+            camScript.m_target = m_currCharScript.gameObject;
+        }
 
         Renderer rend = m_currCharScript.gameObject.transform.GetComponentInChildren<Renderer>();
         rend.materials[2].shader = rend.materials[0].shader;
@@ -546,10 +602,15 @@ public class BoardScript : MonoBehaviour {
 
         if (m_currCharScript.m_isAI)
             m_currCharScript.AITurn();
+
+        m_camIsFrozen = true;
     }
 
     public void EndTurn()
     {
+        if (!m_currCharScript)
+            return;
+
         if (m_currCharScript.m_anim.GetCurrentAnimatorStateInfo(0).fullPathHash == Animator.StringToHash("Base.Idle Melee") ||
             m_currCharScript.m_anim.GetCurrentAnimatorStateInfo(0).fullPathHash == Animator.StringToHash("Base.Death"))
             if (m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] + m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] > 3 &&
@@ -639,6 +700,10 @@ public class BoardScript : MonoBehaviour {
         PanelScript.GetPanel("Turn Panel").NewTurnOrder();
 
         SpawnItem();
+
+        PanelScript roundPan = PanelScript.GetPanel("Round End Panel");
+        roundPan.m_inView = true;
+        roundPan.GetComponentInChildren<Text>().text = "NEW ROUND";
     }
 
     public void GameOver(PlayerScript _winningTeam)
@@ -664,5 +729,9 @@ public class BoardScript : MonoBehaviour {
     {
         GameObject pUP = Instantiate(m_powerup);
         pUP.GetComponent<ObjectScript>().PlaceRandomly(this);
+        m_camIsFrozen = true;
+        m_camera.GetComponent<CameraScript>().m_target = pUP;
+
+        //m_actionEndTimer += Time.deltaTime;
     }
 }

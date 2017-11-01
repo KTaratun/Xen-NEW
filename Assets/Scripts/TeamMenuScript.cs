@@ -83,6 +83,9 @@ public class TeamMenuScript : MonoBehaviour {
 
     public void RandomCharacter()
     {
+        if (!m_audio.isPlaying)
+            m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Recruitment Sound 2"));
+
         int color = Random.Range(0, 4);
 
         m_currCharScript.m_name = RandomName();
@@ -241,10 +244,7 @@ public class TeamMenuScript : MonoBehaviour {
         m_currButton.onClick.AddListener(() => CharacterAssignment());
 
         if (!m_audio.isPlaying)
-        {
-            m_audio.volume = 0.5f;
-            m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Remove Character Sound 1"));
-        }
+            m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Remove Character Sound 1 LOW"));
     }
 
     public void Load()
@@ -508,6 +508,8 @@ public class TeamMenuScript : MonoBehaviour {
 
     public void CloseLevelPanel(int _pan)
     {
+        m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Menu Sound 2"));
+
         EventSystem.current.currentSelectedGameObject.GetComponent<Button>().name = m_currButton.name;
         if (_pan == 0)
         {
@@ -656,9 +658,15 @@ public class TeamMenuScript : MonoBehaviour {
         Button me = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
 
         if (me.image.color == Color.white)
+        {
+            m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Misc Sound 2"));
             me.image.color = Color.cyan;
+        }
         else
+        {
+            m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Misc Sound 2 OFF"));
             me.image.color = Color.white;
+        }
     }
 
     private void CheckIfCompControlled()

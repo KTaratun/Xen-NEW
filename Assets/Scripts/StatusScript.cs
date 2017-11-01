@@ -25,6 +25,8 @@ public class StatusScript : MonoBehaviour {
 	// Use this for initialization
 	void Start ()
     {
+        m_statMod = new int[(int)CharacterScript.sts.TOT];
+        m_lifeSpan = 0;
     }
 	
 	// Update is called once per frame
@@ -35,13 +37,22 @@ public class StatusScript : MonoBehaviour {
     static public void NewStatus(GameObject _owner, CharacterScript _caster, string _name)
     {
         CharacterScript charScript = _owner.GetComponent<CharacterScript>();
-        _owner.AddComponent<StatusScript>();
-        StatusScript[] statScripts = charScript.GetComponents<StatusScript>();
+        int ind = AddStatus(_owner);
+        if (ind == -1)
+            return;
 
-        statScripts[statScripts.Length - 1].m_statMod = new int[(int)CharacterScript.sts.TOT];
-        statScripts[statScripts.Length - 1].StatusInit(charScript, _caster, _name);
+        charScript.m_statuses[ind].StatusInit(charScript, _caster, _name);
         ApplyStatus(_owner);
         charScript.UpdateStatusImages();
+    }
+
+    static private int AddStatus(GameObject _owner)
+    {
+        CharacterScript charScript = _owner.GetComponent<CharacterScript>();
+        for (int i = 0; i < charScript.m_statuses.Length; i++)
+            if (charScript.m_statuses[i].m_lifeSpan < 1)
+                return i;
+        return -1;
     }
 
     public void StatusInit(CharacterScript _ownerScript, CharacterScript _casterScript, string _action)
@@ -347,19 +358,50 @@ public class StatusScript : MonoBehaviour {
     static public void UpdateStatus(GameObject _character, mode _mode)
     {
         CharacterScript charScript = _character.GetComponent<CharacterScript>();
-        StatusScript[] statScripts = charScript.GetComponents<StatusScript>();
+        StatusScript[] statScripts = charScript.m_statuses;
+        bool hasBeenDestroyed = false;
 
         for (int i = 0; i < statScripts.Length; i++)
         {
-            if (statScripts[i].m_mode == _mode)
+            if (statScripts[i].m_mode == _mode && statScripts[i].m_lifeSpan > 0)
             {
                 statScripts[i].m_lifeSpan--;
                 if (statScripts[i].m_lifeSpan <= 0)
+                {
+                    hasBeenDestroyed = true;
                     statScripts[i].DestroyStatus(_character);
+                }
                 else
                     PerformEffect(statScripts[i], charScript);
             }
         }
+
+        if (!hasBeenDestroyed)
+            return;
+
+        StatusScript[] cStatuses = _character.GetComponent<CharacterScript>().m_statuses;
+
+        for (int i = 0; i < cStatuses.Length - 1; i++)
+        {
+            if (cStatuses[i].m_lifeSpan > 0)
+                continue;
+
+            for (int j = i + 1; j < cStatuses.Length; j++)
+                if (cStatuses[j].m_lifeSpan > 0)
+                {
+                    cStatuses[i].m_name = cStatuses[j].m_name;
+                    cStatuses[i].m_effect = cStatuses[j].m_effect;
+                    cStatuses[i].m_statMod = cStatuses[j].m_statMod;
+                    cStatuses[i].m_mode = cStatuses[j].m_mode;
+                    cStatuses[i].m_lifeSpan = cStatuses[j].m_lifeSpan;
+                    cStatuses[i].m_sprite = cStatuses[j].m_sprite;
+                    cStatuses[i].m_color = cStatuses[j].m_color;
+                    cStatuses[j].m_lifeSpan = 0;
+                    break;
+                }
+        }
+
+        _character.GetComponent<CharacterScript>().UpdateStatusImages();
     }
 
     public void DestroyStatus(GameObject _character)
@@ -370,8 +412,6 @@ public class StatusScript : MonoBehaviour {
             m_statMod[i] = 0;
 
         ApplyStatus(_character);
-        Destroy(this);
-        _character.GetComponent<CharacterScript>().UpdateStatusImages();
     }
 
     static public void DestroyAll(GameObject _character)

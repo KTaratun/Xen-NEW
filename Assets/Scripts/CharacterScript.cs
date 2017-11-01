@@ -46,13 +46,24 @@ public class CharacterScript : ObjectScript {
     public int[] m_isDiabled;
     public int m_gender;
     public GameObject[] m_weapons;
+    public List<GameObject> m_body;
+    public GameObject m_particle;
     public List<GameObject> m_targets;
     public AudioSource m_audio;
     public int[] m_hasActed;
+    public StatusScript[] m_statuses;
 
     // Use this for initialization
     void Start ()
     {
+        m_statuses = new StatusScript[8];
+
+        for (int i = 0; i < m_statuses.Length; i++)
+        {
+            StatusScript s = gameObject.AddComponent<StatusScript>();
+            m_statuses[i] = s;
+        }
+
         if (m_hasActed.Length == 0)
             m_hasActed = new int[2];
 
@@ -69,6 +80,19 @@ public class CharacterScript : ObjectScript {
 
         if (m_stats.Length == 0)
             InitializeStats();
+
+        List<GameObject> bodyParts = new List<GameObject>();
+        bodyParts.Add(m_body[0]);
+        
+        while (bodyParts.Count > 0)
+        {
+            for (int i = 0; i < bodyParts[0].transform.childCount; i++)
+            {
+                m_body.Add(bodyParts[0].transform.GetChild(i).gameObject);
+                bodyParts.Add(bodyParts[0].transform.GetChild(i).gameObject);
+            }
+            bodyParts.RemoveAt(0);
+        }
 
         // Set up the spheres that pop up over the characters heads when they gain or lose energy
         for (int i = 0; i < m_popupSpheres.Length; i++)
@@ -339,6 +363,7 @@ public class CharacterScript : ObjectScript {
         // ATTACK MODS
         bool teamBuff = false;
         bool soloBuff = false;
+        bool gainOK = false;
         if (UniqueActionProperties(m_currAction, uniAct.TEAM_BUFF) >= 0)// || actName == "Cleansing ATK")
             teamBuff = true;
         else if (UniqueActionProperties(m_currAction, uniAct.SOLO_BUFF) >= 0)
@@ -349,26 +374,29 @@ public class CharacterScript : ObjectScript {
             for (int i = 0; i < m_targets.Count; i++)
             {
                 if (CheckIfAttack(actName))
-                {
-                    Attack(m_targets[i].GetComponent<ObjectScript>());
-
-                    if (!m_isFree)
-                        m_hasActed[(int)trn.ACT] += 3;
-                }
-                else if (!CheckIfAttack(actName) && actName != "SUP(Redirect)")
-                    m_hasActed[(int)trn.ACT] += 2;
+                    gainOK = Attack(m_targets[i].GetComponent<ObjectScript>());
 
                 if (!soloBuff)
                     if (m_targets[i].tag == "PowerUp" || m_targets[i].tag == "Player" && !m_targets[i].GetComponent<CharacterScript>().m_effects[(int)StatusScript.effects.REFLECT])
-                        if (!teamBuff || teamBuff && m_targets[i].tag == "Player" && m_targets[i].GetComponent<CharacterScript>().m_player != m_player)
+                        if (!teamBuff || teamBuff && m_targets[i].tag == "Player" && m_targets[i].GetComponent<CharacterScript>().m_player == m_player)
                             Ability(m_targets[i], actName);
             }
+
+            if (!m_isFree && CheckIfAttack(actName))
+                m_hasActed[(int)trn.ACT] += 3;
+            else if (!CheckIfAttack(actName) && actName != "SUP(Redirect)")
+                m_hasActed[(int)trn.ACT] += 2;
+
+            if (m_targets.Count > 1)
+                m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_selected.gameObject;
+            else
+                m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_targets[0];
         }
 
-        if (teamBuff || soloBuff)
+        if (teamBuff || soloBuff && gainOK)
             Ability(gameObject, actName);
 
-        if (!m_isFree)
+        if (!m_isFree && PlayerScript.CheckIfGains(actEng) && gainOK || !m_isFree && !PlayerScript.CheckIfGains(actEng))
             EnergyConversion(actEng);
         else
             PanelScript.GetPanel("Choose Panel").m_inView = false;
@@ -392,11 +420,11 @@ public class CharacterScript : ObjectScript {
         print(m_name + " has finished acting.");
     }
 
-    public void Attack(ObjectScript _currTarget)
+    public bool Attack(ObjectScript _currTarget)
     {
         if (_currTarget.gameObject.tag != "Player" && _currTarget.gameObject.tag != "Environment" || 
             _currTarget.gameObject.tag == "Player" && _currTarget.GetComponent<CharacterScript>().m_isAlive == false)
-            return;
+            return false;
 
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
         string actDmg = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.DMG);
@@ -415,7 +443,7 @@ public class CharacterScript : ObjectScript {
             {
                 CharacterScript charScript = _currTarget.GetComponent<CharacterScript>();
                 // DAMAGE MODS
-                if (UniqueActionProperties(m_currAction, uniAct.BYPASS) >= 0)
+                if (UniqueActionProperties(m_currAction, uniAct.BYPASS) >= 0 && charScript.m_tempStats[(int)sts.DEF] > 0)
                 {
                     int def = charScript.m_tempStats[(int)sts.DEF] - UniqueActionProperties(m_currAction, uniAct.BYPASS) + m_tempStats[(int)sts.TEC];
                     if (def < 0)
@@ -431,12 +459,12 @@ public class CharacterScript : ObjectScript {
                 finalDMG = (int.Parse(finalDMG) + m_tempStats[(int)sts.TEC]).ToString();
 
             _currTarget.ReceiveDamage(finalDMG, Color.white);
+
+            if (_currTarget.gameObject.tag == "Player" && _currTarget.GetComponent<CharacterScript>().m_player != m_player)
+                return true;
         }
 
-        if (m_targets.Count > 1)
-            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_selected.gameObject;
-        else
-            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_targets[0];
+        return false;
     }
 
     public void Ability(GameObject _currTarget, string _name)
@@ -646,7 +674,7 @@ public class CharacterScript : ObjectScript {
 
 
     // Health/Damage
-    new public void ReceiveDamage(string _dmg, Color _color)
+    override public void ReceiveDamage(string _dmg, Color _color)
     {
         TextMesh textMesh = m_popupText.GetComponent<TextMesh>();
         m_popupText.SetActive(true);
@@ -741,8 +769,8 @@ public class CharacterScript : ObjectScript {
                 return 1;
         }
         // Only SOLO BUFF
-        else if (actName == "ATK(Accelerate)" || actName == "ATK(Fortify)" || actName == "ATK(Rev)" || 
-            actName == "ATK(Salvage)" || actName == "ATK(Target)")
+        else if (actName == "ATK(Accelerate)" || actName == "ATK(Fortify)" || actName == "ATK(Mod)" ||
+            actName == "ATK(Rev)" || actName == "ATK(Salvage)" || actName == "ATK(Target)")
         {
             if (_uniAct == uniAct.SOLO_BUFF)
                 return 1;
@@ -952,19 +980,6 @@ public class CharacterScript : ObjectScript {
             }
             break;
         }
-    }
-
-    public bool checkTargetsTiles(ObjectScript _target, TileScript _tile)
-    {
-        for (int i = 0; i < m_targets.Count; i++)
-        {
-            TileScript tScript = m_targets[i].GetComponent<ObjectScript>().m_tile;
-            if (_tile == tScript && m_targets[i].tag == _target.gameObject.tag ||
-                _tile == m_tile && gameObject.tag == _target.gameObject.tag)
-                return false;
-        }
-
-        return true;
     }
     
     public void DisableRandomAction()
@@ -1178,11 +1193,6 @@ public class CharacterScript : ObjectScript {
 
 
     // Utilities
-    private void OnMouseDown()
-    {
-        m_tile.OnMouseDown();
-    }
-
     public void HighlightCharacter()
     {
         if (PanelScript.GetPanel("HUD Panel RIGHT").m_inView)
@@ -1388,4 +1398,23 @@ public class CharacterScript : ObjectScript {
 
         }
     }
+
+    public bool checkTargetsTiles(ObjectScript _target, TileScript _tile)
+    {
+        for (int i = 0; i < m_targets.Count; i++)
+        {
+            TileScript tScript = m_targets[i].GetComponent<ObjectScript>().m_tile;
+            if (_tile == tScript && m_targets[i].tag == _target.gameObject.tag ||
+                _tile == m_tile && gameObject.tag == _target.gameObject.tag)
+                return false;
+        }
+
+        return true;
+    }
+
+    //public void SparkRandomly()
+    //{
+    //    int randPart = Random.Range(0, m_body.Count);
+    //    m_particle.transform.SetPositionAndRotation(m_body[randPart].transform.position, m_particle.transform.rotation);
+    //}
 }

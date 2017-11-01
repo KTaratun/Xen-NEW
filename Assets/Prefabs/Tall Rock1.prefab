@@ -99,7 +99,7 @@ MonoBehaviour:
   - {fileID: 23318407292814356}
   m_tile: {fileID: 0}
   m_boardScript: {fileID: 0}
-  m_width: 0
+  m_width: 1
   m_facing: 0
 --- !u!136 &136126271412015388
 CapsuleCollider:

@@ -17,10 +17,12 @@ public class ButtonScript : MonoBehaviour {
     public Color m_oldColor;
     public bool m_hovered;
     public string m_action;
+    public AudioSource m_audio;
 
 	// Use this for initialization
 	void Start ()
     {
+        m_audio = gameObject.AddComponent<AudioSource>();
         m_hovered = false;
 	}
 	
@@ -33,11 +35,12 @@ public class ButtonScript : MonoBehaviour {
     {
         if (m_boardScript && m_boardScript.m_isForcedMove && m_parent.tag != "Selector" ||
             PanelScript.m_confirmPanel.m_inView && m_parent != PanelScript.m_confirmPanel ||
+            gameObject.tag == "Action Button" && m_boardScript && m_boardScript.m_camIsFrozen ||
             m_boardScript && m_boardScript.m_currCharScript.m_isAI)
             return;
 
-        if (m_boardScript)
-            m_boardScript.m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Menu Sound 3"));
+        if (GetComponent<Button>() && GetComponent<Button>().interactable)
+            m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Menu Sound 3"));
 
         if (m_boardScript && GetComponent<Button>())
             m_boardScript.m_hoverButton = GetComponent<Button>();
@@ -175,6 +178,7 @@ public class ButtonScript : MonoBehaviour {
             m_object != m_boardScript.m_currCharScript.gameObject && GetComponent<Button>().GetComponent<Image>().color == Color.white ||
             m_boardScript && m_boardScript.m_isForcedMove && m_parent && m_parent.tag != "Selector" || 
             PanelScript.m_confirmPanel.m_inView && m_parent != PanelScript.m_confirmPanel ||
+            gameObject.tag == "Action Button" && m_boardScript && m_boardScript.m_camIsFrozen ||
             m_boardScript && m_boardScript.m_currCharScript.m_isAI)
             return;
 
@@ -196,6 +200,7 @@ public class ButtonScript : MonoBehaviour {
             if (gameObject == m_boardScript.m_currButton.gameObject)
             {
                 m_boardScript.m_currButton = null;
+                m_boardScript.m_currCharScript.m_currAction = "";
                 if (!m_hovered)
                     GetComponent<ButtonScript>().m_main.m_inView = false;
                 return;
@@ -211,6 +216,7 @@ public class ButtonScript : MonoBehaviour {
 
         if (gameObject.tag == "Action Button")
         {
+
             if (PanelScript.GetPanel("Choose Panel").m_inView)
                 m_boardScript.m_isForcedMove = null;
 
@@ -225,6 +231,9 @@ public class ButtonScript : MonoBehaviour {
             m_boardScript.m_currButton.GetComponent<ButtonScript>().m_main.m_cScript = m_boardScript.m_currCharScript;
             m_boardScript.m_currButton.GetComponent<ButtonScript>().m_main.PopulatePanel();
             m_boardScript.m_currCharScript.ActionTargeting(m_boardScript.m_currCharScript.m_tile);
+
+            if (PanelScript.GetPanel("HUD Panel RIGHT").m_inView)
+                PanelScript.GetPanel("HUD Panel RIGHT").PopulatePanel();
         }
         else if (gameObject.name == "Move" && !PanelScript.GetPanel("Choose Panel").m_inView)
             m_boardScript.m_currCharScript.MovementSelection(0);

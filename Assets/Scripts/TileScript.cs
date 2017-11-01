@@ -42,7 +42,7 @@ public class TileScript : MonoBehaviour {
 
     public void OnMouseDown()
     {
-        if (PanelScript.CheckIfPanelOpen() || m_boardScript.m_camIsFrozen || m_boardScript.m_hoverButton)
+        if (PanelScript.CheckIfPanelOpen() || m_boardScript.m_camIsFrozen || m_boardScript.m_hoverButton || !m_boardScript.m_battle)
             return;
 
         Renderer renderer = GetComponent<Renderer>();
@@ -96,7 +96,7 @@ public class TileScript : MonoBehaviour {
             buttons[1].GetComponent<ButtonScript>().ConfirmationButton("Move");
         }
         // If selecting a tile that is holding a character while using an action
-        else if (renderer.material.color == Color.red || renderer.material.color == Color.green ||
+        else if (renderer.material.color == Color.red && m_holding || renderer.material.color == Color.green && m_holding ||
             renderer.material.color == Color.yellow) // Otherwise if color is red, perform action code
         {
             Button[] buttons = PanelScript.m_confirmPanel.GetComponentsInChildren<Button>();
