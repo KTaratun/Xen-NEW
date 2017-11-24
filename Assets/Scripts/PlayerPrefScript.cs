@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PlayerPrefScript : MonoBehaviour {
 
+    public enum netwrkPak { NAME, COLOR, ACTIONS, EXP, LVL, GENDER, AI, STATS, TEAM, POS}
+
 	// Use this for initialization
 	void Start () {
 		
@@ -67,9 +69,29 @@ public class PlayerPrefScript : MonoBehaviour {
         }
 
         _charScript.m_isAlive = true;
-        _charScript.m_currRadius = 0;
         _charScript.m_effects = new bool[(int)StatusScript.effects.TOT];
 
         return _charScript;
+    }
+
+    static public string PackageForNetwork(int _ind)
+    {
+        string netString = "";
+        string key = "0," + _ind.ToString();
+        char symbol = '|';
+
+        netString += PlayerPrefs.GetString(key + ",name") + symbol;
+        netString += PlayerPrefs.GetString(key + ",color") + symbol;
+        string[] actions = PlayerPrefs.GetString(key + ",actions").Split(';');
+        for (int i = 0; i < actions.Length; i++)
+            netString += DatabaseScript.GetActionData(actions[i], DatabaseScript.actions.ID) + ',';
+        netString = netString.Trim(','); netString += symbol;
+        netString += PlayerPrefs.GetString(key + ",exp") + symbol;
+        netString += PlayerPrefs.GetString(key + ",level") + symbol;
+        netString += PlayerPrefs.GetString(key + ",gender") + symbol;
+        netString += PlayerPrefs.GetString(key + ",AI") + symbol;
+        netString += PlayerPrefs.GetString(key + ",stats");
+
+        return netString;
     }
 }

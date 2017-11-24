@@ -27,22 +27,26 @@ public class Action : StateMachineBehaviour {
     {
         if (stateInfo.fullPathHash == Animator.StringToHash("Base.Melee") && 
             stateInfo.normalizedTime > 0.3777777777777778 && !m_hasDoneAction ||
-            stateInfo.fullPathHash == Animator.StringToHash("Base.Ranged") &&
-            stateInfo.normalizedTime > 0.72 && !m_hasDoneAction ||
-            stateInfo.fullPathHash == Animator.StringToHash("Base.Throw") &&
-            stateInfo.normalizedTime > 0.7857142857142857 && !m_hasDoneAction ||
             stateInfo.fullPathHash == Animator.StringToHash("Base.Ability") &&
-            stateInfo.normalizedTime > 0.5 && !m_hasDoneAction)
+            stateInfo.normalizedTime > 0.5 && !m_hasDoneAction ||
+            stateInfo.fullPathHash == Animator.StringToHash("Base.Kick") &&
+            stateInfo.normalizedTime > 0.48 && !m_hasDoneAction ||
+            stateInfo.fullPathHash == Animator.StringToHash("Base.Stab") &&
+            stateInfo.normalizedTime > 0.42 && !m_hasDoneAction ||
+            stateInfo.fullPathHash == Animator.StringToHash("Base.Slash") &&
+            stateInfo.normalizedTime > 0.38 && !m_hasDoneAction ||
+            stateInfo.fullPathHash == Animator.StringToHash("Base.Sweep") &&
+            stateInfo.normalizedTime > 0.3 && !m_hasDoneAction)
+
         {
-            if (stateInfo.fullPathHash == Animator.StringToHash("Base.Melee"))
+            if (stateInfo.fullPathHash == Animator.StringToHash("Base.Melee") ||
+                stateInfo.fullPathHash == Animator.StringToHash("Base.Kick") ||
+                stateInfo.fullPathHash == Animator.StringToHash("Base.Stab") ||
+                stateInfo.fullPathHash == Animator.StringToHash("Base.Slash") ||
+                stateInfo.fullPathHash == Animator.StringToHash("Base.Sweep"))
             {
                 animator.GetComponentInParent<CharacterScript>().m_audio.volume = 0.6f;
                 animator.GetComponentInParent<CharacterScript>().m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Melee Hit Sound 1.2"));
-            }
-            else if (stateInfo.fullPathHash == Animator.StringToHash("Base.Ranged"))
-            {
-                animator.GetComponentInParent<CharacterScript>().m_audio.volume = 0.5f;
-                animator.GetComponentInParent<CharacterScript>().m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Gun Sound 1"));
             }
             else if (stateInfo.fullPathHash == Animator.StringToHash("Base.Ability"))
             {
@@ -51,6 +55,27 @@ public class Action : StateMachineBehaviour {
             }
 
             animator.GetComponentInParent<CharacterScript>().Action();
+            m_hasDoneAction = true;
+        }
+        else if (stateInfo.fullPathHash == Animator.StringToHash("Base.Throw") &&
+            stateInfo.normalizedTime > 0.5 && !m_hasDoneAction ||
+            stateInfo.fullPathHash == Animator.StringToHash("Base.Ranged") &&
+            stateInfo.normalizedTime > 0.72 && !m_hasDoneAction)
+        {
+            BoardScript board = animator.GetComponentInParent<ObjectScript>().m_boardScript;
+
+            if (stateInfo.fullPathHash == Animator.StringToHash("Base.Throw"))
+            {
+                board.m_grenade.GetComponent<ObjectScript>().MovingStart(board.m_selected, true, false);
+                animator.GetComponentInParent<CharacterScript>().m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Grenade Shot 1"));
+            }
+            else if (stateInfo.fullPathHash == Animator.StringToHash("Base.Ranged"))
+            {
+                board.m_laser.GetComponent<ObjectScript>().MovingStart(board.m_selected, true, false);
+                animator.GetComponentInParent<CharacterScript>().m_audio.volume = 0.5f;
+                animator.GetComponentInParent<CharacterScript>().m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Gun Sound 1"));
+            }
+
             m_hasDoneAction = true;
         }
     }

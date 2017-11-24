@@ -6,80 +6,94 @@ using UnityEngine.SceneManagement;
 
 public class BoardScript : MonoBehaviour {
 
-    public Camera m_camera; // Why it do that squiggle?
-    public int m_roundCount;
-    public int m_environmentalDensity; // This dictates how many environmental objs per tile
-    public GameObject[] m_environmentOBJs;
-    public List<GameObject> m_obstacles; // The actual array of objects on the board
-    public TileScript[] m_tiles; // All m_tiles on the board
-    public GameObject m_tile; // A reference to the m_tile prefab
-    public GameObject[] m_character; // A reference to the character prefab
-    public int m_width; // Width of the board
+    // Tiles
     public int m_height; // Height of the board
-    public TileScript m_selected; // Last pressed tile
+    public int m_width; // Width of the board
+    public TileScript[] m_tiles; // All m_tiles on the board
     public TileScript m_highlightedTile; // Currently hovered over tile
+    public TileScript m_selected; // Last pressed tile
     public TileScript m_oldTile; // A pointer to the previously hovered over m_tile
-    public CharacterScript m_currCharScript; // A pointer to the character that's turn is currently up
+
+    // OBJs
     public List<GameObject> m_characters; // A list of all characters within the game
-    public GameObject[] m_players;
-    public List<GameObject> m_currRound; // A list of the players who have taken a turn in the current round
-    public GameObject m_isForcedMove; // This is to keep track of whichever player is turning an action out of order
+    public List<GameObject> m_currRound; // A list of the players who have not taken a turn in the current round
+    public CharacterScript m_currCharScript; // A pointer to the character that's turn is currently up
+    public List<GameObject> m_obstacles; // The actual array of objects on the board
+    public GameObject[] m_netOBJs; // List of all objects for the network to index through
+
+    // GUI
+    public Button m_hoverButton; // The button which is currently hovered over
+    public Button m_currButton; // The button which is currently selected
+
+    // State info
+    public int m_roundCount;
+    public bool m_battle; // This checks to see if a battle has started
+    public bool m_newTurn; // This tells the turn panels to slide
+    public bool m_camIsFrozen; // This is used to disable camera movement input from the player
+    public int m_environmentalDensity; // This dictates how many environmental objs per tile
     public int m_livingPlayersInRound; // This is mainly for the turn panels. This tells them how far to move when I player finishes their turn.
-    public bool m_camIsFrozen;
-    public bool m_newTurn;
-    public AudioSource m_audio;
-    public Button m_hoverButton;
-    public Button m_currButton;
-    public GameObject m_powerup;
-    public float m_actionEndTimer;
-    public bool m_battle;
+    public float m_actionEndTimer; // This is used to delay camera movement when focusing on a target
+    public GameObject m_isForcedMove; // This is to keep track of whichever player is turning an action out of order
+
+    // References
+    public GameObject m_players; // A list of all player (Teams) within the game
     public FieldScript m_field;
+    public Camera m_camera;
+    public AudioSource m_audio;
+    public GameObject m_grenade;
+    public GameObject m_laser;
+
+
 
     // Use this for initialization
     void Start()
     {
-        if (m_field)
-            m_battle = false;
-        else
-            m_battle = true;
-
         m_actionEndTimer = 0;
-        m_audio = gameObject.AddComponent<AudioSource>();
-
-        m_newTurn = false;
-        PanelScript.MenuPanelInit("Canvas");
         m_roundCount = 0;
-        m_isForcedMove = null;
+        m_newTurn = false;
         m_camIsFrozen = false;
-        Renderer r = GetComponent<Renderer>();
+        m_netOBJs = new GameObject[60];
 
-        if (m_environmentalDensity <= 2)
-            m_environmentalDensity = 10;
-        // If the user didn't assign a m_tile size in the editor, auto adjust the m_tiles to fit the board
-        if (m_height == 0 && m_width == 0)
-        {
-            m_width = (int)(r.bounds.size.x / m_tile.GetComponent<Renderer>().bounds.size.x);
-            m_height = (int)(r.bounds.size.z / m_tile.GetComponent<Renderer>().bounds.size.z);
-        }
+        m_grenade = Instantiate(Resources.Load<GameObject>("OBJs/Grenade"));
+        m_grenade.GetComponent<ObjectScript>().m_boardScript = this;
+        m_grenade.SetActive(false);
+
+        m_laser = Instantiate(Resources.Load<GameObject>("OBJs/Laser"));
+        m_laser.GetComponent<ObjectScript>().m_boardScript = this;
+        m_laser.SetActive(false);
+
+        m_audio = gameObject.AddComponent<AudioSource>();
+        m_isForcedMove = null;
+
+        PanelScript.MenuPanelInit("Board Canvas", gameObject);
 
         InitBoardTiles();
         AssignNeighbors();
-        EnvironmentInit();
 
-        if (m_battle)
+        if (m_field)
+            m_battle = false;
+        else
             BattleOverview();
     }
 
     public void InitBoardTiles()
     {
         Renderer r = GetComponent<Renderer>();
+        // If the user didn't assign a m_tile size in the editor, auto adjust the m_tiles to fit the board
+        if (m_height == 0 && m_width == 0)
+        {
+            m_width = (int)(r.bounds.size.x / Resources.Load<GameObject>("OBJs/Tile").GetComponent<Renderer>().bounds.size.x);
+            m_height = (int)(r.bounds.size.z / Resources.Load<GameObject>("OBJs/Tile").GetComponent<Renderer>().bounds.size.z);
+        }
+
         m_tiles = new TileScript[m_width * m_height];
+
 
         for (int z = 0; z < m_height; z++)
         {
             for (int x = 0; x < m_width; x++)
             {
-                GameObject newtile = Instantiate(m_tile);
+                GameObject newtile = Instantiate(Resources.Load<GameObject>("OBJs/Tile"));
 
                 Renderer ntR = newtile.GetComponent<Renderer>();
                 ntR.material.color = new Color(1, 1, 1, 0f);
@@ -90,7 +104,7 @@ public class BoardScript : MonoBehaviour {
                 tScript.m_x = x;
                 tScript.m_z = z;
                 tScript.m_boardScript = GetComponent<BoardScript>();
-
+                tScript.m_id = x + z * m_width;
                 m_tiles[x + z * m_width] = tScript;
             }
         }
@@ -118,15 +132,20 @@ public class BoardScript : MonoBehaviour {
         }
     }
 
-    private void EnvironmentInit()
+    private void RandomEnvironmentInit()
     {
+        if(m_environmentalDensity <= 2)
+            m_environmentalDensity = 10;
+
         int numOfObstacles = (m_height * m_width) / m_environmentalDensity;
 
         while (numOfObstacles > 0)
         {
-            int randomOBJ = Random.Range(0, m_environmentOBJs.Length);
+            GameObject[] environmentalOBJs = Resources.LoadAll<GameObject>("OBJs/Environmental");
+            int randomOBJ = Random.Range(0, environmentalOBJs.Length);
 
-            GameObject newOBJ = Instantiate(m_environmentOBJs[randomOBJ]);
+            GameObject newOBJ = Instantiate(environmentalOBJs[randomOBJ]);
+            newOBJ.GetComponent<ObjectScript>().m_name = randomOBJ.ToString();
             newOBJ.GetComponent<ObjectScript>().RandomRotation();
             newOBJ.GetComponent<ObjectScript>().PlaceRandomly(this);
             m_obstacles.Add(newOBJ);
@@ -140,6 +159,12 @@ public class BoardScript : MonoBehaviour {
     public void CharacterInit()
     {
         for (int i = 0; i < 4; i++)
+        {
+            PlayerScript playScript = m_players.AddComponent<PlayerScript>();
+            playScript.m_characters = new List<CharacterScript>();
+            playScript.m_bScript = this;
+            playScript.m_energy = new int[4];
+
             for (int j = 0; j < 6; j++)
             {
                 string key = i.ToString() + ',' + j.ToString();
@@ -147,7 +172,8 @@ public class BoardScript : MonoBehaviour {
                 if (name.Length > 0)
                 {
                     // Set up character
-                    GameObject newChar = Instantiate(m_character[int.Parse(PlayerPrefs.GetString(key + ",gender"))]);
+                    GameObject[] characterTypes = Resources.LoadAll<GameObject>("OBJs/Characters");
+                    GameObject newChar = Instantiate(characterTypes[int.Parse(PlayerPrefs.GetString(key + ",gender"))]);
                     CharacterScript cScript = newChar.GetComponent<CharacterScript>();
                     newChar.name = name;
                     
@@ -162,9 +188,9 @@ public class BoardScript : MonoBehaviour {
                     else if (i == 3)
                         cScript.m_teamColor = Color.magenta;
                     
-                    newChar.GetComponentInChildren<Renderer>().materials[0].color = cScript.m_teamColor;
-                    newChar.GetComponentInChildren<Renderer>().materials[1].color = cScript.m_teamColor;
-                    
+                    Renderer rend = newChar.transform.GetComponentInChildren<Renderer>();
+                    rend.materials[0].color = cScript.m_teamColor;
+
                     cScript.SetPopupSpheres("");
                     m_characters.Add(newChar);
                     
@@ -175,15 +201,16 @@ public class BoardScript : MonoBehaviour {
                     cScript.m_hasActed[1] = 0;
                     
                     // Link to player
-                    PlayerScript playScript = m_players[i].GetComponent<PlayerScript>();
                     cScript.m_player = playScript;
                     playScript.name = "Team " + (i + 1).ToString();
+
                     playScript.m_characters.Add(cScript);
                     newChar.GetComponent<ObjectScript>().PlaceRandomly(this);
                 }
             }
+        }
     }
-    
+
 
     // Update is called once per frame
     void Update()
@@ -194,52 +221,64 @@ public class BoardScript : MonoBehaviour {
         Inputs();
         Hover();
         EndOfActionTimer();
-        EndTurn();
+        EndTurn(false);
     }
 
     public void OnCollisionEnter(Collision collision)
     {
-        if (!m_battle && collision.collider.gameObject == m_field.m_mainChar.gameObject)
-        {
-            if (m_field)
-                m_field.MainCharJoinBattle();
+        if (m_battle)
+            return;
 
-            BattleOverview();
+        else if (collision.collider.tag == "Player")
+        {
+            JoinBattle(collision.gameObject.GetComponent<CharacterScript>());
+
+            if (collision.collider.gameObject == m_field.m_mainChar.gameObject)
+                BattleOverview();
         }
     }
 
     void Inputs()
     {
-        if (m_selected && m_selected.m_holding && m_selected.m_holding.tag == "Player")
+        if (Input.GetMouseButtonDown(0))
         {
-            Renderer oldRend = m_selected.m_holding.transform.GetComponentInChildren<Renderer>();
-            if (oldRend.materials[2].shader != oldRend.materials[0].shader)
-                return;
+            PanelScript rEndPan = PanelScript.GetPanel("Round End Panel");
+            if (rEndPan.m_inView && rEndPan.m_text[0].text == "BATTLE START" && !GameObject.Find("Network") ||
+                rEndPan.m_inView && rEndPan.m_text[0].text == "BATTLE START" && GameObject.Find("Network") && GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted)
+                StartCoroutine(StartBattle());
+            else if (rEndPan.m_inView && rEndPan.m_text[0].text[rEndPan.m_text[0].text.Length - 1] == 'S')
+            {
+                m_battle = false;
+                SceneManager.LoadScene("Menu");
+            }
         }
 
+        if (m_camIsFrozen || m_camera.GetComponent<CameraScript>().m_rotate || m_isForcedMove)
+            return;
+
+        //if (m_selected && m_selected.m_holding && m_selected.m_holding.tag == "Player")
+        //{
+        //    // If character is not being viewed
+        //    Renderer oldRend = m_selected.m_holding.transform.GetComponentInChildren<Renderer>();
+        //    if (oldRend.materials[2].shader != oldRend.materials[0].shader)
+        //        return;
+        //}
+
         float w = Input.GetAxis("Mouse ScrollWheel");
-        PanelScript actPan = PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)CharacterScript.HUDPan.ACT_PAN].GetComponent<PanelScript>();
+        PanelScript actPan = PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.ACT_PAN].GetComponent<PanelScript>();
 
         if (Input.GetKeyDown(KeyCode.Q) && !PanelScript.GetPanel("Choose Panel").m_inView) //Formally getmousebuttondown(1);
             OnRightClick();
-        else if (Input.GetMouseButtonDown(0))
-        {
-            PanelScript rEndPan = PanelScript.GetPanel("Round End Panel");
-            if (rEndPan.m_inView && rEndPan.m_text[0].text == "BATTLE START")
-                StartBattle();
-            else if (rEndPan.m_inView && rEndPan.m_text[0].text[rEndPan.m_text[0].text.Length - 1] == 'S')
-                SceneManager.LoadScene("Menu");
-        }
         else if (Input.GetKeyDown(KeyCode.Escape))
             PanelScript.GetPanel("Options Panel").PopulatePanel();
         else if (Input.GetKeyDown(KeyCode.LeftShift) && m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] == 0)
-            PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)CharacterScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0].GetComponent<ButtonScript>().Select();
+            PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0].GetComponent<ButtonScript>().Select();
         else if (Input.GetKeyDown(KeyCode.Space) && !PanelScript.GetPanel("Choose Panel").m_inView)
         {
             if (m_currButton)
             {
                 m_currButton.GetComponent<Image>().color = Color.white;
-                m_currButton.GetComponent<ButtonScript>().m_main.m_inView = false;
+                m_currButton.GetComponent<ButtonScript>().m_main.ClosePanel();
                 m_currButton = null;
                 TileScript selectedTileScript = m_currCharScript.m_tile.GetComponent<TileScript>();
                 if (selectedTileScript.m_radius.Count > 0)
@@ -313,21 +352,27 @@ public class BoardScript : MonoBehaviour {
         if (num >= 0 && t.text != "EMPTY" && butt.interactable == true)
         {
             butt.GetComponent<ButtonScript>().Select();
+            if (m_highlightedTile && m_highlightedTile.m_holding && m_highlightedTile.m_holding.tag == "Player")
+                if (m_highlightedTile.gameObject.GetComponent<Renderer>().material.color != TileScript.c_attack &&
+                    m_highlightedTile.gameObject.GetComponent<Renderer>().material.color != Color.yellow)
+                    PanelScript.GetPanel("ActionViewer Panel").m_panels[2].m_inView = false;
         }
     }
 
     public void OnRightClick()
     {
         m_selected = null;
-        if (m_currButton)
+        if (m_currButton && !m_camIsFrozen)
         {
             m_currButton.GetComponent<Image>().color = m_currButton.GetComponent<ButtonScript>().m_oldColor;
+            if (m_currButton.GetComponent<PanelScript>())
+                m_currButton.GetComponent<PanelScript>().m_inView = false;
             m_currButton = null;
             TileScript selectedTileScript = m_currCharScript.m_tile.GetComponent<TileScript>();
             if (selectedTileScript.m_radius.Count > 0)
                 selectedTileScript.ClearRadius();
 
-            PanelScript.GetPanel("ActionViewer Panel").m_inView = false;
+            PanelScript.GetPanel("ActionViewer Panel").ClosePanel();
         }
 
         // If right click while the confirmation panel is up, do nothing but close that specific panel
@@ -343,7 +388,7 @@ public class BoardScript : MonoBehaviour {
             return;
 
         PanelScript actPreviewScript = PanelScript.GetPanel("ActionPreview");
-        actPreviewScript.m_inView = false;
+        actPreviewScript.ClosePanel();
 
         if (m_highlightedTile)
             m_highlightedTile.ClearRadius();
@@ -362,7 +407,7 @@ public class BoardScript : MonoBehaviour {
                 m_camIsFrozen = false;
 
                 if (!m_selected)
-                    PanelScript.GetPanel("HUD Panel RIGHT").m_inView = false;
+                    PanelScript.GetPanel("HUD Panel RIGHT").ClosePanel();
 
                 if (m_currRound.Count == m_livingPlayersInRound - 1 && m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] == 0)
                     m_camera.GetComponent<CameraScript>().m_target = m_currCharScript.gameObject;
@@ -411,7 +456,7 @@ public class BoardScript : MonoBehaviour {
             }
 
             if (!PanelScript.GetPanel("StatusViewer Panel").m_cScript)
-                PanelScript.GetPanel("StatusViewer Panel").m_inView = false;
+                PanelScript.GetPanel("StatusViewer Panel").ClosePanel();
             return;
         }
 
@@ -443,14 +488,14 @@ public class BoardScript : MonoBehaviour {
         if (charScript && tScript.gameObject.GetComponent<Renderer>().material.color == new Color(1, 0, 0, 1) ||
             charScript && tScript.gameObject.GetComponent<Renderer>().material.color == Color.yellow)
         {
-            PanelScript.GetPanel("ActionViewer Panel").m_panels[1].m_cScript = charScript;
-            PanelScript.GetPanel("ActionViewer Panel").m_panels[1].PopulatePanel();
+            PanelScript.GetPanel("ActionViewer Panel").m_panels[2].m_cScript = charScript;
+            PanelScript.GetPanel("ActionViewer Panel").m_panels[2].PopulatePanel();
         }
 
         if (m_highlightedTile && tScript != m_highlightedTile)
         {
             if (!PanelScript.GetPanel("StatusViewer Panel").m_cScript)
-                PanelScript.GetPanel("StatusViewer Panel").m_inView = false;
+                PanelScript.GetPanel("StatusViewer Panel").ClosePanel();
             if (m_highlightedTile.m_holding && m_highlightedTile.m_holding.tag == "Player")
                 DeselectHighlightedTile();
         }
@@ -467,10 +512,10 @@ public class BoardScript : MonoBehaviour {
 
     private void DeselectHighlightedTile()
     {
-        PanelScript.GetPanel("ActionViewer Panel").m_panels[1].m_inView = false;
+        PanelScript.GetPanel("ActionViewer Panel").m_panels[2].ClosePanel();
 
         if (m_selected && m_selected.m_holding && m_selected.m_holding.tag == "Player" && 
-            m_selected.m_holding.transform.GetComponentInChildren<Renderer>().materials[2].shader != m_selected.m_holding.transform.GetComponentInChildren<Renderer>().materials[0].shader || 
+            m_selected.m_holding.GetComponent<CharacterScript>().m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor == Color.magenta || 
             PanelScript.GetPanel("Choose Panel").m_inView)
             return;
 
@@ -490,7 +535,7 @@ public class BoardScript : MonoBehaviour {
             }
         }
 
-        hudPanScript.m_inView = false;
+        hudPanScript.ClosePanel();
         m_highlightedTile = null;
     }
 
@@ -498,60 +543,49 @@ public class BoardScript : MonoBehaviour {
     // Turn
     public void BattleOverview()
     {
-        CharacterInit();
         CameraScript cam = m_camera.GetComponent<CameraScript>();
         cam.m_rotate = true;
         cam.m_zoomIn = false;
         m_camIsFrozen = true;
         cam.m_target = gameObject;
-        PanelScript.GetPanel("Round End Panel").m_inView = true;
-        if (PanelScript.GetPanel("Round End Panel").m_text.Length > 0)
-            PanelScript.GetPanel("Round End Panel").m_text[0].text = "BATTLE START";
+        PanelScript rEndPan = PanelScript.GetPanel("Round End Panel");
+        rEndPan.m_inView = true;
+        rEndPan.GetComponentInChildren<Text>().text = "BATTLE START";
         m_battle = true;
     }
 
-    public void StartBattle()
+    public IEnumerator StartBattle()
     {
+        RandomEnvironmentInit();
+
+        if (!m_field)
+        {
+            if (GameObject.Find("Network"))
+                ServerInit();
+            else
+                CharacterInit();
+        }
+
+        m_camera.GetComponent<CameraScript>().m_zoomIn = true;
         m_camera.GetComponent<CameraScript>().m_rotate = false;
         PanelScript.GetPanel("HUD Panel LEFT").m_inView = true;
         PanelScript.GetPanel("Round Panel").m_inView = true;
-        NewTurn();
+
+        yield return new WaitForSeconds(.1f);
+
+        NewTurn(false);
     }
 
-    public void NewTurn()
+    public void NewTurn(bool _isForced)
     {
-        PlayerScript winningTeam = null;
-        int numTeamsActive = 0;
-        for (int i = 0; i < m_players.Length; i++)
-        {
-            if (!m_players[i])
-                continue;
-
-            for (int j = 0; j < m_players[i].GetComponent<PlayerScript>().m_characters.Count; j++)
-            {
-                if (m_players[i].GetComponent<PlayerScript>().m_characters[j].m_isAlive)
-                {
-                    numTeamsActive++;
-                    winningTeam = m_players[i].GetComponent<PlayerScript>();
-                    break;
-                }
-            }
-        }
-
-        if (numTeamsActive < 2)
-        {
-            GameOver(winningTeam);
+        if (m_currRound.Count == 0 && GameObject.Find("Network") && !GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted)
             return;
-        }
 
         // Turn previous character back to original color
         if (m_currCharScript)
         {
-            Renderer oldRend = m_currCharScript.gameObject.transform.GetComponentInChildren<Renderer>();
-            oldRend.materials[1].shader = oldRend.materials[0].shader;
-            oldRend.materials[2].shader = oldRend.materials[0].shader;
-            //Renderer oldRenderer = m_currPlayer.GetComponent<Renderer>();
-            //oldRenderer.material.color = m_currPlayer.GetComponent<CharacterScript>().m_teamColor;
+            m_currCharScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].SetActive(false);
+            m_currCharScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.white;
         }
 
         bool newRound = false;
@@ -580,8 +614,12 @@ public class BoardScript : MonoBehaviour {
             m_currRound.RemoveAt(0);
         }
 
-        if (!newRound)
+        if (!newRound && !_isForced)
+        {
             m_newTurn = true;
+            CameraScript camScript = m_camera.GetComponent<CameraScript>();
+            camScript.m_target = m_currCharScript.gameObject;
+        }
 
         if (m_currCharScript.m_turnPanels.Count > 0)
             m_currCharScript.m_turnPanels.RemoveAt(0);
@@ -590,15 +628,8 @@ public class BoardScript : MonoBehaviour {
         HUDLeftScript.m_cScript = m_currCharScript;
         HUDLeftScript.PopulatePanel();
 
-        if (!newRound)
-        {
-            CameraScript camScript = m_camera.GetComponent<CameraScript>();
-            camScript.m_target = m_currCharScript.gameObject;
-        }
-
-        Renderer rend = m_currCharScript.gameObject.transform.GetComponentInChildren<Renderer>();
-        rend.materials[2].shader = rend.materials[0].shader;
-        rend.materials[1].shader = Resources.Load<Shader>("Outlined-Silhouette Only (NOT MINE)");
+        m_currCharScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(true);
+        m_currCharScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.green;
 
         if (m_currCharScript.m_isAI)
             m_currCharScript.AITurn();
@@ -606,36 +637,76 @@ public class BoardScript : MonoBehaviour {
         m_camIsFrozen = true;
     }
 
-    public void EndTurn()
+    public void EndTurn(bool _isForced)
     {
-        if (!m_currCharScript)
+        if (!m_currCharScript || !m_currCharScript.m_anim)
             return;
 
-        if (m_currCharScript.m_anim.GetCurrentAnimatorStateInfo(0).fullPathHash == Animator.StringToHash("Base.Idle Melee") ||
-            m_currCharScript.m_anim.GetCurrentAnimatorStateInfo(0).fullPathHash == Animator.StringToHash("Base.Death"))
-            if (m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] + m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] > 3 &&
-                !m_isForcedMove && !m_camIsFrozen && !PanelScript.GetPanel("Choose Panel").m_inView)
+        PlayerScript winningTeam = null;
+        int numTeamsActive = 0;
+        for (int i = 0; i < m_players.GetComponents<PlayerScript>().Length; i++)
+        {
+            PlayerScript p = m_players.GetComponents<PlayerScript>()[i];
+            for (int j = 0; j < p.m_characters.Count; j++)
             {
-                print(m_currCharScript.m_name + " has ended their turn.\n");
+                CharacterScript c = p.m_characters[j];
+                if (c.m_isAlive)
+                {
+                    numTeamsActive++;
+                    winningTeam = p;
+                    break;
+                }
+            }
+        }
 
-                PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)CharacterScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[(int)CharacterScript.trn.MOV].interactable = true;
+        if (numTeamsActive < 2)
+        {
+            GameOver(winningTeam);
+            return;
+        }
+
+        if (m_currCharScript.m_anim.GetCurrentAnimatorStateInfo(0).fullPathHash == Animator.StringToHash("Base.Idle Melee") ||
+            m_currCharScript.m_anim.GetCurrentAnimatorStateInfo(0).fullPathHash == Animator.StringToHash("Base.Death") || _isForced)
+            if (m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] + m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] > 3 &&
+                !m_isForcedMove && !m_camIsFrozen && !PanelScript.GetPanel("Choose Panel").m_inView && m_actionEndTimer == 0 || _isForced)
+            {
+                if (GameObject.Find("Network") && !GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted &&
+                    !_isForced)
+                {
+                    ClientScript c = GameObject.Find("Network").GetComponent<ClientScript>();
+                    c.Send("TURNEND~", c.m_reliableChannel);
+                    m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] = 0;
+                    m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] = 0;
+                    return;
+                }
+                else if (GameObject.Find("Network") && GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted)
+                {
+                    ServerScript s = GameObject.Find("Network").GetComponent<ServerScript>();
+                    s.Send("TURNEND~", s.m_reliableChannel, s.m_clients);
+                }
+
+                print(m_currCharScript.m_name + " has ended their turn.\n");
+                PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[(int)CharacterScript.trn.MOV].interactable = true;
                 StatusScript.UpdateStatus(m_currCharScript.gameObject, StatusScript.mode.TURN_END);
                 m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] = 0;
                 m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] = 0;
                 m_currCharScript.m_currAction = "";
-                NewTurn();
+                NewTurn(false);
             }
     }
 
     public void NewRound()
     {
         List<GameObject> tempChars = new List<GameObject>();
+        List<int> roundOrder = new List<int>();
+
         m_currCharScript = null;
 
         m_livingPlayersInRound = 0;
         for (int i = 0; i < m_characters.Count; i++)
             if (m_characters[i].GetComponent<CharacterScript>().m_isAlive)
             {
+                StatusScript.UpdateStatus(m_characters[i], StatusScript.mode.ROUND_END);
                 tempChars.Add(m_characters[i]);
                 m_livingPlayersInRound++;
             }
@@ -668,6 +739,7 @@ public class BoardScript : MonoBehaviour {
                 if (randNum < currNum)
                 {
                     m_currRound.Add(tempChars[i]);
+                    roundOrder.Add(charScript.m_id);
 
                     if (charScript.m_tempStats[(int)CharacterScript.sts.SPD] >= 10)
                         numPool -= 10;
@@ -688,8 +760,6 @@ public class BoardScript : MonoBehaviour {
             CharacterScript charScript = m_characters[i].GetComponent<CharacterScript>();
             if (!charScript.m_effects[(int)StatusScript.effects.STUN] && charScript.m_isAlive)
                 charScript.m_tempStats[(int)CharacterScript.sts.SPD] += 10;
-
-            StatusScript.UpdateStatus(m_characters[i], StatusScript.mode.ROUND_END);
         }
 
         m_livingPlayersInRound = m_currRound.Count;
@@ -699,11 +769,18 @@ public class BoardScript : MonoBehaviour {
 
         PanelScript.GetPanel("Turn Panel").NewTurnOrder();
 
-        SpawnItem();
+        ObjectScript obj = SpawnItem(-1, -1, -1);
 
         PanelScript roundPan = PanelScript.GetPanel("Round End Panel");
         roundPan.m_inView = true;
         roundPan.GetComponentInChildren<Text>().text = "NEW ROUND";
+
+        if (GameObject.Find("Network"))
+        {
+            ServerScript network = GameObject.Find("Network").GetComponent<ServerScript>();
+            string roundData = PackUpRoundData(roundOrder, obj);
+            network.Send(roundData, network.m_reliableChannel, network.m_clients);
+        }
     }
 
     public void GameOver(PlayerScript _winningTeam)
@@ -712,6 +789,7 @@ public class BoardScript : MonoBehaviour {
         roundPan.m_inView = true;
         roundPan.m_text[0].text = _winningTeam.name + " WINS";
         m_camera.GetComponent<CameraScript>().m_rotate = true;
+        m_currCharScript = null;
     }
 
     public void Pass()
@@ -719,19 +797,327 @@ public class BoardScript : MonoBehaviour {
         m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] = 2;
         m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] = 2;
         PanelScript.CloseHistory();
-        PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)CharacterScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[1].GetComponent<Image>().color = Color.white;
+        PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[1].GetComponent<Image>().color = Color.white;
         m_currButton = null;
     }
 
 
-    // Utilities
-    public void SpawnItem()
+    // Network
+    public void ServerInit()
     {
-        GameObject pUP = Instantiate(m_powerup);
-        pUP.GetComponent<ObjectScript>().PlaceRandomly(this);
+        ServerScript network = GameObject.Find("Network").GetComponent<ServerScript>();
+
+        for (int i = 0; i < network.m_clients.Count; i++)
+        {
+            PlayerScript playScript = m_players.AddComponent<PlayerScript>();
+            playScript.m_characters = new List<CharacterScript>();
+            playScript.m_bScript = this;
+            playScript.m_energy = new int[4];
+
+            //playScript.name = "Team " + (i + 1).ToString();
+
+            string[] chars = network.m_clients[i].m_team.Split(';');
+
+            for (int j = 0; j < chars.Length; j++)
+            {
+                string[] data = chars[j].Split('|');
+
+                // Set up character
+                GameObject[] characterTypes = Resources.LoadAll<GameObject>("OBJs/Characters");
+                GameObject newChar = Instantiate(characterTypes[int.Parse(data[(int)PlayerPrefScript.netwrkPak.GENDER])]);
+                newChar.name = data[(int)PlayerPrefScript.netwrkPak.NAME];
+
+                CharacterScript cScript = newChar.GetComponent<CharacterScript>();
+                cScript = ReadCharNetData(data, cScript);
+
+                if (i == 0)
+                    cScript.m_teamColor = new Color(1, .5f, 0, 1);
+                else if (i == 1)
+                    cScript.m_teamColor = new Color(.5f, 0, 1, 1);
+                else if (i == 2)
+                    cScript.m_teamColor = new Color(.8f, 1, 0, 1);
+                else if (i == 3)
+                    cScript.m_teamColor = Color.magenta;
+
+                cScript.CharInit();
+                m_characters.Add(newChar);
+
+                // Link to player
+                cScript.m_player = playScript;
+                playScript.name = "Team " + (0).ToString();
+
+                playScript.m_characters.Add(cScript);
+                newChar.GetComponent<ObjectScript>().PlaceRandomly(this);
+            }
+        }
+
+        string initData = PackUpInitData();
+        network.Send(initData, network.m_reliableFragmentedChannel, network.m_clients);
+    }
+
+    public void ClientInit(string _data)
+    {
+        GameObject[] environmentalOBJs = Resources.LoadAll<GameObject>("OBJs/Environmental");
+
+        string[] objs = _data.Split(';')[0].Split('|');
+        string[] chars = _data.Split(';')[1].Split('/');
+
+        for (int i = 0; i < objs.Length; i++)
+        {
+            string[] obj = objs[i].Split(',');
+            GameObject newOBJ = Instantiate(environmentalOBJs[int.Parse(obj[0])]);
+            newOBJ.GetComponent<ObjectScript>().SetRotation((TileScript.nbors)int.Parse(obj[1]));
+            newOBJ.GetComponent<ObjectScript>().PlaceOBJ(this, int.Parse(obj[2]), int.Parse(obj[3]));
+            m_obstacles.Add(newOBJ);
+        }
+
+        GameObject[] characterTypes = Resources.LoadAll<GameObject>("OBJs/Characters");
+        for (int i = 0; i < chars.Length; i++)
+        {
+            string[] character = chars[i].Split('|');
+
+            GameObject newChar = Instantiate(characterTypes[int.Parse(character[(int)PlayerPrefScript.netwrkPak.GENDER])]);
+            newChar.name = character[(int)PlayerPrefScript.netwrkPak.NAME];
+
+            CharacterScript cScript = newChar.GetComponent<CharacterScript>();
+            cScript = ReadCharNetData(character, cScript);
+
+            int team = int.Parse(character[(int)PlayerPrefScript.netwrkPak.TEAM]);
+
+            // Color character
+            if (team == 0)
+                cScript.m_teamColor = new Color(1, .5f, 0, 1);
+            else if (team == 1)
+                cScript.m_teamColor = new Color(.5f, 0, 1, 1);
+            else if (team == 2)
+                cScript.m_teamColor = new Color(.8f, 1, 0, 1);
+            else if (team == 3)
+                cScript.m_teamColor = Color.magenta;
+
+            cScript.CharInit();
+            m_characters.Add(newChar);
+
+            PlayerScript[] p = m_players.GetComponents<PlayerScript>();
+
+            if (team <= p.Length)
+            {
+                m_players.AddComponent<PlayerScript>();
+                p = m_players.GetComponents<PlayerScript>();
+
+                p[p.Length - 1].m_characters = new List<CharacterScript>();
+                p[p.Length - 1].m_bScript = this;
+                p[p.Length - 1].m_energy = new int[4];
+            }
+
+            // Link to player
+            p[team].m_characters.Add(cScript);
+            cScript.m_player = m_players.GetComponents<PlayerScript>()[team];
+
+            // Place on Board
+            string[] pos = character[(int)PlayerPrefScript.netwrkPak.POS].Split(',');
+            cScript.PlaceOBJ(this, int.Parse(pos[0]), int.Parse(pos[1]));
+        }
+
+        m_camera.GetComponent<CameraScript>().m_zoomIn = true;
+        m_camera.GetComponent<CameraScript>().m_rotate = false;
+        PanelScript.GetPanel("HUD Panel LEFT").m_inView = true;
+        PanelScript.GetPanel("Round Panel").m_inView = true;
+    }
+
+    public void ClientRoundInit(string _data)
+    {
+        string[] roundOrder = _data.Split(';')[0].Split(',');
+        string[] charSpeed = _data.Split(';')[1].Split(',');
+        string[] powerUp = _data.Split(';')[2].Split(',');
+
+        for (int i = 0; i < roundOrder.Length; i++)
+            m_currRound.Add(m_netOBJs[int.Parse(roundOrder[i])]);
+
+        for (int i = 0; i < charSpeed.Length; i++)
+            m_characters[i].GetComponent<CharacterScript>().m_tempStats[(int)CharacterScript.sts.SPD] = int.Parse(charSpeed[i]);
+
+        m_livingPlayersInRound = m_currRound.Count;
+        m_roundCount++;
+        PanelScript roundPanScript = PanelScript.GetPanel("Round Panel");
+        roundPanScript.PopulatePanel();
+
+        PanelScript.GetPanel("Turn Panel").NewTurnOrder();
+
+        SpawnItem(int.Parse(powerUp[0]), int.Parse(powerUp[1]), int.Parse(powerUp[2]));
+
+        PanelScript roundPan = PanelScript.GetPanel("Round End Panel");
+        roundPan.m_inView = true;
+        roundPan.GetComponentInChildren<Text>().text = "NEW ROUND";
+
+        NewTurn(true);
+    }
+
+    private CharacterScript ReadCharNetData(string[] _data, CharacterScript _char)
+    {
+        _char.m_name = _data[(int)PlayerPrefScript.netwrkPak.NAME];
+        _char.m_color = _data[(int)PlayerPrefScript.netwrkPak.COLOR];
+
+        string[] acts = _data[(int)PlayerPrefScript.netwrkPak.ACTIONS].Split(',');
+        string[] actionsForChar = new string[acts.Length];
+
+        for (int k = 0; k < acts.Length; k++)
+        {
+            int ind = int.Parse(acts[k]) - 1;
+            DatabaseScript db = GameObject.Find("Database").GetComponent<DatabaseScript>();
+            actionsForChar[k] = db.m_actions[ind];
+        }
+
+        _char.m_actions = actionsForChar;
+        _char.m_exp = int.Parse(_data[(int)PlayerPrefScript.netwrkPak.EXP]);
+        _char.m_level = int.Parse(_data[(int)PlayerPrefScript.netwrkPak.LVL]);
+        _char.m_gender = int.Parse(_data[(int)PlayerPrefScript.netwrkPak.GENDER]);
+        _char.m_isAI = bool.Parse(_data[(int)PlayerPrefScript.netwrkPak.AI]);
+
+        // Load in stats
+        string[] stats = _data[(int)PlayerPrefScript.netwrkPak.STATS].Split(',');
+
+        if (_char.m_stats.Length == 0)
+        {
+            _char.m_stats = new int[(int)CharacterScript.sts.TOT];
+            _char.m_tempStats = new int[(int)CharacterScript.sts.TOT];
+            _char.InitializeStats();
+        }
+
+        for (int k = 0; k < _char.m_stats.Length; k++)
+        {
+            _char.m_stats[k] = int.Parse(stats[k]);
+            _char.m_tempStats[k] = int.Parse(stats[k]);
+        }
+
+        return _char;
+    }
+
+    public string PackUpInitData()
+    {
+        string data = "READY~";
+        for (int i = 0; i < m_obstacles.Count; i++)
+        {
+            ObjectScript obj = m_obstacles[i].GetComponent<ObjectScript>();
+
+            data += obj.m_name + "," + (int)obj.m_facing + "," + obj.m_tile.m_x.ToString() + "," + obj.m_tile.m_z.ToString() + "|";
+        }
+
+        data = data.Trim('|') + ';';
+
+        PlayerScript[] players = m_players.GetComponents<PlayerScript>();
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            string charString;
+            for (int j = 0; j < players[i].m_characters.Count; j++)
+            {
+                CharacterScript charScript = players[i].m_characters[j];
+                charString = "";
+                char symbol = '|';
+
+                charString += charScript.m_name + symbol;
+                charString += charScript.m_color + symbol;
+
+                for (int k = 0; k < charScript.m_actions.Length; k++)
+                    charString += DatabaseScript.GetActionData(charScript.m_actions[k], DatabaseScript.actions.ID) + ',';
+                charString = charString.Trim(','); charString += symbol;
+
+                charString += charScript.m_exp.ToString() + symbol;
+                charString += charScript.m_level.ToString() + symbol;
+                charString += charScript.m_gender.ToString() + symbol;
+                charString += charScript.m_isAI.ToString() + symbol;
+
+                string stats = null;
+                for (int k = 0; k < charScript.m_stats.Length; k++)
+                {
+                    if (k != 0)
+                        stats += ",";
+                    stats += charScript.m_stats[k];
+                }
+
+                charString += stats + symbol;
+
+                charString += i.ToString() + symbol;
+
+                charString += charScript.m_tile.m_x.ToString() + ',' + charScript.m_tile.m_z.ToString();
+
+                data += charString + "/";
+            }
+        }
+
+        data = data.Trim('/');
+
+        return data;
+    }
+
+    public string PackUpRoundData(List<int> _roundOrder, ObjectScript _obj)
+    {
+        string data = "NEWROUND~";
+
+        for (int i = 0; i < _roundOrder.Count; i++)
+            data += _roundOrder[i].ToString() + ",";
+
+        data = data.Trim(',') + ';';
+
+        // Update speed
+        for (int i = 0; i < m_characters.Count; i++)
+            data += m_characters[i].GetComponent<CharacterScript>().m_tempStats[(int)CharacterScript.sts.SPD].ToString() + ",";
+
+        data = data.Trim(',') + ';';
+
+        PowerupScript pUp = _obj.GetComponent<PowerupScript>();
+
+
+        data += pUp.name + ',';
+        data += _obj.m_tile.m_x.ToString() + ',' + _obj.m_tile.m_z.ToString();
+
+        return data;
+    }
+
+
+    // Utilities
+    public ObjectScript SpawnItem(int _ind, int _x, int _z)
+    {
+        GameObject pUP = Instantiate(Resources.Load<GameObject>("OBJs/PowerUp"));
+        PowerupScript pScript = pUP.GetComponent<PowerupScript>();
+        pScript.Init(_ind);
+
+        if (_x == -1 || _z == -1)
+            pScript.PlaceRandomly(this);
+        else
+            pScript.PlaceOBJ(this, _x, _z);
+
         m_camIsFrozen = true;
         m_camera.GetComponent<CameraScript>().m_target = pUP;
 
-        //m_actionEndTimer += Time.deltaTime;
+        return pScript;
+    }
+
+    public void JoinBattle(CharacterScript _char)
+    {
+        TileScript closest = null;
+        for (int i = 0; i < m_tiles.Length; i++)
+        {
+            if (!closest || Vector3.Distance(m_tiles[i].gameObject.transform.position, _char.transform.position) <
+                Vector3.Distance(closest.transform.position, _char.transform.position))
+                closest = m_tiles[i];
+        }
+
+        _char.m_tile = closest;
+        _char.m_boardScript = this;
+        m_characters.Add(_char.gameObject);
+    }
+
+    public void AddToOBJList(ObjectScript _obj)
+    {
+        for (int i = 0; i < m_netOBJs.Length; i++)
+        {
+            if (m_netOBJs[i] == null)
+            {
+                _obj.m_id = i;
+                m_netOBJs[i] = _obj.gameObject;
+                return;
+            }
+        }
     }
 }

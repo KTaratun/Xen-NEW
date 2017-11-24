@@ -15,7 +15,7 @@ public class PlayerScript : MonoBehaviour {
 	// Use this for initialization
 	void Start ()
     {
-        m_energy = new int[4];
+        //m_energy = new int[4];
 	}
 	
 	// Update is called once per frame
@@ -27,9 +27,9 @@ public class PlayerScript : MonoBehaviour {
     {
         Text[] text = null;
         if (_caller == m_bScript.m_currCharScript)
-            text = PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)CharacterScript.HUDPan.ENG_PAN].GetComponentsInChildren<Text>();
+            text = PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.ENG_PAN].GetComponentsInChildren<Text>();
         else
-            text = PanelScript.GetPanel("HUD Panel RIGHT").m_panels[(int)CharacterScript.HUDPan.ENG_PAN].GetComponentsInChildren<Text>();
+            text = PanelScript.GetPanel("HUD Panel RIGHT").m_panels[(int)PanelScript.HUDPan.ENG_PAN].GetComponentsInChildren<Text>();
 
         for (int i = 0; i < text.Length; i++)
             text[i].text = m_energy[i].ToString();
@@ -43,6 +43,7 @@ public class PlayerScript : MonoBehaviour {
         return true;
     }
 
+    // Check to see if action is usable
     public bool CheckEnergy(string _eng)
     {
         if (CheckIfGains(_eng))
@@ -76,15 +77,26 @@ public class PlayerScript : MonoBehaviour {
         for (int i = 0; i < _actions.Length; i++)
         {
             string actEng = DatabaseScript.GetActionData(_actions[i], DatabaseScript.actions.ENERGY);
-            if (CheckIfGains(actEng))
-                continue;
 
             for (int j = 0; j < actEng.Length; j++)
             {
+                char engToCheck = ' ';
+
+                if (actEng[j] == 'g')
+                    engToCheck = 'G';
+                else if (actEng[j] == 'r')
+                    engToCheck = 'R';
+                else if (actEng[j] == 'w')
+                    engToCheck = 'W';
+                else if (actEng[j] == 'b')
+                    engToCheck = 'B';
+                else
+                    engToCheck = actEng[j];
+
                 bool newColor = false;  
                 for (int k = 0; k < colors.Length; k++)
                 {
-                    if (actEng[j] == colors[k])
+                    if (engToCheck == colors[k])
                         break;
 
                     if (k == colors.Length - 1)
@@ -92,16 +104,7 @@ public class PlayerScript : MonoBehaviour {
                 }
 
                 if (newColor || colors.Length == 0)
-                {
-                    if (actEng[j] == 'g' || actEng[j] == 'G')
-                        colors += 'G';
-                    else if (actEng[j] == 'r' || actEng[j] == 'R')
-                        colors += 'R';
-                    else if (actEng[j] == 'w' || actEng[j] == 'W')
-                        colors += 'W';
-                    else if (actEng[j] == 'b' || actEng[j] == 'B')
-                        colors += 'B';
-                }
+                    colors += engToCheck;
             }
         }
 
@@ -113,6 +116,9 @@ public class PlayerScript : MonoBehaviour {
         List<int> energyOverZero = new List<int>();
         for (int h = 0; h < _num; h++)
         {
+            if (TotalEnergy() < 1)
+                return;
+
             for (int i = 0; i < m_energy.Length; i++)
                 if (m_energy[i] > 0)
                     energyOverZero.Add(i);

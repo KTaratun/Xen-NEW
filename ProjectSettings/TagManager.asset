@@ -11,6 +11,9 @@ TagManager:
   - Selector
   - Action Button
   - PowerUp
+  - Canvas
+  - Board
+  - Grenade
   layers:
   - Default
   - TransparentFX

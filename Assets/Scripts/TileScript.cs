@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 
-public class TileScript : MonoBehaviour {
+public class TileScript : NetworkBehaviour {
 
     public enum nbors { left, right, top, bottom };
     public enum targetRestriction { NONE, HORVERT, DIAGONAL};
@@ -13,6 +14,7 @@ public class TileScript : MonoBehaviour {
     static public Color c_move = new Color(0, 0, 1, 0.5f);
     static public Color c_neutral = new Color(1, 1, 1, 0.5f);
 
+    public int m_id;
     public GameObject m_holding;
     public TileScript[] m_neighbors;
     public List<TileScript> m_radius;
@@ -42,30 +44,27 @@ public class TileScript : MonoBehaviour {
 
     public void OnMouseDown()
     {
-        if (PanelScript.CheckIfPanelOpen() || m_boardScript.m_camIsFrozen || m_boardScript.m_hoverButton || !m_boardScript.m_battle)
+        if (PanelScript.CheckIfPanelOpen() || m_boardScript.m_camIsFrozen || m_boardScript.m_hoverButton || !m_boardScript.m_currCharScript)
             return;
 
         Renderer renderer = GetComponent<Renderer>();
 
-        // Prevent players from being clicked on bringing up menus during move or attack
-        if (m_holding && m_boardScript.m_currCharScript.m_tile.m_radius.Count > 0 && renderer.material.color == new Color(1, 1, 1, 0.5f))
-            return;
-
         if (renderer.material.color == c_neutral && m_boardScript.m_selected != this && !PanelScript.GetPanel("Choose Panel").m_inView &&
-            m_boardScript.m_currCharScript && m_holding != m_boardScript.m_currCharScript.gameObject)
+            m_boardScript.m_currCharScript && m_holding != m_boardScript.m_currCharScript.gameObject && m_boardScript.m_currCharScript.m_tile.m_radius.Count == 0)
         {
             if (m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player")
             {
-                Renderer oldRend = m_boardScript.m_selected.m_holding.transform.GetComponentInChildren<Renderer>();
-                oldRend.materials[1].shader = oldRend.materials[0].shader;
-                oldRend.materials[2].shader = oldRend.materials[0].shader;
+                CharacterScript charScript = m_boardScript.m_selected.m_holding.GetComponent<CharacterScript>();
+                charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(false);
+                charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.white;
 
-                PanelScript.GetPanel("HUD Panel RIGHT").m_inView = false;
+                PanelScript.GetPanel("HUD Panel RIGHT").ClosePanel();
             }
             if (m_holding && m_holding.tag == "Player")
             {
-                Renderer rend = m_holding.transform.GetComponentInChildren<Renderer>();
-                rend.materials[2].shader = Resources.Load<Shader>("Outlined-Silhouette Only (NOT MINE)");
+                CharacterScript charScript = m_holding.GetComponent<CharacterScript>();
+                charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(true);
+                charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.magenta;
             }
             m_boardScript.m_selected = this;
         }
@@ -74,11 +73,11 @@ public class TileScript : MonoBehaviour {
         {
             if (m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player")
             {
-                Renderer oldRend = m_boardScript.m_selected.m_holding.transform.GetComponentInChildren<Renderer>();
-                oldRend.materials[1].shader = oldRend.materials[0].shader;
-                oldRend.materials[2].shader = oldRend.materials[0].shader;
+                CharacterScript charScript = m_boardScript.m_selected.m_holding.GetComponent<CharacterScript>();
+                charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(false);
+                charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.white;
 
-                PanelScript.GetPanel("HUD Panel RIGHT").m_inView = false;
+                PanelScript.GetPanel("HUD Panel RIGHT").ClosePanel();
             }
             m_boardScript.m_selected = null;
         }
@@ -110,32 +109,24 @@ public class TileScript : MonoBehaviour {
 
             m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_holding;
 
-            if (m_holding == m_boardScript.m_currCharScript.gameObject)
+            if (m_holding == m_boardScript.m_currCharScript.gameObject && m_boardScript.m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] < 2)// &&
+                //NetworkConnection. == m_holding.GetComponent<CharacterScript>().m_player.m_num)
             {
-                PanelScript statusPanel = PanelScript.GetPanel("Status Panel");
-                statusPanel.m_cScript = m_holding.GetComponent<CharacterScript>();
-                statusPanel.PopulatePanel();
-            }
+                //PanelScript statusPanel = PanelScript.GetPanel("Status Panel");
+                //statusPanel.m_cScript = m_holding.GetComponent<CharacterScript>();
+                //statusPanel.PopulatePanel();
 
-            //if (m_holding == m_boardScript.m_currPlayer)
-            //{
-            //    // Assign character to panels
-            //    PanelScript mainPanScript = PanelScript.GetPanel("Main Panel");
-            //    mainPanScript.m_cScript = m_holding.GetComponent<CharacterScript>();
-            //    mainPanScript.PopulatePanel();
-            //}
-            //else
-            //{
-            //    // Assign character to panels
-            //    PanelScript charViewPanScript = PanelScript.GetPanel("CharacterViewer Panel");
-            //    charViewPanScript.m_cScript = m_holding.GetComponent<CharacterScript>();
-            //    charViewPanScript.PopulatePanel();
-            //}
+                Button movB = PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0];
+                    movB.GetComponent<ButtonScript>().Select();
+            }
         }
     }
 
     public void HandleTile()
     {
+        if (!m_boardScript)
+            return;
+
         CharacterScript currChar = m_boardScript.m_currCharScript;
         TileScript oldTile = m_boardScript.m_oldTile;
 
@@ -157,12 +148,16 @@ public class TileScript : MonoBehaviour {
         // TARGET RED TILE
 
         // For special case, multi targeting attacks
-        if (currChar.m_currAction.Length > 0 && tarRend.material.color == c_attack && CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.NON_RAD) >= 0 ||
-            currChar.m_currAction.Length > 0 && tarRend.material.color == c_attack && int.Parse(DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RAD)) > 0)
-        {
-            HandleRadius();
-            return;
-        }
+        if (currChar.m_currAction.Length > 0)
+            if (tarRend.material.color == c_attack || tarRend.material.color == c_action)
+                if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.NON_RAD) >= 0 ||
+                    int.Parse(DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RAD)) > 0 ||
+                    m_boardScript.m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0 &&
+                    CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.RAD_NOT_MODDABLE) != 1)
+                {
+                    HandleRadius();
+                    return;
+                }
 
         tarRend.material.color = new Color(tarRend.material.color.r, tarRend.material.color.g, tarRend.material.color.b, tarRend.material.color.a + 0.5f);
         m_boardScript.m_oldTile = this;
@@ -173,27 +168,30 @@ public class TileScript : MonoBehaviour {
         CharacterScript currChar = m_boardScript.m_currCharScript;
         string actRng = DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RNG);
 
-        int rad = currChar.m_currRadius + currChar.m_tempStats[(int)CharacterScript.sts.RAD];
+        int rad = currChar.m_tempStats[(int)CharacterScript.sts.RAD] + int.Parse(DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RAD));
         if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.NON_RAD) >= 0)
             rad = int.Parse(actRng) + currChar.m_tempStats[(int)CharacterScript.sts.RNG];
 
-        bool targetSelf = true;
-        if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.TAR_SELF) >= 0)
-            targetSelf = false;
+        bool targetSelf = false;
+        Renderer tarRend = gameObject.GetComponent<Renderer>();
+        if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.TAR_SELF) >= 0 ||
+            m_boardScript.m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0 && tarRend.material.color != c_attack)
+            targetSelf = true;
 
         targetRestriction tR = targetRestriction.NONE;
         if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.TAR_RES) >= 0)
             tR = (targetRestriction)CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.TAR_RES);
 
         bool isBlockable = true;
-        if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.IS_NOT_BLOCK) >= 0)
+        if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.IS_NOT_BLOCK) >= 0 ||
+            m_boardScript.m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0)
             isBlockable = false;
 
-        FetchTilesWithinRange(rad, Color.yellow, targetSelf, tR, isBlockable);
+        FetchTilesWithinRange(currChar, rad, Color.yellow, targetSelf, tR, isBlockable);
         m_boardScript.m_oldTile = this;
     }
 
-    public void FetchTilesWithinRange(int _range, Color _color, bool _targetSelf, targetRestriction _targetingRestriction, bool _isBlockable)
+    public void FetchTilesWithinRange(ObjectScript _owner, int _range, Color _color, bool _targetSelf, targetRestriction _targetingRestriction, bool _isBlockable)
     {
         // REFACTOR: Maybe less lists? Just a thought
         List<TileScript> workingList = new List<TileScript>();
@@ -201,21 +199,19 @@ public class TileScript : MonoBehaviour {
         List<TileScript> oddGen = new List<TileScript>();
         List<TileScript> evenGen = new List<TileScript>();
 
-        CharacterScript ownerCharScript = m_boardScript.m_currCharScript;
-
         // Handle attacks with radius
         TileScript originalTileScript = this;
 
-        if (ownerCharScript.m_currAction.Length > 0 && _color != c_move)
+        if (_owner.tag == "Player" && _owner.GetComponent<CharacterScript>().m_currAction.Length > 0 && _color != c_move)
         {
-            string range = DatabaseScript.GetActionData(ownerCharScript.m_currAction, DatabaseScript.actions.RNG);
-            string radius = DatabaseScript.GetActionData(ownerCharScript.m_currAction, DatabaseScript.actions.RAD);
+            string range = DatabaseScript.GetActionData(_owner.GetComponent<CharacterScript>().m_currAction, DatabaseScript.actions.RNG);
+            string radius = DatabaseScript.GetActionData(_owner.GetComponent<CharacterScript>().m_currAction, DatabaseScript.actions.RAD);
 
             if (int.Parse(range) == 0 && int.Parse(radius) > 0)
             {
                 _range = int.Parse(radius);
                 _targetSelf = false;
-                originalTileScript = ownerCharScript.m_tile;
+                originalTileScript = _owner.m_tile;
             }
 
             if (int.Parse(radius) > 0)
@@ -225,7 +221,7 @@ public class TileScript : MonoBehaviour {
         // Start with current tile in oddGen
         oddGen.Add(originalTileScript);
 
-        if (_targetSelf || !_targetSelf && originalTileScript != ownerCharScript.m_tile.GetComponent<TileScript>())//|| !_targetSelf && this != currCharScript.m_tile.GetComponent<TileScript>())// || !_targetSelf && this != originalTileScript
+        if (_targetSelf || !_targetSelf && originalTileScript != _owner.m_tile.GetComponent<TileScript>())//|| !_targetSelf && this != currCharScript.m_tile.GetComponent<TileScript>())// || !_targetSelf && this != originalTileScript
         {
             Renderer myRend = originalTileScript.gameObject.GetComponent<Renderer>();
             m_oldColor = myRend.material.color;
@@ -275,7 +271,7 @@ public class TileScript : MonoBehaviour {
                     // if color is movement color and the current tile is holding someone
                     if (m_holding && m_holding.tag == "Player" && _color == c_move && tScript.m_holding && tScript.m_holding.tag != "PowerUp" ||
                         m_holding && m_holding.tag == "PowerUp" && _color == c_move && tScript.m_holding && tScript.m_holding.tag != "Player" ||
-                        !_targetSelf && tScript == ownerCharScript.m_tile.GetComponent<TileScript>())
+                        !_targetSelf && tScript == _owner.m_tile.GetComponent<TileScript>())
                         continue;
 
                     if (_targetingRestriction == targetRestriction.HORVERT && tScript.m_x != m_x && tScript.m_z != m_z)
@@ -287,11 +283,10 @@ public class TileScript : MonoBehaviour {
                     Renderer tR = currNeighbor.GetComponent<Renderer>();
 
                     // If the fetch was yellow but doesn't have radius, then we want to select all tiles in a specific direction ie. Piercing, thrust and diagnal
-                    if (_color == Color.yellow && ownerCharScript.m_currAction.Length > 0 && tR.material.color == new Color(1, 1, 1, 0))
+                    if (_color == Color.yellow && _owner.tag == "Player" && _owner.GetComponent<CharacterScript>().m_currAction.Length > 0 && tR.material.color == new Color(1, 1, 1, 0))
                     {
-                        string[] actSeparated = ownerCharScript.m_currAction.Split('|');
-                        string[] radius = actSeparated[(int)DatabaseScript.actions.RAD].Split(':');
-                        if (int.Parse(radius[1]) == 0)
+                        if (int.Parse(DatabaseScript.GetActionData(_owner.GetComponent<CharacterScript>().m_currAction, DatabaseScript.actions.RAD)) == 0 &&
+                            _owner.GetComponent<CharacterScript>().m_tempStats[(int)CharacterScript.sts.RAD] == 0)
                             continue;
                     }
 
@@ -440,7 +435,7 @@ public class TileScript : MonoBehaviour {
                 continue;
 
             TileScript nei = _tile.m_neighbors[i].GetComponent<TileScript>();
-            if (!nei.m_holding)
+            if (!nei.m_holding || nei.m_holding.tag == "PowerUp")
                 return true;
         }
         return false;

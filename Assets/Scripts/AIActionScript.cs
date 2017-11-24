@@ -47,7 +47,7 @@ public class AIActionScript : MonoBehaviour {
         int rad = int.Parse(DatabaseScript.GetActionData(m_action, DatabaseScript.actions.RAD)) + _owner.m_tempStats[(int)CharacterScript.sts.RAD];
 
         TileScript originalTile = m_targets[0].GetComponent<CharacterScript>().m_tile;
-        originalTile.FetchTilesWithinRange(rad, Color.yellow, true, TileScript.targetRestriction.NONE, false);
+        originalTile.FetchTilesWithinRange(_owner, rad, Color.yellow, true, TileScript.targetRestriction.NONE, false);
         //List<TileScript> tiles = originalTile.m_targetRadius;
 
         for (int i = 0; i < originalTile.m_targetRadius.Count; i++)
