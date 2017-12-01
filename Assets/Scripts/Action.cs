@@ -30,16 +30,30 @@ public class Action : StateMachineBehaviour {
         else if (AnimationProperties(stateInfo, aniAct.RANGED_ANI))
         {
             BoardScript board = animator.GetComponentInParent<ObjectScript>().m_boardScript;
+            CharacterScript chara = animator.GetComponentInParent<CharacterScript>();
 
             if (stateInfo.fullPathHash == Animator.StringToHash("Base.Throw"))
             {
-                board.m_grenade.GetComponent<ObjectScript>().MovingStart(board.m_selected, true, false);
-                animator.GetComponentInParent<CharacterScript>().m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Grenade Shot 1"));
+                board.m_projectiles[(int)BoardScript.prjcts.GRENADE].GetComponent<ObjectScript>().MovingStart(board.m_selected, true, false);
+                chara.m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Grenade Shot 1"));
+            }
+            else if (stateInfo.fullPathHash == Animator.StringToHash("Base.Ranged") && 
+                DatabaseScript.GetActionData(chara.m_currAction, DatabaseScript.actions.NAME) == "ATK(Pull)")
+            {
+                //board.m_projectiles[(int)BoardScript.prjcts.BEAM].GetComponent<ObjectScript>().MovingStart(board.m_selected, true, false);
+                //chara.m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Gun Sound 1"));
+
+                BeamScript bS = board.m_projectiles[(int)BoardScript.prjcts.BEAM].GetComponent<BeamScript>();
+                bS.m_origin = board.m_currCharScript.m_body[(int)CharacterScript.bod.RIGHT_HAND].transform;
+                bS.m_destination = chara.m_targets[0].transform;
+                board.m_projectiles[(int)BoardScript.prjcts.BEAM].SetActive(true);
+                //bS.m_origin = board.m_currCharScript.m_body[(int)CharacterScript.bod.RIGHT_HAND].transform;
+                //bS.m_destination = chara.m_targets[0].transform;
             }
             else if (stateInfo.fullPathHash == Animator.StringToHash("Base.Ranged"))
             {
-                board.m_laser.GetComponent<ObjectScript>().MovingStart(board.m_selected, true, false);
-                animator.GetComponentInParent<CharacterScript>().m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Gun Sound 1"));
+                board.m_projectiles[(int)BoardScript.prjcts.LASER].GetComponent<ObjectScript>().MovingStart(board.m_selected, true, false);
+                chara.m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Gun Sound 1"));
             }
 
             m_hasDoneAction = true;

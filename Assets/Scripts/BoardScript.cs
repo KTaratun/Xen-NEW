@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class BoardScript : MonoBehaviour {
 
+    public enum prjcts { BEAM, GRENADE, LASER }
     // Tiles
     public int m_height; // Height of the board
     public int m_width; // Width of the board
@@ -40,8 +41,7 @@ public class BoardScript : MonoBehaviour {
     public FieldScript m_field;
     public Camera m_camera;
     public AudioSource m_audio;
-    public GameObject m_grenade;
-    public GameObject m_laser;
+    public GameObject[] m_projectiles;
 
 
 
@@ -54,13 +54,18 @@ public class BoardScript : MonoBehaviour {
         m_camIsFrozen = false;
         m_netOBJs = new GameObject[60];
 
-        m_grenade = Instantiate(Resources.Load<GameObject>("OBJs/Grenade"));
-        m_grenade.GetComponent<ObjectScript>().m_boardScript = this;
-        m_grenade.SetActive(false);
+        GameObject[] projs = Resources.LoadAll<GameObject>("OBJs/Projectiles");
+        m_projectiles = new GameObject[projs.Length];
 
-        m_laser = Instantiate(Resources.Load<GameObject>("OBJs/Laser"));
-        m_laser.GetComponent<ObjectScript>().m_boardScript = this;
-        m_laser.SetActive(false);
+        for (int i = 0; i < projs.Length; i++)
+        {
+            m_projectiles[i] = Instantiate(projs[i]);
+            if (m_projectiles[i].GetComponent<ProjectileScript>())
+                m_projectiles[i].GetComponent<ProjectileScript>().m_boardScript = this;
+            m_projectiles[i].SetActive(false);
+        }
+
+        m_projectiles[0].GetComponent<BeamScript>().m_boardScript = this;
 
         m_audio = gameObject.AddComponent<AudioSource>();
         m_isForcedMove = null;

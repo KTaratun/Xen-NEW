@@ -15,6 +15,8 @@ public class ProjectileScript : ObjectScript {
     new void Update()
     {
         base.Update();
+
+        //if (base)
     }
 
     override public void MovingStart(TileScript newScript, bool _isForced, bool _isNetForced)

@@ -1578,7 +1578,6 @@ public class CharacterScript : ObjectScript {
                 ps[i].startColor = _color;
 
             Material[] mats = Resources.LoadAll<Material>("Symbols/Materials");
-  
 
             for (int i = 0; i < mats.Length; i++)
                 if (mats[i].name == _sprite)

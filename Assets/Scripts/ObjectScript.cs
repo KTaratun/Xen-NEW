@@ -133,6 +133,9 @@ public class ObjectScript : MonoBehaviour {
         else
             m_tile.m_holding = gameObject;
 
+        if (m_boardScript.m_projectiles[(int)BoardScript.prjcts.BEAM].activeSelf)
+            m_boardScript.m_projectiles[(int)BoardScript.prjcts.BEAM].SetActive(false);
+
         m_boardScript.m_currButton = null;
 
         if (!PanelScript.GetPanel("Round End Panel").m_inView)
