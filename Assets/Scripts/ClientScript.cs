@@ -29,7 +29,7 @@ public class ClientScript : MonoBehaviour {
 
     private int m_port = 5357;
 
-    private int m_hostId;
+    public int m_hostId;
 
     public int m_reliableChannel;
     public int m_unreliableChannel;
@@ -78,17 +78,26 @@ public class ClientScript : MonoBehaviour {
                     case "ASKNAME":
                         OnAskName(splitData);
                         break;
-                    case "READY":
-                        GameObject.Find("Board").GetComponent<BoardScript>().ClientInit(splitData[1]);
+                    case "READYENVIRONMENT":
+                        GameObject.Find("Board").GetComponent<BoardScript>().ClientEnvironmentInit(splitData[1]);
+                        break;
+                    case "READYCHARS":
+                        GameObject.Find("Board").GetComponent<BoardScript>().ClientCharInit(splitData[1]);
                         break;
                     case "MOVESTART":
                         OnMove(splitData[1]);
+                        break;
+                    case "ACTIONSTART":
+                        OnAction(splitData[1]);
                         break;
                     case "TURNEND":
                         GameObject.Find("Board").GetComponent<BoardScript>().EndTurn(true);
                         break;
                     case "NEWROUND":
                         GameObject.Find("Board").GetComponent<BoardScript>().ClientRoundInit(splitData[1]);
+                        break;
+                    case "ENERGYUPDATE":
+                        OnEnergy(splitData[1]);
                         break;
                     case "CON":
                         SpawnCharacters(splitData[1], int.Parse(splitData[2]));
@@ -165,6 +174,48 @@ public class ClientScript : MonoBehaviour {
         b.m_netOBJs[objId].GetComponent<ObjectScript>().MovingStart(b.m_tiles[tileId], isForced, true);
     }
 
+    private void OnAction(string _data)
+    {
+        int objId = int.Parse(_data.Split('|')[0]);
+        int actId = int.Parse(_data.Split('|')[1]);
+        int selectedId = int.Parse(_data.Split('|')[2]);
+        string[] tarIds = _data.Split('|')[3].Split(',');
+
+        BoardScript b = GameObject.Find("Board").GetComponent<BoardScript>();
+        b.m_selected = b.m_tiles[selectedId].GetComponent<TileScript>();
+
+        CharacterScript c = b.m_netOBJs[objId].GetComponent<CharacterScript>();
+        c.m_currAction = GameObject.Find("Database").GetComponent<DatabaseScript>().m_actions[actId];
+
+        if (c.m_targets.Count == 0)
+            for (int i = 0; i < tarIds.Length; i++)
+                c.m_targets.Add(b.m_netOBJs[int.Parse(tarIds[i])]);
+
+        c.ActionStart(true);
+    }
+
+    private void OnEnergy(string _data)
+    {
+        int currPlayerId = int.Parse(_data.Split('|')[0].Split(',')[0]);
+        string currPlayerEng = _data.Split('|')[0];
+        int tarPlayerId = int.Parse(_data.Split('|')[1].Split(',')[0]);
+        string tarPlayerEng = _data.Split('|')[1];
+
+        BoardScript b = GameObject.Find("Board").GetComponent<BoardScript>();
+        PlayerScript[] players = b.m_players.GetComponents<PlayerScript>();
+        PlayerScript currPlayer = players[currPlayerId];
+
+        for (int i = 0; i < currPlayer.m_energy.Length; i++)
+            currPlayer.m_energy[i] = int.Parse(currPlayerEng.Split(',')[i + 1]);
+
+        PlayerScript tarPlayer = players[tarPlayerId];
+
+        for (int i = 0; i < tarPlayer.m_energy.Length; i++)
+            tarPlayer.m_energy[i] = int.Parse(tarPlayerEng.Split(',')[i + 1]);
+
+        PanelScript.GetPanel("HUD Panel LEFT").PopulatePanel();
+    }
+
     private void PlayerDisconnected(int _conId)
     {
         //Destroy
@@ -188,8 +239,14 @@ public class ClientScript : MonoBehaviour {
 
         HostTopology topo = new HostTopology(cc, MAX_CONNECTION);
 
+        string IP = GameObject.Find("IP Address").GetComponentsInChildren<Text>()[1].text;
+
+        if (IP.Length == 0)
+            IP = "127.0.0.1";
+
         m_hostId = NetworkTransport.AddHost(topo, 0);
-        m_connectionId = NetworkTransport.Connect(m_hostId, "127.0.0.1", m_port, 0, out error);
+        m_connectionId = NetworkTransport.Connect(m_hostId, IP, m_port, 0, out error);
+        GameObject.Find("Network").GetComponent<ClientScript>().m_connectionId = m_connectionId;
 
         m_name = "TEAM " + m_connectionId.ToString();
 

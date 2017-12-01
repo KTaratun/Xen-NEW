@@ -356,7 +356,7 @@ public class PowerupScript : ObjectScript {
             _char.m_tempStats[(int)CharacterScript.sts.SPD] -= 3;
 
         StatusScript.ApplyStatus(_char.gameObject);
-        _char.PlayAnimation(CharacterScript.prtcles.GAIN_STATUS, m_color);
+        _char.PlayAnimation(CharacterScript.prtcles.GAIN_STATUS, m_color, m_sprite.name);
 
         if (m_boardScript.m_currCharScript == _char)
             PanelScript.GetPanel("HUD Panel LEFT").PopulatePanel();

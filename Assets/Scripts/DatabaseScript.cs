@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Net;
 
 public class DatabaseScript : MonoBehaviour {
 
@@ -17,17 +18,28 @@ public class DatabaseScript : MonoBehaviour {
 	// Use this for initialization
 	IEnumerator Start ()
     {
-        WWW actionData = new WWW("http://localhost:8081/Xen_New/ActionsData.php");
+        //string ip = "http://" + Network.player.ipAddress;
+        string ip = "http://192.168.1.15";
+
+        //if (!GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted)
+        //{
+        //    GameObject.Find("Network").GetComponent<ClientScript>().m
+        //}
+
+        string acts = ip + ":8081/Xen_New/ActionsData.php";
+        WWW actionData = new WWW(acts);
         yield return actionData;
         string actionDataString = actionData.text;
         m_actions = actionDataString.Split(';');
 
-        WWW presetsData = new WWW("http://localhost:8081/Xen_New/PresetsData.php");
+        string presets = ip + ":8081/Xen_New/PresetsData.php";
+        WWW presetsData = new WWW(presets);
         yield return presetsData;
         string presetsDataString = presetsData.text;
         m_presets = presetsDataString.Split(';');
 
-        WWW statData = new WWW("http://localhost:8081/Xen_New/StatData.php");
+        string stats = ip + ":8081/Xen_New/StatData.php";
+        WWW statData = new WWW(stats);
         yield return statData;
         string statDataString = statData.text;
         m_stat = statDataString.Split(';');

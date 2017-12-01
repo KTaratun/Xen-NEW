@@ -235,7 +235,8 @@ public class CharacterScript : ObjectScript {
                     if (meshRends[j].material.color.a <= 0)
                     {
                         m_popupSpheres[i].SetActive(false);
-                        m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_currCharScript.gameObject;
+                        if (m_boardScript.m_currCharScript)
+                            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_currCharScript.gameObject;
                     }
                 }
             }
@@ -267,12 +268,15 @@ public class CharacterScript : ObjectScript {
             m_anim.Play("Running Melee", -1, 0);
 
         if (!_isForced)
-        {
-            m_hasActed[(int)trn.MOV] += 2;
-            PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[(int)trn.MOV].interactable = false;
-            if (m_boardScript.m_currButton)
-                m_boardScript.m_currButton.GetComponent<Image>().color = Color.white;
-        }
+            if (!GameObject.Find("Network") ||
+                GameObject.Find("Network") && GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted ||
+                _isNetForced)
+            {
+                m_hasActed[(int)trn.MOV] += 2;
+                PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[(int)trn.MOV].interactable = false;
+                if (m_boardScript.m_currButton)
+                    m_boardScript.m_currButton.GetComponent<Image>().color = Color.white;
+            }
 
         print(m_name + " has started moving.\n");
     }
@@ -308,7 +312,6 @@ public class CharacterScript : ObjectScript {
     {
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
         string actRng = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RNG);
-        string actRad = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RAD);
         TileScript.targetRestriction targetingRestriction = TileScript.targetRestriction.NONE;
 
         // RANGE MODS
@@ -351,43 +354,44 @@ public class CharacterScript : ObjectScript {
         _tile.FetchTilesWithinRange(this, finalRNG, color, targetSelf, targetingRestriction, isBlockable);
     }
 
-    public void ActionStart()
+    public void ActionStart(bool _isNetForced)
     {
         transform.LookAt(m_boardScript.m_selected.transform);
 
-        int rng = int.Parse(DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RNG)) + m_tempStats[(int)sts.RNG];
+        int actRng = int.Parse(DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RNG)) + m_tempStats[(int)sts.RNG];
+        int actRad = int.Parse(DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RAD)) + m_tempStats[(int)sts.RAD];
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
-        Renderer r = m_boardScript.m_selected.GetComponent<Renderer>();
         TileScript selectedTileScript = m_boardScript.m_selected;
 
-        if (r.material.color == Color.red
-            || r.material.color == Color.green) // single
+        if (actRad == 0 && UniqueActionProperties(m_currAction, uniAct.NON_RAD) < 0) // single
         {
-            if (UniqueActionProperties(m_currAction, uniAct.MOBILITY) >= 1 && rng <= 1)
+            if (UniqueActionProperties(m_currAction, uniAct.MOBILITY) >= 1 && actRng <= 1)
                 m_anim.Play("Kick", -1, 0);
-            else if (r.material.color == Color.green)
+            else if (!CheckIfAttack(actName))
                 m_anim.Play("Ability", -1, 0);
-            else if (rng + m_tempStats[(int)sts.RNG] > 1)
+            else if (actRng + m_tempStats[(int)sts.RNG] > 1)
                 m_anim.Play("Ranged", -1, 0);
             else
                 m_anim.Play("Melee", -1, 0);
 
-            m_targets.Add(selectedTileScript.m_holding);
+            if (m_targets.Count == 0)
+                m_targets.Add(selectedTileScript.m_holding);
         }
-        else if (r.material.color == Color.yellow) // multi
+        else // multi
         {
-            for (int i = 0; i < selectedTileScript.m_targetRadius.Count; i++)
-            {
-                TileScript tarTile = selectedTileScript.m_targetRadius[i].GetComponent<TileScript>();
-                if (tarTile.m_holding)
-                    m_targets.Add(tarTile.m_holding);
-            }
+            if (m_targets.Count == 0)
+                for (int i = 0; i < selectedTileScript.m_targetRadius.Count; i++)
+                {
+                    TileScript tarTile = selectedTileScript.m_targetRadius[i].GetComponent<TileScript>();
+                    if (tarTile.m_holding)
+                        m_targets.Add(tarTile.m_holding);
+                }
 
             if (actName == "ATK(Slash)")
                 m_anim.Play("Slash", -1, 0);
             else if (UniqueActionProperties(m_currAction, uniAct.TAR_RES) == (int)TileScript.targetRestriction.HORVERT)
                 m_anim.Play("Stab", -1, 0);
-            else if (rng <= 1)
+            else if (actRng <= 1)
                 m_anim.Play("Sweep", -1, 0);
             else
                 m_anim.Play("Throw", -1, 0);
@@ -402,6 +406,34 @@ public class CharacterScript : ObjectScript {
 
         if (!m_boardScript.m_isForcedMove)
             m_tile.GetComponent<TileScript>().ClearRadius();
+
+        if (m_targets.Count > 1)
+            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_selected.gameObject;
+        else
+            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_targets[0];
+
+        if (GameObject.Find("Network"))
+        {
+            int actId = int.Parse(DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.ID)) - 1;
+            string msg = "ACTIONSTART~" + m_id.ToString() + '|' + actId.ToString() + '|' +
+                m_boardScript.m_selected.m_id + '|';
+
+            for (int i = 0; i < m_targets.Count; i++)
+                msg += m_targets[i].GetComponent<ObjectScript>().m_id.ToString() + ',';
+
+            msg = msg.Trim(',');
+
+            if (!GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted && !_isNetForced)
+            {
+                ClientScript c = GameObject.Find("Network").GetComponent<ClientScript>();
+                c.Send(msg, c.m_reliableChannel);
+            }
+            else if (GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted)
+            {
+                ServerScript s = GameObject.Find("Network").GetComponent<ServerScript>();
+                s.Send(msg, s.m_reliableChannel, s.m_clients);
+            }
+        }
     }
 
     public void Action()
@@ -411,8 +443,6 @@ public class CharacterScript : ObjectScript {
 
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
         string actEng = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.ENERGY);
-        int actRng = int.Parse(DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RNG));
-        int actRad = int.Parse(DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RAD));
 
         // ATTACK MODS
         bool teamBuff = false;
@@ -436,12 +466,6 @@ public class CharacterScript : ObjectScript {
                         if (!teamBuff || teamBuff && m_targets[i].tag == "Player" && m_targets[i].GetComponent<CharacterScript>().m_player == m_player)
                             Ability(m_targets[i], actName);
             }
-
-
-            if (m_targets.Count > 1)
-                m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_selected.gameObject;
-            else
-                m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_targets[0];
         }
 
         if (!m_isFree && CheckIfAttack(actName))
@@ -472,7 +496,7 @@ public class CharacterScript : ObjectScript {
         if (!PanelScript.GetPanel("Choose Panel").m_inView)
             m_boardScript.m_selected = null;
 
-        if (m_boardScript.m_currButton.GetComponent<PanelScript>())
+        if (m_boardScript.m_currButton && m_boardScript.m_currButton.GetComponent<PanelScript>())
             m_boardScript.m_currButton.GetComponent<PanelScript>().m_inView = false;
         m_boardScript.m_currButton = null;
 
@@ -601,7 +625,7 @@ public class CharacterScript : ObjectScript {
             case "ATK(Copy)":
             case "ATK(Hack)":
             case "SUP(Redirect)":
-                if (!m_isAI)
+                if (!m_isAI && m_boardScript.m_currCharScript.CheckIfMine())
                 {
                     PanelScript.GetPanel("Choose Panel").m_inView = true;
                     PanelScript.m_history.Add(PanelScript.GetPanel("Choose Panel"));
@@ -656,10 +680,10 @@ public class CharacterScript : ObjectScript {
                 targetScript.m_tempStats[(int)sts.SPD] += 2 + m_tempStats[(int)sts.TEC];
                 break;
             case "ATK(Dash)":
-                if (TileScript.CheckForEmptyNeighbor(tileScript) && !m_isAI)
+                if (TileScript.CheckForEmptyNeighbor(tileScript) && !m_isAI && m_boardScript.m_currCharScript.CheckIfMine())
                 {
-                    tileScript.ClearRadius();
                     m_boardScript.m_isForcedMove = gameObject;
+                    tileScript.ClearRadius();
                     MovementSelection(3 + m_tempStats[(int)sts.TEC]);
                 }
                 break;
@@ -679,7 +703,7 @@ public class CharacterScript : ObjectScript {
                 PullTowards(_currTarget.GetComponent<ObjectScript>(), tileScript, 100);
                 break;
             case "ATK(Push)":
-                if (TileScript.CheckForEmptyNeighbor(targetTile) && !m_isAI)
+                if (TileScript.CheckForEmptyNeighbor(targetTile) && !m_isAI && m_boardScript.m_currCharScript.CheckIfMine())
                 {
                     tileScript.ClearRadius();
                     m_boardScript.m_isForcedMove = _currTarget;
@@ -727,9 +751,7 @@ public class CharacterScript : ObjectScript {
             m_particles[(int)prtcles.PROJECTILE_HIT].transform.LookAt(m_boardScript.m_currCharScript.transform);
             m_particles[(int)prtcles.PROJECTILE_HIT].SetActive(false);
             m_particles[(int)prtcles.PROJECTILE_HIT].SetActive(true);
-            m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Explosion Sound 3"));
         }
-
         int parsedDMG;
         if (int.TryParse(_dmg, out parsedDMG))
         {
@@ -1041,10 +1063,10 @@ public class CharacterScript : ObjectScript {
             {
                 if (checkTargetsTiles(_targetScript, neighbors[i])) // For magnet attack.
                     {
-                        if (i == 0 && targetTileScript.m_x > _towards.m_x ||
-                            i == 1 && targetTileScript.m_x < _towards.m_x ||
-                            i == 2 && targetTileScript.m_z < _towards.m_z ||
-                            i == 3 && targetTileScript.m_z > _towards.m_z)
+                        if (i == (int)TileScript.nbors.bottom && targetTileScript.m_z > _towards.m_z ||
+                            i == (int)TileScript.nbors.left && targetTileScript.m_x > _towards.m_x ||
+                            i == (int)TileScript.nbors.top && targetTileScript.m_z < _towards.m_z ||
+                            i == (int)TileScript.nbors.right && targetTileScript.m_x < _towards.m_x)
                         {
                             nei = targetTileScript.m_neighbors[i].GetComponent<TileScript>();
                             break;
@@ -1274,6 +1296,17 @@ public class CharacterScript : ObjectScript {
     }
 
 
+    // Network
+    public bool CheckIfMine()
+    {
+        if (!m_boardScript || !GameObject.Find("Network") || 
+            m_boardScript && GameObject.Find("Network") && GameObject.Find("Network").GetComponent<ClientScript>().m_connectionId == m_boardScript.m_currCharScript.m_player.m_id)
+            return true;
+        else
+            return false;
+    }
+
+
     // Utilities
     public void HighlightCharacter()
     {
@@ -1340,9 +1373,9 @@ public class CharacterScript : ObjectScript {
         m_boardScript.m_isForcedMove = gameObject;
     }
 
-    static public bool CheckIfAttack(string _action)
+    static public bool CheckIfAttack(string _actName)
     {
-        if (_action[0] == 'A' && _action[1] == 'T' && _action[2] == 'K')
+        if (_actName[0] == 'A' && _actName[1] == 'T' && _actName[2] == 'K')
             return true;
         else
             return false;
@@ -1533,7 +1566,7 @@ public class CharacterScript : ObjectScript {
         }
     }
 
-    public void PlayAnimation(prtcles _ani, Color _color)
+    public void PlayAnimation(prtcles _ani, Color _color, string _sprite)
     {
         if (_ani == prtcles.GAIN_STATUS)
         {
@@ -1543,6 +1576,16 @@ public class CharacterScript : ObjectScript {
 
             for (int i = 0; i < ps.Length; i++)
                 ps[i].startColor = _color;
+
+            Material[] mats = Resources.LoadAll<Material>("Symbols/Materials");
+  
+
+            for (int i = 0; i < mats.Length; i++)
+                if (mats[i].name == _sprite)
+                {
+                    ps[2].GetComponent<ParticleSystemRenderer>().material = mats[i];
+                    break;
+                }
         }
     }
 

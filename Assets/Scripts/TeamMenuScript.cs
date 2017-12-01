@@ -108,7 +108,6 @@ public class TeamMenuScript : MonoBehaviour {
 
         DatabaseScript dbScript = GameObject.Find("Database").GetComponent<DatabaseScript>();
 
-        int[] lvls = new int[4];
         string newAct = "";
         for (int i = 0; i < numActions; i++)
         {
@@ -566,7 +565,7 @@ public class TeamMenuScript : MonoBehaviour {
 
     public void NewRandomStat(Button[] _buttons)
     {
-        DatabaseScript db = GetComponent<DatabaseScript>();
+        DatabaseScript db = GameObject.Find("Database").GetComponent<DatabaseScript>();
 
         // Do this to ensure we don't throw away choices from the last time the panel was opened.
         for (int i = 0; i < _buttons.Length - 1; i++)

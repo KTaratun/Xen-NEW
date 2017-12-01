@@ -50,7 +50,7 @@ public class CameraScript : MonoBehaviour {
     private void BattleCamControls()
     {
         float wheelSpeed = 100.0f;
-        float maxDis = 200;
+        float maxDis = 100;
         float minDis = 20;
         float w = Input.GetAxis("Mouse ScrollWheel");
 
@@ -62,7 +62,8 @@ public class CameraScript : MonoBehaviour {
             float rotSpeed = 4.5f;
 
             // If right click is held down, moving the mouse side-to-side rotates the screen around the world's y-axis
-            transform.RotateAround(m_freeCam.transform.position, Vector3.up, x * rotSpeed);
+            //if (x > 0 || x < 0 && m_freeCam.transform.position.y > 50)
+                transform.RotateAround(m_freeCam.transform.position, Vector3.up, x * rotSpeed);
         }
 
         float wheelMovSpeed = 4.0f;

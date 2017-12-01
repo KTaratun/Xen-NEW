@@ -409,7 +409,7 @@ public class BoardScript : MonoBehaviour {
                 if (!m_selected)
                     PanelScript.GetPanel("HUD Panel RIGHT").ClosePanel();
 
-                if (m_currRound.Count == m_livingPlayersInRound - 1 && m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] == 0)
+                if (m_currCharScript && m_currRound.Count == m_livingPlayersInRound - 1 && m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] == 0)
                     m_camera.GetComponent<CameraScript>().m_target = m_currCharScript.gameObject;
             }
         }
@@ -639,7 +639,8 @@ public class BoardScript : MonoBehaviour {
 
     public void EndTurn(bool _isForced)
     {
-        if (!m_currCharScript || !m_currCharScript.m_anim)
+        if (!m_currCharScript || !m_currCharScript.m_anim ||
+            GameObject.Find("Network") && !m_currCharScript.CheckIfMine() && !_isForced)
             return;
 
         PlayerScript winningTeam = null;
@@ -697,57 +698,35 @@ public class BoardScript : MonoBehaviour {
 
     public void NewRound()
     {
-        List<GameObject> tempChars = new List<GameObject>();
         List<int> roundOrder = new List<int>();
 
-        m_currCharScript = null;
+        int numPool = PreRoundSetUp();
+        int randNum;
+        int currNum;
 
-        m_livingPlayersInRound = 0;
-        for (int i = 0; i < m_characters.Count; i++)
-            if (m_characters[i].GetComponent<CharacterScript>().m_isAlive)
-            {
-                StatusScript.UpdateStatus(m_characters[i], StatusScript.mode.ROUND_END);
-                tempChars.Add(m_characters[i]);
-                m_livingPlayersInRound++;
-            }
-
-        int numPool;
         do
         {
-            numPool = 0;
-            // Gather all characters speed to pull from
-            for (int i = 0; i < tempChars.Count; i++)
-            {
-                CharacterScript charScript = tempChars[i].GetComponent<CharacterScript>();
-                if (charScript.m_tempStats[(int)CharacterScript.sts.SPD] < 0 || charScript.m_effects[(int)StatusScript.effects.STUN] && i == 0)
-                    continue;
-                else
-                    numPool += charScript.m_tempStats[(int)CharacterScript.sts.SPD];
-            }
+            randNum = Random.Range(0, numPool);
+            currNum = 0;
 
-            int randNum = Random.Range(0, numPool);
-            int currNum = 0;
-
-            for (int i = 0; i < tempChars.Count; i++)
+            for (int i = 0; i < m_characters.Count; i++)
             {
-                CharacterScript charScript = tempChars[i].GetComponent<CharacterScript>();
-                if (charScript.m_tempStats[(int)CharacterScript.sts.SPD] <= 0 || charScript.m_effects[(int)StatusScript.effects.STUN] && i == 0)
+                CharacterScript charScript = m_characters[i].GetComponent<CharacterScript>();
+                if (charScript.m_tempStats[(int)CharacterScript.sts.SPD] <= 0 || charScript.m_effects[(int)StatusScript.effects.STUN] && i == 0 ||
+                    !charScript.m_isAlive)
                     continue;
 
                 currNum += charScript.m_tempStats[(int)CharacterScript.sts.SPD];
 
                 if (randNum < currNum)
                 {
-                    m_currRound.Add(tempChars[i]);
+                    m_currRound.Add(m_characters[i]);
                     roundOrder.Add(charScript.m_id);
 
                     if (charScript.m_tempStats[(int)CharacterScript.sts.SPD] >= 10)
                         numPool -= 10;
                     else
-                    {
                         numPool -= charScript.m_tempStats[(int)CharacterScript.sts.SPD];
-                        tempChars.RemoveAt(i);
-                    }
 
                     charScript.m_tempStats[(int)CharacterScript.sts.SPD] -= 10;
                     break;
@@ -755,6 +734,35 @@ public class BoardScript : MonoBehaviour {
             }
         } while (m_currRound.Count < m_livingPlayersInRound && numPool > 0);
 
+        PostRoundSetUp(roundOrder);
+    }
+
+    private int PreRoundSetUp()
+    {
+        m_currCharScript = null;
+        m_livingPlayersInRound = 0;
+        int numPool = 0;
+
+        for (int i = 0; i < m_characters.Count; i++)
+        {
+            StatusScript.UpdateStatus(m_characters[i], StatusScript.mode.ROUND_END);
+            CharacterScript charScript = m_characters[i].GetComponent<CharacterScript>();
+
+            if (charScript.m_isAlive)
+                m_livingPlayersInRound++;
+
+            if (charScript.m_tempStats[(int)CharacterScript.sts.SPD] < 0 || charScript.m_effects[(int)StatusScript.effects.STUN] && i == 0 ||
+                !charScript.m_isAlive)
+                continue;
+            else
+                numPool += charScript.m_tempStats[(int)CharacterScript.sts.SPD];
+        }
+
+        return numPool;
+    }
+
+    private void PostRoundSetUp(List<int> _roundOrder)
+    {
         for (int i = 0; i < m_characters.Count; i++)
         {
             CharacterScript charScript = m_characters[i].GetComponent<CharacterScript>();
@@ -778,7 +786,7 @@ public class BoardScript : MonoBehaviour {
         if (GameObject.Find("Network"))
         {
             ServerScript network = GameObject.Find("Network").GetComponent<ServerScript>();
-            string roundData = PackUpRoundData(roundOrder, obj);
+            string roundData = PackUpRoundData(_roundOrder, obj);
             network.Send(roundData, network.m_reliableChannel, network.m_clients);
         }
     }
@@ -813,6 +821,7 @@ public class BoardScript : MonoBehaviour {
             playScript.m_characters = new List<CharacterScript>();
             playScript.m_bScript = this;
             playScript.m_energy = new int[4];
+            playScript.m_id = i;
 
             //playScript.name = "Team " + (i + 1).ToString();
 
@@ -851,16 +860,14 @@ public class BoardScript : MonoBehaviour {
             }
         }
 
-        string initData = PackUpInitData();
-        network.Send(initData, network.m_reliableFragmentedChannel, network.m_clients);
+        PackUpInitData();
     }
 
-    public void ClientInit(string _data)
+    public void ClientEnvironmentInit(string _data)
     {
         GameObject[] environmentalOBJs = Resources.LoadAll<GameObject>("OBJs/Environmental");
 
-        string[] objs = _data.Split(';')[0].Split('|');
-        string[] chars = _data.Split(';')[1].Split('/');
+        string[] objs = _data.Split('|');
 
         for (int i = 0; i < objs.Length; i++)
         {
@@ -870,11 +877,16 @@ public class BoardScript : MonoBehaviour {
             newOBJ.GetComponent<ObjectScript>().PlaceOBJ(this, int.Parse(obj[2]), int.Parse(obj[3]));
             m_obstacles.Add(newOBJ);
         }
+    }
 
+    public void ClientCharInit(string _data)
+    {
         GameObject[] characterTypes = Resources.LoadAll<GameObject>("OBJs/Characters");
-        for (int i = 0; i < chars.Length; i++)
+        string[] characters = _data.Split(';');
+
+        for (int i = 0; i < characters.Length; i++)
         {
-            string[] character = chars[i].Split('|');
+            string[] character = characters[i].Split('|');
 
             GameObject newChar = Instantiate(characterTypes[int.Parse(character[(int)PlayerPrefScript.netwrkPak.GENDER])]);
             newChar.name = character[(int)PlayerPrefScript.netwrkPak.NAME];
@@ -899,7 +911,7 @@ public class BoardScript : MonoBehaviour {
 
             PlayerScript[] p = m_players.GetComponents<PlayerScript>();
 
-            if (team <= p.Length)
+            if (team >= p.Length)
             {
                 m_players.AddComponent<PlayerScript>();
                 p = m_players.GetComponents<PlayerScript>();
@@ -907,6 +919,7 @@ public class BoardScript : MonoBehaviour {
                 p[p.Length - 1].m_characters = new List<CharacterScript>();
                 p[p.Length - 1].m_bScript = this;
                 p[p.Length - 1].m_energy = new int[4];
+                p[p.Length - 1].m_id = team;
             }
 
             // Link to player
@@ -917,7 +930,8 @@ public class BoardScript : MonoBehaviour {
             string[] pos = character[(int)PlayerPrefScript.netwrkPak.POS].Split(',');
             cScript.PlaceOBJ(this, int.Parse(pos[0]), int.Parse(pos[1]));
         }
-
+        
+        // Doing this for each team unnecessarily
         m_camera.GetComponent<CameraScript>().m_zoomIn = true;
         m_camera.GetComponent<CameraScript>().m_rotate = false;
         PanelScript.GetPanel("HUD Panel LEFT").m_inView = true;
@@ -992,27 +1006,30 @@ public class BoardScript : MonoBehaviour {
         return _char;
     }
 
-    public string PackUpInitData()
+    private void PackUpInitData()
     {
-        string data = "READY~";
+        ServerScript network = GameObject.Find("Network").GetComponent<ServerScript>();
+
+        string enviroData = "READYENVIRONMENT~";
         for (int i = 0; i < m_obstacles.Count; i++)
         {
             ObjectScript obj = m_obstacles[i].GetComponent<ObjectScript>();
 
-            data += obj.m_name + "," + (int)obj.m_facing + "," + obj.m_tile.m_x.ToString() + "," + obj.m_tile.m_z.ToString() + "|";
+            enviroData += obj.m_name + "," + (int)obj.m_facing + "," + obj.m_tile.m_x.ToString() + "," + obj.m_tile.m_z.ToString() + "|";
         }
 
-        data = data.Trim('|') + ';';
+        enviroData = enviroData.Trim('|');
+        network.Send(enviroData, network.m_reliableChannel, network.m_clients);
+
 
         PlayerScript[] players = m_players.GetComponents<PlayerScript>();
 
         for (int i = 0; i < players.Length; i++)
         {
-            string charString;
+            string charString = "READYCHARS~";
             for (int j = 0; j < players[i].m_characters.Count; j++)
             {
                 CharacterScript charScript = players[i].m_characters[j];
-                charString = "";
                 char symbol = '|';
 
                 charString += charScript.m_name + symbol;
@@ -1039,15 +1056,12 @@ public class BoardScript : MonoBehaviour {
 
                 charString += i.ToString() + symbol;
 
-                charString += charScript.m_tile.m_x.ToString() + ',' + charScript.m_tile.m_z.ToString();
+                charString += charScript.m_tile.m_x.ToString() + ',' + charScript.m_tile.m_z.ToString() + ';';
 
-                data += charString + "/";
             }
+            charString = charString.Trim(';');
+            network.Send(charString, network.m_reliableChannel, network.m_clients);
         }
-
-        data = data.Trim('/');
-
-        return data;
     }
 
     public string PackUpRoundData(List<int> _roundOrder, ObjectScript _obj)

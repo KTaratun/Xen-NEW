@@ -4,63 +4,30 @@ using UnityEngine;
 
 public class Action : StateMachineBehaviour {
 
+    public enum aniAct { ACT_TIME, MELEE_ANI, RANGED_ANI}
+
     bool m_hasDoneAction;
 
     // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
         m_hasDoneAction = false;
-        animator.GetComponentInParent<CharacterScript>().m_audio.volume = 1.0f;
-
-
-        //for (int i = 0; i < animator.GetComponentInParent<CharacterScript>().m_weapons.Length; i++)
-        //    animator.GetComponentInParent<CharacterScript>().m_weapons[i].SetActive(false);
-        //
-        //    if (stateInfo.nameHash == Animator.StringToHash("Base.Melee"))
-        //    animator.GetComponentInParent<CharacterScript>().m_weapons[(int)CharacterScript.weaps.SWORD].SetActive(true);
-        //else if (stateInfo.nameHash == Animator.StringToHash("Base.Range"))
-        //    animator.GetComponentInParent<CharacterScript>().m_weapons[(int)CharacterScript.weaps.HGUN].SetActive(true);
     }
 
     // OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
     override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        if (stateInfo.fullPathHash == Animator.StringToHash("Base.Melee") && 
-            stateInfo.normalizedTime > 0.3777777777777778 && !m_hasDoneAction ||
-            stateInfo.fullPathHash == Animator.StringToHash("Base.Ability") &&
-            stateInfo.normalizedTime > 0.5 && !m_hasDoneAction ||
-            stateInfo.fullPathHash == Animator.StringToHash("Base.Kick") &&
-            stateInfo.normalizedTime > 0.48 && !m_hasDoneAction ||
-            stateInfo.fullPathHash == Animator.StringToHash("Base.Stab") &&
-            stateInfo.normalizedTime > 0.42 && !m_hasDoneAction ||
-            stateInfo.fullPathHash == Animator.StringToHash("Base.Slash") &&
-            stateInfo.normalizedTime > 0.38 && !m_hasDoneAction ||
-            stateInfo.fullPathHash == Animator.StringToHash("Base.Sweep") &&
-            stateInfo.normalizedTime > 0.3 && !m_hasDoneAction)
-
+        if (AnimationProperties(stateInfo, aniAct.ACT_TIME))
         {
-            if (stateInfo.fullPathHash == Animator.StringToHash("Base.Melee") ||
-                stateInfo.fullPathHash == Animator.StringToHash("Base.Kick") ||
-                stateInfo.fullPathHash == Animator.StringToHash("Base.Stab") ||
-                stateInfo.fullPathHash == Animator.StringToHash("Base.Slash") ||
-                stateInfo.fullPathHash == Animator.StringToHash("Base.Sweep"))
-            {
-                animator.GetComponentInParent<CharacterScript>().m_audio.volume = 0.6f;
+            if (AnimationProperties(stateInfo, aniAct.MELEE_ANI))
                 animator.GetComponentInParent<CharacterScript>().m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Melee Hit Sound 1.2"));
-            }
             else if (stateInfo.fullPathHash == Animator.StringToHash("Base.Ability"))
-            {
-                animator.GetComponentInParent<CharacterScript>().m_audio.volume = 0.5f;
                 animator.GetComponentInParent<CharacterScript>().m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Ability Sound 1"));
-            }
 
             animator.GetComponentInParent<CharacterScript>().Action();
             m_hasDoneAction = true;
         }
-        else if (stateInfo.fullPathHash == Animator.StringToHash("Base.Throw") &&
-            stateInfo.normalizedTime > 0.5 && !m_hasDoneAction ||
-            stateInfo.fullPathHash == Animator.StringToHash("Base.Ranged") &&
-            stateInfo.normalizedTime > 0.72 && !m_hasDoneAction)
+        else if (AnimationProperties(stateInfo, aniAct.RANGED_ANI))
         {
             BoardScript board = animator.GetComponentInParent<ObjectScript>().m_boardScript;
 
@@ -72,7 +39,6 @@ public class Action : StateMachineBehaviour {
             else if (stateInfo.fullPathHash == Animator.StringToHash("Base.Ranged"))
             {
                 board.m_laser.GetComponent<ObjectScript>().MovingStart(board.m_selected, true, false);
-                animator.GetComponentInParent<CharacterScript>().m_audio.volume = 0.5f;
                 animator.GetComponentInParent<CharacterScript>().m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Gun Sound 1"));
             }
 
@@ -96,4 +62,43 @@ public class Action : StateMachineBehaviour {
 	//override public void OnStateIK(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
 	//
 	//}
+
+    private bool AnimationProperties(AnimatorStateInfo _stateInfo, aniAct _aniAct)
+    {
+        if (_aniAct == aniAct.ACT_TIME)
+        {
+            if (_stateInfo.fullPathHash == Animator.StringToHash("Base.Melee") &&
+            _stateInfo.normalizedTime > 0.3777777777777778 && !m_hasDoneAction ||
+            _stateInfo.fullPathHash == Animator.StringToHash("Base.Ability") &&
+            _stateInfo.normalizedTime > 0.5 && !m_hasDoneAction ||
+            _stateInfo.fullPathHash == Animator.StringToHash("Base.Kick") &&
+            _stateInfo.normalizedTime > 0.48 && !m_hasDoneAction ||
+            _stateInfo.fullPathHash == Animator.StringToHash("Base.Stab") &&
+            _stateInfo.normalizedTime > 0.42 && !m_hasDoneAction ||
+            _stateInfo.fullPathHash == Animator.StringToHash("Base.Slash") &&
+            _stateInfo.normalizedTime > 0.38 && !m_hasDoneAction ||
+            _stateInfo.fullPathHash == Animator.StringToHash("Base.Sweep") &&
+            _stateInfo.normalizedTime > 0.3 && !m_hasDoneAction)
+                return true;
+        }
+        else if (_aniAct == aniAct.MELEE_ANI)
+        {
+            if (_stateInfo.fullPathHash == Animator.StringToHash("Base.Melee") ||
+                _stateInfo.fullPathHash == Animator.StringToHash("Base.Kick") ||
+                _stateInfo.fullPathHash == Animator.StringToHash("Base.Stab") ||
+                _stateInfo.fullPathHash == Animator.StringToHash("Base.Slash") ||
+                _stateInfo.fullPathHash == Animator.StringToHash("Base.Sweep"))
+                return true;
+        }
+        else if (_aniAct == aniAct.RANGED_ANI)
+        {
+            if (_stateInfo.fullPathHash == Animator.StringToHash("Base.Throw") &&
+            _stateInfo.normalizedTime > 0.5 && !m_hasDoneAction ||
+            _stateInfo.fullPathHash == Animator.StringToHash("Base.Ranged") &&
+            _stateInfo.normalizedTime > 0.72 && !m_hasDoneAction)
+                return true;
+        }
+
+        return false;
+    }
 }

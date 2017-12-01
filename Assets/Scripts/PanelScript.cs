@@ -91,7 +91,6 @@ public class PanelScript : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
-        RectTransform recTrans = GetComponent<RectTransform>();
         // REFACTOR
         if (Input.GetMouseButtonDown(1) && name == "Confirmation Panel" && m_history.Count > 0)
             if (GetRecentHistory().name == "Confirmation Panel" || GetRecentHistory().name != "Confirmation Panel" && !m_locked)
@@ -268,13 +267,13 @@ public class PanelScript : MonoBehaviour {
 
                 if (int.TryParse(currB.name, out res)) // If last pressed button is an int, it's a preset character panel button. Character slot buttons names are in the x,x format
                 {
-                    DatabaseScript dbScript = m_main.GetComponent<DatabaseScript>();
+                    DatabaseScript dbScript = GameObject.Find("Database").GetComponent<DatabaseScript>();
 
                     string[] presetDataSeparated = dbScript.m_presets[int.Parse(currB.name)].Split('|');
                     string[] presetName = presetDataSeparated[(int)DatabaseScript.presets.NAME].Split(':');
                     string[] presetColor = presetDataSeparated[(int)DatabaseScript.presets.COLORS].Split(':');
 
-                    int gen = Random.Range(0, 2);
+                    int gen = 0;//Random.Range(0, 2);
                     tMenu.FillOutCharacterData(presetName[1], presetColor[1], dbScript.GetActions(dbScript.m_presets[int.Parse(currB.name)]), "", 0, 1, gen);
 
                     // Fill out name
@@ -436,7 +435,7 @@ public class PanelScript : MonoBehaviour {
         }
         else if (name == "PresetSelect Panel")
         {
-            DatabaseScript dbScript = m_main.GetComponent<DatabaseScript>();
+            DatabaseScript dbScript = GameObject.Find("Database").GetComponent<DatabaseScript>();
 
             for (int i = 0; i < m_buttons.Length; i++)
             {

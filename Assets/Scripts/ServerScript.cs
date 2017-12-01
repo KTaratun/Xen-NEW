@@ -19,6 +19,7 @@ public class ServerScript : MonoBehaviour {
     private int m_port = 5357;
     private int m_hostId;
     //private int m_webHostId;
+
     public int m_reliableChannel;
     public int m_unreliableChannel;
     public int m_reliableFragmentedChannel;
@@ -70,6 +71,9 @@ public class ServerScript : MonoBehaviour {
                     case "MOVESTART":
                         OnMove(splitData[1]);
                         break;
+                    case "ACTIONSTART":
+                        OnAction(splitData[1]);
+                        break;
                     case "TURNEND":
                         GameObject.Find("Board").GetComponent<BoardScript>().EndTurn(true);
                         break;
@@ -111,6 +115,25 @@ public class ServerScript : MonoBehaviour {
 
         BoardScript b = GameObject.Find("Board").GetComponent<BoardScript>();
         b.m_netOBJs[objId].GetComponent<ObjectScript>().MovingStart(b.m_tiles[tileId], isForced, true);
+    }
+
+    private void OnAction(string _data)
+    {
+        int objId = int.Parse(_data.Split('|')[0]);
+        int actId = int.Parse(_data.Split('|')[1]);
+        int selectedId = int.Parse(_data.Split('|')[2]);
+        string[] tarIds = _data.Split('|')[3].Split(',');
+
+        BoardScript b = GameObject.Find("Board").GetComponent<BoardScript>();
+        b.m_selected = b.m_tiles[selectedId].GetComponent<TileScript>();
+
+        CharacterScript c = b.m_netOBJs[objId].GetComponent<CharacterScript>();
+        c.m_currAction = GameObject.Find("Database").GetComponent<DatabaseScript>().m_actions[actId];
+
+        for (int i = 0; i < tarIds.Length; i++)
+            c.m_targets.Add(b.m_netOBJs[int.Parse(tarIds[i])]);
+
+        c.ActionStart(true);
     }
 
     private void OnConnection(int _conId)

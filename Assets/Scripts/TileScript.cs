@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 
 public class TileScript : NetworkBehaviour {
 
-    public enum nbors { left, right, top, bottom };
+    public enum nbors { bottom, left, top, right };
     public enum targetRestriction { NONE, HORVERT, DIAGONAL};
 
     static public Color c_attack = new Color(1, 0, 0, 0.5f);
@@ -47,46 +47,10 @@ public class TileScript : NetworkBehaviour {
         if (PanelScript.CheckIfPanelOpen() || m_boardScript.m_camIsFrozen || m_boardScript.m_hoverButton || !m_boardScript.m_currCharScript)
             return;
 
+        ColorSelectedChar();
+        m_boardScript.m_selected = this;
+
         Renderer renderer = GetComponent<Renderer>();
-
-        if (renderer.material.color == c_neutral && m_boardScript.m_selected != this && !PanelScript.GetPanel("Choose Panel").m_inView &&
-            m_boardScript.m_currCharScript && m_holding != m_boardScript.m_currCharScript.gameObject && m_boardScript.m_currCharScript.m_tile.m_radius.Count == 0)
-        {
-            if (m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player")
-            {
-                CharacterScript charScript = m_boardScript.m_selected.m_holding.GetComponent<CharacterScript>();
-                charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(false);
-                charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.white;
-
-                PanelScript.GetPanel("HUD Panel RIGHT").ClosePanel();
-            }
-            if (m_holding && m_holding.tag == "Player")
-            {
-                CharacterScript charScript = m_holding.GetComponent<CharacterScript>();
-                charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(true);
-                charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.magenta;
-            }
-            m_boardScript.m_selected = this;
-        }
-        else if (renderer.material.color == c_neutral && m_boardScript.m_selected == this && !PanelScript.GetPanel("Choose Panel").m_inView &&
-            m_boardScript.m_currCharScript && m_holding != m_boardScript.m_currCharScript.gameObject)
-        {
-            if (m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player")
-            {
-                CharacterScript charScript = m_boardScript.m_selected.m_holding.GetComponent<CharacterScript>();
-                charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(false);
-                charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.white;
-
-                PanelScript.GetPanel("HUD Panel RIGHT").ClosePanel();
-            }
-            m_boardScript.m_selected = null;
-        }
-        else
-            m_boardScript.m_selected = this;
-
-        if (m_boardScript.m_selected == null)
-            return;
-
         // If selecting a tile while moving
         if (renderer.material.color == Color.blue) // If tile is blue when clicked, perform movement code
         {
@@ -109,15 +73,10 @@ public class TileScript : NetworkBehaviour {
 
             m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_holding;
 
-            if (m_holding == m_boardScript.m_currCharScript.gameObject && m_boardScript.m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] < 2)// &&
-                //NetworkConnection. == m_holding.GetComponent<CharacterScript>().m_player.m_num)
+            if (m_holding == m_boardScript.m_currCharScript.gameObject && m_boardScript.m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] < 2)
             {
-                //PanelScript statusPanel = PanelScript.GetPanel("Status Panel");
-                //statusPanel.m_cScript = m_holding.GetComponent<CharacterScript>();
-                //statusPanel.PopulatePanel();
-
                 Button movB = PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0];
-                    movB.GetComponent<ButtonScript>().Select();
+                movB.GetComponent<ButtonScript>().Select();
             }
         }
     }
@@ -422,6 +381,37 @@ public class TileScript : NetworkBehaviour {
 
 
     // Utilities
+    private void ColorSelectedChar()
+    {
+        Renderer renderer = GetComponent<Renderer>();
+        bool wasColored = false;
+
+        if (m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player" &&
+            m_boardScript.m_selected.m_holding != m_boardScript.m_currCharScript.gameObject)
+        {
+            CharacterScript charScript = m_boardScript.m_selected.m_holding.GetComponent<CharacterScript>();
+
+            if (charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor != Color.white)
+                wasColored = true;
+
+            charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(false);
+            charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.white;
+
+            PanelScript.GetPanel("HUD Panel RIGHT").ClosePanel();
+        }
+
+        if (renderer.material.color == c_neutral && !PanelScript.GetPanel("Choose Panel").m_inView && m_holding && m_holding.tag == "Player" &&
+            m_holding != m_boardScript.m_currCharScript.gameObject && m_boardScript.m_currCharScript.m_tile.m_radius.Count == 0)
+        {
+            if (!wasColored)
+            {
+                CharacterScript charScript = m_holding.GetComponent<CharacterScript>();
+                charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(true);
+                charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.magenta;
+            }
+        }
+    }
+
     static public int CaclulateDistance(TileScript _targetOne, TileScript _targetTwo)
     {
         return Mathf.Abs(_targetOne.m_x - _targetTwo.m_x) + Mathf.Abs(_targetOne.m_z - _targetTwo.m_z);

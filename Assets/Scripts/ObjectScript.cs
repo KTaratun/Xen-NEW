@@ -177,13 +177,13 @@ public class ObjectScript : MonoBehaviour {
         transform.Rotate(0, randomRot * 90, 0);
 
         if (randomRot == 0)
-            m_facing = TileScript.nbors.left;
+            m_facing = TileScript.nbors.bottom;
         else if (randomRot == 1)
-            m_facing = TileScript.nbors.right;
+            m_facing = TileScript.nbors.left;
         else if (randomRot == 2)
             m_facing = TileScript.nbors.top;
         else if (randomRot == 3)
-            m_facing = TileScript.nbors.bottom;
+            m_facing = TileScript.nbors.right;
     }
 
     public void SetRotation(TileScript.nbors _facing)
@@ -213,11 +213,13 @@ public class ObjectScript : MonoBehaviour {
             {
                 if (m_width <= 1)
                     isPlacable = true;
-                else if (m_width == 2 && script.m_neighbors[(int)m_facing] && !script.m_neighbors[(int)m_facing].GetComponent<TileScript>().m_holding)
-                {
-                    isPlacable = true;
-                    script.m_neighbors[(int)m_facing].GetComponent<TileScript>().m_holding = gameObject;
-                }
+                else if (m_width == 2)
+                    if (script.m_neighbors[(int)m_facing] && !script.m_neighbors[(int)m_facing].GetComponent<TileScript>().m_holding)
+                    {
+                        isPlacable = true;
+                        TileScript nei = script.m_neighbors[(int)m_facing].GetComponent<TileScript>();
+                        nei.m_holding = gameObject;
+                    }
 
             }
         } while (!isPlacable);

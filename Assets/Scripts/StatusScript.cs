@@ -341,7 +341,7 @@ public class StatusScript : MonoBehaviour {
                 break;
         }
 
-        _ownerScript.PlayAnimation(CharacterScript.prtcles.GAIN_STATUS, m_color);
+        _ownerScript.PlayAnimation(CharacterScript.prtcles.GAIN_STATUS, m_color, m_sprite.name);
     }
 
     static public void ApplyStatus(GameObject _character)

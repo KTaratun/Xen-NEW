@@ -188,7 +188,8 @@ public class ButtonScript : MonoBehaviour {
             m_boardScript && m_boardScript.m_isForcedMove && m_parent && m_parent.tag != "Selector" || 
             PanelScript.m_confirmPanel.m_inView && m_parent != PanelScript.m_confirmPanel ||
             m_boardScript && m_boardScript.m_camIsFrozen ||
-            m_boardScript && m_boardScript.m_currCharScript.m_isAI)
+            m_boardScript && m_boardScript.m_currCharScript.m_isAI ||
+            GameObject.Find("Network") && GameObject.Find("Network").GetComponent<ClientScript>().m_connectionId != m_boardScript.m_currCharScript.m_player.m_id)
             return;
 
         TileScript selectedTileScript = m_boardScript.m_currCharScript.m_tile.GetComponent<TileScript>();
@@ -255,243 +256,6 @@ public class ButtonScript : MonoBehaviour {
         }
     }
 
-    public void SetTotalEnergy(string energy)
-    {
-        // Initialize panel with anything
-        GameObject panel = m_energyPanel[0];
-
-        // Check to see how many energy symbols we are going to need
-        if (energy.Length == 1)
-        {
-            m_energyPanel[0].SetActive(true);
-            m_energyPanel[1].SetActive(false);
-            m_energyPanel[2].SetActive(false);
-           // m_energyPanel[3].SetActive(false);
-            panel = m_energyPanel[0];
-        }
-        else if (energy.Length == 2)
-        {
-            m_energyPanel[1].SetActive(true);
-            m_energyPanel[0].SetActive(false);
-            m_energyPanel[2].SetActive(false);
-           // m_energyPanel[3].SetActive(false);
-            panel = m_energyPanel[1];
-        }
-        else if (energy.Length == 3)
-        {
-            m_energyPanel[2].SetActive(true);
-            m_energyPanel[0].SetActive(false);
-            m_energyPanel[1].SetActive(false);
-            //m_energyPanel[3].SetActive(false);
-            panel = m_energyPanel[2];
-        }
-        //else if (energy.Length == 4)
-        //{
-        //    m_energyPanel[3].SetActive(true);
-        //    m_energyPanel[0].SetActive(false);
-        //    m_energyPanel[1].SetActive(false);
-        //    m_energyPanel[2].SetActive(false);
-        //    panel = m_energyPanel[2];
-        //}
-        // Gather engergy symbols into an array
-        Image[] orbs = panel.GetComponentsInChildren<Image>();
-
-        // Assign energy symbols
-        for (int i = 0; i < energy.Length; i++)
-        {
-            if (energy[i] == 'g')
-                orbs[i+1].color = new Color(.7f, 1f, .65f, 1);
-            else if (energy[i] == 'r')
-                orbs[i+1].color = new Color(1, .45f, .5f, 1);
-            else if (energy[i] == 'w')
-                orbs[i+1].color = new Color(.85f, .85f, .85f, 1); // (1, 1, 1, 1)
-            else if (energy[i] == 'b')
-                orbs[i+1].color = new Color(.7f, .65f, 1, 1);
-            else if (energy[i] == 'G')
-                orbs[i+1].color = new Color(.4f, .65f, .35f, 1);
-            else if (energy[i] == 'R')
-                orbs[i+1].color = new Color(.85f, .15f, .2f, 1);
-            else if (energy[i] == 'W')
-                orbs[i+1].color = new Color(1, 1, 1, 1); // (.8f, .8f, .8f, 1)
-            else if (energy[i] == 'B')
-                orbs[i+1].color = new Color(.4f, .35f, 1, 1);
-        }
-    }
-
-    //public void SetUniqueEnergy(string energy)
-    //{
-    //    GameObject panel = energyPanel[0];
-
-    //    int numEle = 0;
-    //    List<char> used = new List<char>();
-
-    //    for (int i = 0; i < energy.Length; i++)
-    //    {
-    //        if (used.Contains(energy[i]))
-    //            continue;
-
-    //        used.Add(energy[i]);
-    //        numEle++;
-    //    }
-
-    //    if (numEle== 1)
-    //    {
-    //        energyPanel[0].SetActive(true);
-    //        panel = energyPanel[0];
-    //    }
-    //    else if (numEle == 2)
-    //    {
-    //        energyPanel[1].SetActive(true);
-    //        panel = energyPanel[1];
-    //    }
-    //    else if (numEle == 3)
-    //    {
-    //        energyPanel[2].SetActive(true);
-    //        panel = energyPanel[2];
-    //    }
-
-    //    Image[] orbs = panel.GetComponentsInChildren<Image>();
-
-    //    for (int i = 0; i < num; i++)
-    //    {
-    //        if (energy[i] == 'g')
-    //            orbs[i + 1].color = new Color(.5f, 1, .5f, 1);
-    //        else if (energy[i] == 'r')
-    //            orbs[i + 1].color = new Color(1, .5f, .5f, 1);
-    //        else if (energy[i] == 'w')
-    //            orbs[i + 1].color = new Color(1, 1, 1, 1);
-    //        else if (energy[i] == 'b')
-    //            orbs[i + 1].color = new Color(.5f, .5f, 1, 1);
-    //        else if (energy[i] == 'G')
-    //            orbs[i + 1].color = new Color(.1f, .9f, .1f, 1);
-    //        else if (energy[i] == 'R')
-    //            orbs[i + 1].color = new Color(.9f, .1f, .1f, 1);
-    //        else if (energy[i] == 'W')
-    //            orbs[i + 1].color = new Color(.9f, .9f, .9f, 1);
-    //        else if (energy[i] == 'B')
-    //            orbs[i + 1].color = new Color(.1f, .1f, .9f, 1);
-    //    }
-    //}
-
-    public void SetCameraTarget()
-    {
-        CameraScript camScript = m_camera.GetComponent<CameraScript>();
-        camScript.m_target = m_object;
-    }
-
-    public void SelectorButton()
-    {
-        string actName = DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME);
-        CharacterScript charScript = m_boardScript.m_currCharScript;
-
-        if (m_parent.name == "Status Selector")
-        {
-            StatusScript statScript = m_parent.m_cScript.GetComponents<StatusScript>()[m_parent.m_cScript.m_currStatus];
-            if (actName == "SUP(Delete)")
-                statScript.DestroyStatus(m_parent.m_cScript.transform.root.gameObject, true);
-            else if (actName == "SUP(Extension)")
-            {
-                statScript.m_lifeSpan += 3 + charScript.m_tempStats[(int)CharacterScript.sts.TEC];
-
-                //for (int i = 0; i < statScript.m_statMod.Length; i++)
-                //{
-                //    if (statScript.m_statMod[i] > 0)
-                //        statScript.m_statMod[i]++;
-                //    else if (statScript.m_statMod[i] < 0)
-                //        statScript.m_statMod[i]--;
-                //}
-            }
-            //else if (actName == "Modification")
-            //    for (int i = 0; i < statScript.m_statMod.Length; i++)
-            //        m_main.m_cScript.m_stats[i] += statScript.m_statMod[i];
-
-            ResumeGame();
-        }
-        else if (m_parent.name == "Energy Selector")
-        {
-
-            if (actName == "ATK(Prismatic)")
-                    AddEnergy(2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
-            else if (actName == "ATK(Deplete)" || actName == "ATK(Syphon)")
-                SubtractEnergy(2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC], m_main.m_cScript.m_player.m_energy);
-        }
-    }
-
-    public void AddEnergy(int _max)
-    {
-        int total = 0;
-        for (int i = 0; i < m_parent.m_images.Length; i++)
-           total += int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
-
-        if (total < _max)
-        {
-            Text text = m_parent.m_images[int.Parse(gameObject.name)].GetComponentInChildren<Text>();
-            text.text = (int.Parse(text.text) + 1).ToString();
-        }
-    }
-
-    public void SubtractEnergy(int _min, int[] _playerEnergy)
-    {
-        int currTotal = 0;
-        int origTotal = 0;
-
-        for (int i = 0; i < m_parent.m_images.Length; i++)
-        {
-            currTotal += int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
-            origTotal += _playerEnergy[i];
-        }
-
-        if (_min > origTotal - currTotal && _playerEnergy[int.Parse(gameObject.name)] > 0)
-        {
-            Text text = m_parent.m_images[int.Parse(gameObject.name)].GetComponentInChildren<Text>();
-            text.text = (int.Parse(text.text) - 1).ToString();
-        }
-    }
-
-    public void ConfirmEnergySelection()
-    {
-        string actName = DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME);
-        CharacterScript charScript = m_boardScript.m_currCharScript;
-        PlayerScript playScript = charScript.m_player;
-        int added = 0;
-
-        if (actName == "ATK(Syphon)" || actName == "ATK(Deplete)")
-        {
-            for (int i = 0; i < m_parent.m_images.Length; i++)
-            {
-                if (actName == "ATK(Syphon)")
-                    playScript.m_energy[i] += m_main.m_cScript.m_player.m_energy[i] - int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
-
-                added += m_main.m_cScript.m_player.m_energy[i] - int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
-                m_main.m_cScript.m_player.m_energy[i] = int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
-            }
-        }
-        else
-            for (int i = 0; i < m_parent.m_images.Length; i++)
-            {
-                added += int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
-                playScript.m_energy[i] += int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
-            }
-
-        if (added > 2)
-            if (actName == "ATK(Prismatic)" || actName == "ATK(Syphon)" || actName == "ATK(Deplete)")
-                charScript.ReceiveDamage((added - 2).ToString(), Color.white);
-
-        playScript.SetEnergyPanel(charScript);
-        ResumeGame();
-    }
-
-    public void ResetEnergySelection()
-    {
-        string actName = DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME);
-        if (actName == "ATK(Syphon)" || actName == "ATK(Deplete)")
-            for (int i = 0; i < m_parent.m_images.Length; i++)
-                m_parent.m_images[i].GetComponentInChildren<Text>().text = m_main.m_cScript.m_player.m_energy[i].ToString();
-        else
-            for (int i = 0; i < m_parent.m_images.Length; i++)
-                m_parent.m_images[i].GetComponentInChildren<Text>().text = "0";
-    }
-
     public void ResumeGame()
     {
         m_parent.m_cScript.m_boardScript.m_isForcedMove = null;
@@ -501,6 +265,9 @@ public class ButtonScript : MonoBehaviour {
 
     public void ConfirmationButton(string _confirm)
     {
+        if (m_boardScript && !m_boardScript.m_currCharScript.CheckIfMine() && _confirm == "Pass")
+            return;
+
         if (!m_main || PanelScript.GetRecentHistory() && PanelScript.GetRecentHistory().name != "Confirmation Panel")
             m_main = PanelScript.GetRecentHistory();
         m_parent.PopulatePanel();
@@ -508,7 +275,7 @@ public class ButtonScript : MonoBehaviour {
 
         if (_confirm == "Action")
         {
-            gameObject.GetComponent<Button>().onClick.AddListener(() => m_object.GetComponent<CharacterScript>().ActionStart());
+            gameObject.GetComponent<Button>().onClick.AddListener(() => m_object.GetComponent<CharacterScript>().ActionStart(false));
         }
         else if (_confirm == "Choose Panel")
         {
@@ -622,4 +389,272 @@ public class ButtonScript : MonoBehaviour {
     {
         SceneManager.LoadScene(_screen);
     }
+
+    public void SetCameraTarget()
+    {
+        CameraScript camScript = m_camera.GetComponent<CameraScript>();
+        camScript.m_target = m_object;
+    }
+
+    public void SelectorButton()
+    {
+        string actName = DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME);
+        CharacterScript charScript = m_boardScript.m_currCharScript;
+
+        if (m_parent.name == "Status Selector")
+        {
+            StatusScript statScript = m_parent.m_cScript.GetComponents<StatusScript>()[m_parent.m_cScript.m_currStatus];
+            if (actName == "SUP(Delete)")
+                statScript.DestroyStatus(m_parent.m_cScript.transform.root.gameObject, true);
+            else if (actName == "SUP(Extension)")
+            {
+                statScript.m_lifeSpan += 3 + charScript.m_tempStats[(int)CharacterScript.sts.TEC];
+
+                //for (int i = 0; i < statScript.m_statMod.Length; i++)
+                //{
+                //    if (statScript.m_statMod[i] > 0)
+                //        statScript.m_statMod[i]++;
+                //    else if (statScript.m_statMod[i] < 0)
+                //        statScript.m_statMod[i]--;
+                //}
+            }
+            //else if (actName == "Modification")
+            //    for (int i = 0; i < statScript.m_statMod.Length; i++)
+            //        m_main.m_cScript.m_stats[i] += statScript.m_statMod[i];
+
+            ResumeGame();
+        }
+        else if (m_parent.name == "Energy Selector")
+        {
+
+            if (actName == "ATK(Prismatic)")
+                    AddEnergy(2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
+            else if (actName == "ATK(Deplete)" || actName == "ATK(Syphon)")
+                SubtractEnergy(2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC], m_main.m_cScript.m_player.m_energy);
+        }
+    }
+
+
+    // Energy
+    public void AddEnergy(int _max)
+    {
+        int total = 0;
+        for (int i = 0; i < m_parent.m_images.Length; i++)
+           total += int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+
+        if (total < _max)
+        {
+            Text text = m_parent.m_images[int.Parse(gameObject.name)].GetComponentInChildren<Text>();
+            text.text = (int.Parse(text.text) + 1).ToString();
+        }
+    }
+
+    public void SubtractEnergy(int _min, int[] _playerEnergy)
+    {
+        int currTotal = 0;
+        int origTotal = 0;
+
+        for (int i = 0; i < m_parent.m_images.Length; i++)
+        {
+            currTotal += int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+            origTotal += _playerEnergy[i];
+        }
+
+        if (_min > origTotal - currTotal && _playerEnergy[int.Parse(gameObject.name)] > 0)
+        {
+            Text text = m_parent.m_images[int.Parse(gameObject.name)].GetComponentInChildren<Text>();
+            text.text = (int.Parse(text.text) - 1).ToString();
+        }
+    }
+
+    public void ConfirmEnergySelection()
+    {
+        string actName = DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME);
+        CharacterScript charScript = m_boardScript.m_currCharScript;
+        PlayerScript playScript = charScript.m_player;
+        CharacterScript tarScript = m_main.m_cScript;
+        PlayerScript tarPlayer = tarScript.m_player;
+        int added = 0;
+
+        if (actName == "ATK(Syphon)" || actName == "ATK(Deplete)")
+        {
+            for (int i = 0; i < m_parent.m_images.Length; i++)
+            {
+                if (actName == "ATK(Syphon)")
+                    playScript.m_energy[i] += m_main.m_cScript.m_player.m_energy[i] - int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+
+                added += tarPlayer.m_energy[i] - int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+                tarPlayer.m_energy[i] = int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+            }
+        }
+        else
+            for (int i = 0; i < m_parent.m_images.Length; i++)
+            {
+                added += int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+                playScript.m_energy[i] += int.Parse(m_parent.m_images[i].GetComponentInChildren<Text>().text);
+            }
+
+        if (added > 2)
+            if (actName == "ATK(Prismatic)" || actName == "ATK(Syphon)" || actName == "ATK(Deplete)")
+                charScript.ReceiveDamage((added - 2).ToString(), Color.white);
+
+        playScript.SetEnergyPanel(charScript);
+
+        if (GameObject.Find("Network"))
+        {
+            string msg = "ENERGYUPDATE~" + playScript.m_id.ToString() + ',';
+
+            for (int i = 0; i < playScript.m_energy.Length; i++)
+                msg += playScript.m_energy[i] + ',';
+
+            msg = msg.Trim(','); msg += '|';
+
+            msg += tarPlayer.m_id.ToString() + ',';
+
+            for (int i = 0; i < tarPlayer.m_energy.Length; i++)
+                msg += tarPlayer.m_energy[i] + ',';
+
+            if (!GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted)
+            {
+                ClientScript c = GameObject.Find("Network").GetComponent<ClientScript>();
+                c.Send(msg, c.m_reliableChannel);
+            }
+            else if (GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted)
+            {
+                ServerScript s = GameObject.Find("Network").GetComponent<ServerScript>();
+                s.Send(msg, s.m_reliableChannel, s.m_clients);
+            }
+        }
+
+        ResumeGame();
+    }
+
+    public void ResetEnergySelection()
+    {
+        string actName = DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME);
+        if (actName == "ATK(Syphon)" || actName == "ATK(Deplete)")
+            for (int i = 0; i < m_parent.m_images.Length; i++)
+                m_parent.m_images[i].GetComponentInChildren<Text>().text = m_main.m_cScript.m_player.m_energy[i].ToString();
+        else
+            for (int i = 0; i < m_parent.m_images.Length; i++)
+                m_parent.m_images[i].GetComponentInChildren<Text>().text = "0";
+    }
+
+    public void SetTotalEnergy(string energy)
+    {
+        // Initialize panel with anything
+        GameObject panel = m_energyPanel[0];
+
+        // Check to see how many energy symbols we are going to need
+        if (energy.Length == 1)
+        {
+            m_energyPanel[0].SetActive(true);
+            m_energyPanel[1].SetActive(false);
+            m_energyPanel[2].SetActive(false);
+           // m_energyPanel[3].SetActive(false);
+            panel = m_energyPanel[0];
+        }
+        else if (energy.Length == 2)
+        {
+            m_energyPanel[1].SetActive(true);
+            m_energyPanel[0].SetActive(false);
+            m_energyPanel[2].SetActive(false);
+           // m_energyPanel[3].SetActive(false);
+            panel = m_energyPanel[1];
+        }
+        else if (energy.Length == 3)
+        {
+            m_energyPanel[2].SetActive(true);
+            m_energyPanel[0].SetActive(false);
+            m_energyPanel[1].SetActive(false);
+            //m_energyPanel[3].SetActive(false);
+            panel = m_energyPanel[2];
+        }
+        //else if (energy.Length == 4)
+        //{
+        //    m_energyPanel[3].SetActive(true);
+        //    m_energyPanel[0].SetActive(false);
+        //    m_energyPanel[1].SetActive(false);
+        //    m_energyPanel[2].SetActive(false);
+        //    panel = m_energyPanel[2];
+        //}
+        // Gather engergy symbols into an array
+        Image[] orbs = panel.GetComponentsInChildren<Image>();
+
+        // Assign energy symbols
+        for (int i = 0; i < energy.Length; i++)
+        {
+            if (energy[i] == 'g')
+                orbs[i+1].color = new Color(.7f, 1f, .65f, 1);
+            else if (energy[i] == 'r')
+                orbs[i+1].color = new Color(1, .45f, .5f, 1);
+            else if (energy[i] == 'w')
+                orbs[i+1].color = new Color(.85f, .85f, .85f, 1); // (1, 1, 1, 1)
+            else if (energy[i] == 'b')
+                orbs[i+1].color = new Color(.7f, .65f, 1, 1);
+            else if (energy[i] == 'G')
+                orbs[i+1].color = new Color(.4f, .65f, .35f, 1);
+            else if (energy[i] == 'R')
+                orbs[i+1].color = new Color(.85f, .15f, .2f, 1);
+            else if (energy[i] == 'W')
+                orbs[i+1].color = new Color(1, 1, 1, 1); // (.8f, .8f, .8f, 1)
+            else if (energy[i] == 'B')
+                orbs[i+1].color = new Color(.4f, .35f, 1, 1);
+        }
+    }
+    
+    //public void SetUniqueEnergy(string energy)
+    //{
+    //    GameObject panel = energyPanel[0];
+
+    //    int numEle = 0;
+    //    List<char> used = new List<char>();
+
+    //    for (int i = 0; i < energy.Length; i++)
+    //    {
+    //        if (used.Contains(energy[i]))
+    //            continue;
+
+    //        used.Add(energy[i]);
+    //        numEle++;
+    //    }
+
+    //    if (numEle== 1)
+    //    {
+    //        energyPanel[0].SetActive(true);
+    //        panel = energyPanel[0];
+    //    }
+    //    else if (numEle == 2)
+    //    {
+    //        energyPanel[1].SetActive(true);
+    //        panel = energyPanel[1];
+    //    }
+    //    else if (numEle == 3)
+    //    {
+    //        energyPanel[2].SetActive(true);
+    //        panel = energyPanel[2];
+    //    }
+
+    //    Image[] orbs = panel.GetComponentsInChildren<Image>();
+
+    //    for (int i = 0; i < num; i++)
+    //    {
+    //        if (energy[i] == 'g')
+    //            orbs[i + 1].color = new Color(.5f, 1, .5f, 1);
+    //        else if (energy[i] == 'r')
+    //            orbs[i + 1].color = new Color(1, .5f, .5f, 1);
+    //        else if (energy[i] == 'w')
+    //            orbs[i + 1].color = new Color(1, 1, 1, 1);
+    //        else if (energy[i] == 'b')
+    //            orbs[i + 1].color = new Color(.5f, .5f, 1, 1);
+    //        else if (energy[i] == 'G')
+    //            orbs[i + 1].color = new Color(.1f, .9f, .1f, 1);
+    //        else if (energy[i] == 'R')
+    //            orbs[i + 1].color = new Color(.9f, .1f, .1f, 1);
+    //        else if (energy[i] == 'W')
+    //            orbs[i + 1].color = new Color(.9f, .9f, .9f, 1);
+    //        else if (energy[i] == 'B')
+    //            orbs[i + 1].color = new Color(.1f, .1f, .9f, 1);
+    //    }
+    //}
 }

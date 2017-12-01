@@ -8,7 +8,7 @@ public class PlayerScript : MonoBehaviour {
     public enum eng { GRN, RED, WHT, BLU, TOT }
 
     public List<CharacterScript> m_characters;
-    public int m_num;
+    public int m_id;
     public int[] m_energy;
     public BoardScript m_bScript;
 
