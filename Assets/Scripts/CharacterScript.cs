@@ -701,6 +701,8 @@ public class CharacterScript : ObjectScript {
                 break;
             case "ATK(Pull)":
                 PullTowards(_currTarget.GetComponent<ObjectScript>(), tileScript, 100);
+                if (targetScript)
+                    targetScript.m_anim.Play("Pulled", -1, 0);
                 break;
             case "ATK(Push)":
                 if (TileScript.CheckForEmptyNeighbor(targetTile) && !m_isAI && m_boardScript.m_currCharScript.CheckIfMine())

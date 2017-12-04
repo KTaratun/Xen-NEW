@@ -4,7 +4,10 @@ using UnityEngine;
 
 public class ProjectileScript : ObjectScript {
 
+    public enum gren { BLAST, EXPLOSION, MAGNET }
+
     private Vector3 m_origin;
+    public GameObject[] m_effects;
 
     // Use this for initialization
     new void Start () {
@@ -22,10 +25,9 @@ public class ProjectileScript : ObjectScript {
     override public void MovingStart(TileScript newScript, bool _isForced, bool _isNetForced)
     {
         if (tag == "Grenade")
-        {
-            Transform[] t = gameObject.GetComponentsInChildren<Transform>(true);
-            t[1].gameObject.SetActive(false);
-        }
+            for (int i = 0; i < m_effects.Length; i++)
+                m_effects[i].SetActive(false);
+        
             // Set active to play the animation again
             gameObject.SetActive(true);
             m_origin = m_boardScript.m_currCharScript.m_body[(int)CharacterScript.bod.RIGHT_HAND].transform.position;
@@ -82,8 +84,13 @@ public class ProjectileScript : ObjectScript {
     {
         if (tag == "Grenade")
         {
-            Transform[] t = gameObject.GetComponentsInChildren<Transform>(true);
-            t[1].gameObject.SetActive(true);
+            if (DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME) == "ATK(Magnet)")
+                m_effects[(int)gren.MAGNET].SetActive(true);
+            else if (DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME) == "ATK(Blast)")
+                m_effects[(int)gren.BLAST].SetActive(true);
+            else
+                m_effects[(int)gren.EXPLOSION].SetActive(true);
+
             m_boardScript.m_currCharScript.m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Explosion Sound 1"));
         }
         else

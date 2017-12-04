@@ -192,40 +192,10 @@ public class ButtonScript : MonoBehaviour {
             GameObject.Find("Network") && GameObject.Find("Network").GetComponent<ClientScript>().m_connectionId != m_boardScript.m_currCharScript.m_player.m_id)
             return;
 
-        TileScript selectedTileScript = m_boardScript.m_currCharScript.m_tile.GetComponent<TileScript>();
-        if (selectedTileScript.m_radius.Count > 0)
-            selectedTileScript.ClearRadius();
+        if (!CloseButton())
+            return;
 
-        if (m_boardScript.m_highlightedTile)
-        {
-            selectedTileScript = m_boardScript.m_highlightedTile.GetComponent<TileScript>();
-            selectedTileScript.ClearRadius();
-        }
-
-        if (m_boardScript.m_currButton)
-        {
-            m_boardScript.m_currButton.GetComponent<Image>().color = m_boardScript.m_currButton.GetComponent<ButtonScript>().m_oldColor;
-            if (m_boardScript.m_currButton.GetComponent<PanelScript>())
-                m_boardScript.m_currButton.GetComponent<PanelScript>().m_inView = false;
-
-            if (gameObject == m_boardScript.m_currButton.gameObject)
-            {
-                m_boardScript.m_currButton = null;
-                m_boardScript.m_currCharScript.m_currAction = "";
-                if (!m_hovered)
-                    GetComponent<ButtonScript>().m_main.ClosePanel();
-                return;
-            }
-        }
-
-        m_oldColor = GetComponent<Image>().color;
-        GetComponent<Image>().color = Color.cyan;
-        if (GetComponent<PanelScript>())
-            GetComponent<PanelScript>().m_inView = true;
-        m_boardScript.m_currButton = GetComponent<Button>();
-        m_boardScript.m_currCharScript.m_currAction = m_action;
-        m_boardScript.m_currButton.GetComponent<ButtonScript>().m_main.m_cScript = m_boardScript.m_currCharScript;
-        m_boardScript.m_currButton.GetComponent<ButtonScript>().m_main.PopulatePanel();
+        OpenButton();
 
         if (gameObject.tag == "Action Button")
         {
@@ -432,6 +402,49 @@ public class ButtonScript : MonoBehaviour {
             else if (actName == "ATK(Deplete)" || actName == "ATK(Syphon)")
                 SubtractEnergy(2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC], m_main.m_cScript.m_player.m_energy);
         }
+    }
+
+    public bool CloseButton()
+    {
+        TileScript selectedTileScript = m_boardScript.m_currCharScript.m_tile.GetComponent<TileScript>();
+        if (selectedTileScript.m_radius.Count > 0)
+            selectedTileScript.ClearRadius();
+
+        if (m_boardScript.m_highlightedTile)
+        {
+            selectedTileScript = m_boardScript.m_highlightedTile.GetComponent<TileScript>();
+            selectedTileScript.ClearRadius();
+        }
+
+        if (m_boardScript.m_currButton)
+        {
+            m_boardScript.m_currButton.GetComponent<Image>().color = m_boardScript.m_currButton.GetComponent<ButtonScript>().m_oldColor;
+            if (m_boardScript.m_currButton.GetComponent<PanelScript>())
+                m_boardScript.m_currButton.GetComponent<PanelScript>().m_inView = false;
+
+            if (gameObject == m_boardScript.m_currButton.gameObject)
+            {
+                m_boardScript.m_currButton = null;
+                m_boardScript.m_currCharScript.m_currAction = "";
+                if (!m_hovered)
+                    GetComponent<ButtonScript>().m_main.ClosePanel();
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public void OpenButton()
+    {
+        m_oldColor = GetComponent<Image>().color;
+        GetComponent<Image>().color = Color.cyan;
+        if (GetComponent<PanelScript>())
+            GetComponent<PanelScript>().m_inView = true;
+        m_boardScript.m_currButton = GetComponent<Button>();
+        m_boardScript.m_currCharScript.m_currAction = m_action;
+        m_boardScript.m_currButton.GetComponent<ButtonScript>().m_main.m_cScript = m_boardScript.m_currCharScript;
+        m_boardScript.m_currButton.GetComponent<ButtonScript>().m_main.PopulatePanel();
     }
 
 

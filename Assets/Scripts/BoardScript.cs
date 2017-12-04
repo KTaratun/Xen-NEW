@@ -281,14 +281,8 @@ public class BoardScript : MonoBehaviour {
         else if (Input.GetKeyDown(KeyCode.Space) && !PanelScript.GetPanel("Choose Panel").m_inView)
         {
             if (m_currButton)
-            {
-                m_currButton.GetComponent<Image>().color = Color.white;
-                m_currButton.GetComponent<ButtonScript>().m_main.ClosePanel();
-                m_currButton = null;
-                TileScript selectedTileScript = m_currCharScript.m_tile.GetComponent<TileScript>();
-                if (selectedTileScript.m_radius.Count > 0)
-                    selectedTileScript.ClearRadius();
-            }
+                m_currButton.GetComponent<ButtonScript>().CloseButton();
+
             PanelScript.GetPanel("Confirmation Panel").m_buttons[1].GetComponent<ButtonScript>().ConfirmationButton("Pass");
         }
         else if (Input.GetKey(KeyCode.E) && w != 0)
