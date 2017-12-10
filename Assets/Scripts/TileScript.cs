@@ -68,9 +68,6 @@ public class TileScript : NetworkBehaviour {
         }
         else if (m_holding && m_holding.tag == "Player" && !m_boardScript.m_isForcedMove)
         {
-            if (m_boardScript.m_selected != this)
-                return;
-
             m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_holding;
 
             if (m_holding == m_boardScript.m_currCharScript.gameObject && m_boardScript.m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] < 2)

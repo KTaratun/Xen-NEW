@@ -361,6 +361,7 @@ public class CharacterScript : ObjectScript {
         int actRng = int.Parse(DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RNG)) + m_tempStats[(int)sts.RNG];
         int actRad = int.Parse(DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RAD)) + m_tempStats[(int)sts.RAD];
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
+
         TileScript selectedTileScript = m_boardScript.m_selected;
 
         if (actRad == 0 && UniqueActionProperties(m_currAction, uniAct.NON_RAD) < 0) // single
@@ -395,6 +396,9 @@ public class CharacterScript : ObjectScript {
                 m_anim.Play("Sweep", -1, 0);
             else
                 m_anim.Play("Throw", -1, 0);
+
+            if (actName == "ATK(Pirecing)" || actName == "ATK(Diagnal)")
+                m_boardScript.m_selected = selectedTileScript.m_targetRadius[selectedTileScript.m_targetRadius.Count - 1];
         }
 
         m_boardScript.m_camIsFrozen = true;
@@ -674,10 +678,10 @@ public class CharacterScript : ObjectScript {
                 }
                 break;
             case "ATK(Lag)":
-                targetScript.m_tempStats[(int)sts.SPD] -= 2 + m_tempStats[(int)sts.TEC];
+                AlterSpeed(targetScript, -2, true);
                 break;
             case "ATK(Synch)":
-                targetScript.m_tempStats[(int)sts.SPD] += 2 + m_tempStats[(int)sts.TEC];
+                AlterSpeed(targetScript, 2, true);
                 break;
             case "ATK(Dash)":
                 if (TileScript.CheckForEmptyNeighbor(tileScript) && !m_isAI && m_boardScript.m_currCharScript.CheckIfMine())
@@ -691,7 +695,7 @@ public class CharacterScript : ObjectScript {
                 targetScript.m_player.RemoveRandomEnergy(1);
                 break;
             case "ATK(Overclock)":
-                m_tempStats[(int)sts.SPD] += 3 + m_tempStats[(int)sts.TEC];
+                AlterSpeed(this, 3, true);
                 break;
             case "ATK(Lunge)":
                 PullTowards(this, targetScript.m_tile, 100);
@@ -1109,6 +1113,23 @@ public class CharacterScript : ObjectScript {
         m_isDiabled[_ind] = 2; // 1 == temp, 2 == perm
         m_boardScript.m_isForcedMove = null;
         PanelScript.CloseHistory();
+    }
+
+    public void AlterSpeed(CharacterScript _targetScript, int _speed, bool _isTec)
+    {
+        int finalVal = _speed;
+        if (_isTec)
+            finalVal += m_tempStats[(int)sts.TEC];
+
+        if (finalVal == 0)
+            return;
+
+        _targetScript.m_tempStats[(int)sts.SPD] += finalVal;
+
+        if (finalVal > 0)
+            _targetScript.PlayAnimation(prtcles.GAIN_STATUS, StatusScript.c_buffColor, "Speed Symbol");
+        else
+            _targetScript.PlayAnimation(prtcles.GAIN_STATUS, StatusScript.c_debuffColor, "Speed Symbol");
     }
 
 
