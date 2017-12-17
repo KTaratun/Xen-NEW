@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Action : StateMachineBehaviour {
 
-    public enum aniAct { ACT_TIME, MELEE_ANI, RANGED_ANI}
+    public enum aniAct { ACT_TIME, MELEE_ANI, RANGED_ANI, BEAM_ANI}
 
     bool m_hasDoneAction;
 
@@ -32,23 +32,30 @@ public class Action : StateMachineBehaviour {
             BoardScript board = animator.GetComponentInParent<ObjectScript>().m_boardScript;
             CharacterScript chara = animator.GetComponentInParent<CharacterScript>();
 
-            if (stateInfo.fullPathHash == Animator.StringToHash("Base.Throw"))
-            {
-                board.m_projectiles[(int)BoardScript.prjcts.GRENADE].GetComponent<ObjectScript>().MovingStart(board.m_selected, true, false);
-                chara.m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Grenade Shot 1"));
-            }
-            else if (stateInfo.fullPathHash == Animator.StringToHash("Base.Ranged") && 
-                DatabaseScript.GetActionData(chara.m_currAction, DatabaseScript.actions.NAME) == "ATK(Pull)")
+            if (DatabaseScript.GetActionData(chara.m_currAction, DatabaseScript.actions.NAME) == "ATK(Pull)" ||
+                DatabaseScript.GetActionData(chara.m_currAction, DatabaseScript.actions.NAME) == "ATK(Piercing)" ||
+                DatabaseScript.GetActionData(chara.m_currAction, DatabaseScript.actions.NAME) == "ATK(Diagnal)")
             {
                 //board.m_projectiles[(int)BoardScript.prjcts.BEAM].GetComponent<ObjectScript>().MovingStart(board.m_selected, true, false);
                 //chara.m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Gun Sound 1"));
 
                 BeamScript bS = board.m_projectiles[(int)BoardScript.prjcts.BEAM].GetComponent<BeamScript>();
                 bS.m_origin = board.m_currCharScript.m_body[(int)CharacterScript.bod.RIGHT_HAND].transform;
-                bS.m_destination = chara.m_targets[0].transform;
+
+                if (DatabaseScript.GetActionData(chara.m_currAction, DatabaseScript.actions.NAME) == "ATK(Piercing)" ||
+                DatabaseScript.GetActionData(chara.m_currAction, DatabaseScript.actions.NAME) == "ATK(Diagnal)")
+                    bS.m_destination = board.m_selected.transform;
+                else
+                    bS.m_destination = board.m_currCharScript.m_targets[0].transform;
+
                 board.m_projectiles[(int)BoardScript.prjcts.BEAM].SetActive(true);
                 //bS.m_origin = board.m_currCharScript.m_body[(int)CharacterScript.bod.RIGHT_HAND].transform;
                 //bS.m_destination = chara.m_targets[0].transform;
+            }
+            else if (stateInfo.fullPathHash == Animator.StringToHash("Base.Throw"))
+            {
+                board.m_projectiles[(int)BoardScript.prjcts.GRENADE].GetComponent<ObjectScript>().MovingStart(board.m_selected, true, false);
+                chara.m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Grenade Shot 1"));
             }
             else if (stateInfo.fullPathHash == Animator.StringToHash("Base.Ranged"))
             {

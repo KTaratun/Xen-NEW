@@ -19,7 +19,7 @@ public class DatabaseScript : MonoBehaviour {
 	IEnumerator Start ()
     {
         //string ip = "http://" + Network.player.ipAddress;
-        string ip = "http://192.168.1.15";
+        string ip = "http://192.168.1.16";
 
         //if (!GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted)
         //{

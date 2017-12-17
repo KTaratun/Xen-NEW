@@ -56,22 +56,32 @@ public class BeamScript : MonoBehaviour {
 
         if (actName == "ATK(Diagnal)" || actName == "ATK(Piercing)")
         {
-            if (m_counter < 1 && gameObject.activeSelf)
+            if (m_counter >= 0 && gameObject.activeSelf)
             {
-                m_counter += m_drawSpeed;
+                if (m_counter == 3)
+                    m_boardScript.m_currCharScript.Action();
+
+                //if (m_counter < 1)
+                    m_lineRenderer.SetWidth(m_counter, m_counter);
+
+                m_counter -= m_drawSpeed;
 
                 float x = Mathf.Lerp(0, m_dist, m_counter);
 
                 // Get unit vector in the desired direction, multiply by the desired length and add the starting point
                 pointAlongLine = x * Vector3.Normalize(pointB - pointA) + pointA;
 
-                if (m_counter >= 1)
-                    m_boardScript.m_currCharScript.Action();
+            }
+
+            if (m_counter < 0)
+            {
+                m_counter = 0;
+                gameObject.SetActive(false);
             }
 
             m_lineRenderer.SetPosition(0, m_origin.position);
             m_lineRenderer.SetPosition(1, pointAlongLine);
-            m_particle.transform.position = m_lineRenderer.GetPosition(1);
+            //m_particle.transform.position = m_lineRenderer.GetPosition(1);
         }
     }
 
@@ -86,13 +96,16 @@ public class BeamScript : MonoBehaviour {
         m_lineRenderer.SetPosition(1, m_origin.position);
 
         string actName = DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME);
-        m_lineRenderer.SetWidth(1f, 1f);
+        m_lineRenderer.SetWidth(1.0f, 1.0f);
 
         m_dist = Vector3.Distance(m_origin.position, m_destination.position);
         m_counter = 0;
 
         if (actName == "ATK(Diagnal)" || actName == "ATK(Piercing)")
+        {
             m_counter = 3.0f;
+            m_lineRenderer.SetWidth(3.0f, 3.0f);
+        }
 
         m_backwards = false;
     }

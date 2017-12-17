@@ -57,6 +57,7 @@ public class CharacterScript : ObjectScript {
     public GameObject m_popupText;
     public GameObject[] m_popupSpheres;
     public GameObject[] m_colorDisplay;
+    public GameObject[] m_RangeCheck;
 
     // References
     public List<GameObject> m_body;
@@ -256,6 +257,9 @@ public class CharacterScript : ObjectScript {
                 m_popupText.SetActive(false);
             }
         }
+
+        m_RangeCheck[0].transform.parent.LookAt(2 * m_RangeCheck[0].transform.parent.position - m_boardScript.m_camera.transform.position);
+
     }
 
 
@@ -275,7 +279,10 @@ public class CharacterScript : ObjectScript {
                 m_hasActed[(int)trn.MOV] += 2;
                 PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[(int)trn.MOV].interactable = false;
                 if (m_boardScript.m_currButton)
-                    m_boardScript.m_currButton.GetComponent<Image>().color = Color.white;
+                {
+                    GetComponent<Image>().color = Color.white;
+                    m_boardScript.TurnMoveSelectOff();
+                }
             }
 
         print(m_name + " has started moving.\n");
@@ -358,6 +365,9 @@ public class CharacterScript : ObjectScript {
     {
         transform.LookAt(m_boardScript.m_selected.transform);
 
+        // Sometimes the character moves when we look at? We have to adjust in case this happens
+        transform.SetPositionAndRotation(m_tile.transform.position, transform.rotation);
+
         int actRng = int.Parse(DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RNG)) + m_tempStats[(int)sts.RNG];
         int actRad = int.Parse(DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RAD)) + m_tempStats[(int)sts.RAD];
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
@@ -390,15 +400,21 @@ public class CharacterScript : ObjectScript {
 
             if (actName == "ATK(Slash)")
                 m_anim.Play("Slash", -1, 0);
-            else if (UniqueActionProperties(m_currAction, uniAct.TAR_RES) == (int)TileScript.targetRestriction.HORVERT)
+            else if (actName == "ATK(Stab)")//(UniqueActionProperties(m_currAction, uniAct.TAR_RES) == (int)TileScript.targetRestriction.HORVERT)
                 m_anim.Play("Stab", -1, 0);
             else if (actRng <= 1)
                 m_anim.Play("Sweep", -1, 0);
             else
                 m_anim.Play("Throw", -1, 0);
 
-            if (actName == "ATK(Pirecing)" || actName == "ATK(Diagnal)")
-                m_boardScript.m_selected = selectedTileScript.m_targetRadius[selectedTileScript.m_targetRadius.Count - 1];
+            if (actName == "ATK(Piercing)" || actName == "ATK(Diagnal)")
+            {
+                for (int i = 0; i < selectedTileScript.m_targetRadius.Count; i++)
+                {
+                    if (i == 0 || TileScript.CaclulateDistance(selectedTileScript.m_targetRadius[i], m_tile) > TileScript.CaclulateDistance(m_boardScript.m_selected, m_tile))
+                        m_boardScript.m_selected = selectedTileScript.m_targetRadius[i];
+                }
+            }
         }
 
         m_boardScript.m_camIsFrozen = true;
@@ -438,6 +454,9 @@ public class CharacterScript : ObjectScript {
                 s.Send(msg, s.m_reliableChannel, s.m_clients);
             }
         }
+
+        if (m_anim.GetCurrentAnimatorStateInfo(0).fullPathHash == Animator.StringToHash("Base.Idle Melee"))
+            return;
     }
 
     public void Action()
@@ -456,6 +475,9 @@ public class CharacterScript : ObjectScript {
             teamBuff = true;
         else if (UniqueActionProperties(m_currAction, uniAct.SOLO_BUFF) >= 0)
             soloBuff = true;
+
+        if (!m_isFree && PlayerScript.CheckIfGains(actEng) && gainOK || !m_isFree && !PlayerScript.CheckIfGains(actEng))
+            EnergyConversion(actEng);
 
         if (m_targets.Count > 0)
         {
@@ -480,9 +502,7 @@ public class CharacterScript : ObjectScript {
         if (teamBuff || soloBuff && gainOK)
             Ability(gameObject, actName);
 
-        if (!m_isFree && PlayerScript.CheckIfGains(actEng) && gainOK || !m_isFree && !PlayerScript.CheckIfGains(actEng))
-            EnergyConversion(actEng);
-        else
+        if (m_isFree)
             PanelScript.GetPanel("Choose Panel").ClosePanel();
 
         m_exp += actEng.Length;
@@ -1008,6 +1028,10 @@ public class CharacterScript : ObjectScript {
         if (_uniAct == uniAct.TAR_SELF && int.Parse(DatabaseScript.GetActionData(_action, DatabaseScript.actions.RAD)) > 0)
             return 1;
 
+        if (_uniAct == uniAct.IS_NOT_BLOCK && !CheckIfAttack(DatabaseScript.GetActionData(_action, DatabaseScript.actions.NAME)) ||
+            _uniAct == uniAct.IS_NOT_BLOCK && int.Parse(DatabaseScript.GetActionData(_action, DatabaseScript.actions.RAD)) > 0)
+            return 1;
+
         return -1;
     }
 
@@ -1413,7 +1437,7 @@ public class CharacterScript : ObjectScript {
 
     private void EnergyConversion(string _energy)
     {
-        // Gain or use energy
+        // Update player's energy after using an action
 
         // Assign _energy symbols
         for (int i = 0; i < _energy.Length; i++)
@@ -1609,6 +1633,18 @@ public class CharacterScript : ObjectScript {
                     break;
                 }
         }
+    }
+
+    public int ActFinalDistAfterMods(string _action)
+    {
+        int finalRng = int.Parse(DatabaseScript.GetActionData(_action, DatabaseScript.actions.RNG)) + m_tempStats[(int)sts.RNG];
+
+        if (UniqueActionProperties(_action, uniAct.RNG_MOD) >= 1)
+            finalRng += m_tempStats[(int)sts.TEC];
+
+        finalRng += int.Parse(DatabaseScript.GetActionData(_action, DatabaseScript.actions.RAD)) + m_tempStats[(int)sts.RAD];
+
+        return finalRng;
     }
 
     //public void SparkRandomly()

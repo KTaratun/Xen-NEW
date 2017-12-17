@@ -139,8 +139,8 @@ public class TileScript : NetworkBehaviour {
             tR = (targetRestriction)CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.TAR_RES);
 
         bool isBlockable = true;
-        if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.IS_NOT_BLOCK) >= 0 ||
-            m_boardScript.m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0)
+        if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.IS_NOT_BLOCK) >= 0)// ||
+            //m_boardScript.m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0)
             isBlockable = false;
 
         FetchTilesWithinRange(currChar, rad, Color.yellow, targetSelf, tR, isBlockable);
@@ -428,8 +428,10 @@ public class TileScript : NetworkBehaviour {
         return false;
     }
 
-    private bool CheckIfBlocked(TileScript _target)
+    public bool CheckIfBlocked(TileScript _target)
     {
+        // Returns true if blocked
+
         float laserMaxLength = Vector3.Distance(transform.position, _target.gameObject.transform.position);
 
         // REFACTOR: Don't instantiate during run time as much as possible

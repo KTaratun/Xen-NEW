@@ -456,6 +456,8 @@ public class BoardScript : MonoBehaviour {
 
             if (!PanelScript.GetPanel("StatusViewer Panel").m_cScript)
                 PanelScript.GetPanel("StatusViewer Panel").ClosePanel();
+
+            TurnMoveSelectOff();
             return;
         }
 
@@ -475,6 +477,9 @@ public class BoardScript : MonoBehaviour {
             if (hit.collider.gameObject.tag == "Player")
                 charScript = hit.collider.gameObject.GetComponent<CharacterScript>();
         }
+
+        if (tScript && PanelScript.GetPanel("HUD Panel LEFT").m_panels[2].m_buttons[0].GetComponent<Image>().color == Color.cyan)
+            CheckRange(tScript);
 
         // If you hit a character/character tile, show their info
         if (charScript)
@@ -1132,5 +1137,45 @@ public class BoardScript : MonoBehaviour {
                 return;
             }
         }
+    }
+
+    private void CheckRange(TileScript _hTile)
+    {
+        for (int i = 0; i < m_characters.Count; i++)
+        {
+            CharacterScript charScript = m_characters[i].GetComponent<CharacterScript>();
+
+            if (charScript == m_currCharScript)
+                continue;
+
+            charScript.m_RangeCheck[0].transform.parent.gameObject.SetActive(true);
+
+            if (charScript.m_isAlive)
+            {
+                for (int j = 0; j < m_currCharScript.m_actions.Length; j++)
+                {
+                    int finalRng = m_currCharScript.ActFinalDistAfterMods(m_currCharScript.m_actions[j]);
+
+                    if (finalRng < TileScript.CaclulateDistance(_hTile, charScript.m_tile) || _hTile.CheckIfBlocked(charScript.m_tile) &&
+                            CharacterScript.UniqueActionProperties(m_currCharScript.m_actions[j], CharacterScript.uniAct.IS_NOT_BLOCK) < 1)
+                        charScript.m_RangeCheck[j].SetActive(false);
+                    else
+                    {
+                        charScript.m_RangeCheck[j].SetActive(true);
+                        charScript.m_RangeCheck[j].GetComponent<TextMesh>().text = DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.NAME);
+                        if (m_currCharScript.m_player.CheckEnergy(DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.ENERGY)))
+                            charScript.m_RangeCheck[j].GetComponent<TextMesh>().offsetZ = -20;
+                        else
+                            charScript.m_RangeCheck[j].GetComponent<TextMesh>().offsetZ = 10;
+                    }
+                }
+            }
+        }
+    }
+
+    public void TurnMoveSelectOff()
+    {
+        for (int i = 0; i < m_characters.Count; i++)
+            m_characters[i].GetComponent<CharacterScript>().m_RangeCheck[0].transform.parent.gameObject.SetActive(false);
     }
 }

@@ -422,6 +422,9 @@ public class ButtonScript : MonoBehaviour {
             if (m_boardScript.m_currButton.GetComponent<PanelScript>())
                 m_boardScript.m_currButton.GetComponent<PanelScript>().m_inView = false;
 
+            if (m_boardScript.m_currButton.name == "Move")
+                m_boardScript.TurnMoveSelectOff();
+
             if (gameObject == m_boardScript.m_currButton.gameObject)
             {
                 m_boardScript.m_currButton = null;
