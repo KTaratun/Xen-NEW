@@ -466,39 +466,18 @@ public class TileScript : NetworkBehaviour {
 
     private TileScript Diagonal(TileScript _neighbor, TileScript _originalTile, int _neiInd)
     {
-        TileScript currNeighbor = _neighbor;
-        // nbors { left, right, top, bottom };
-        if (_neiInd == (int)nbors.left && currNeighbor.m_neighbors[(int)nbors.top])
-        {
-            TileScript newNeighbor = currNeighbor.m_neighbors[(int)nbors.top].GetComponent<TileScript>();
-            int dif = Mathf.Abs(newNeighbor.m_x - _originalTile.m_x) - Mathf.Abs(newNeighbor.m_z - _originalTile.m_z);
+        int next = _neiInd + 1;
 
-            if  (dif == 0)
-                return currNeighbor.m_neighbors[(int)nbors.top];
-        }
-        else if (_neiInd == (int)nbors.top && currNeighbor.m_neighbors[(int)nbors.right])
+        if (next == 4)
+            next = 0;
+
+        if (_neighbor.m_neighbors[next])
         {
-            TileScript newNeighbor = currNeighbor.m_neighbors[(int)nbors.right].GetComponent<TileScript>();
+            TileScript newNeighbor = _neighbor.m_neighbors[next].GetComponent<TileScript>();
             int dif = Mathf.Abs(newNeighbor.m_x - _originalTile.m_x) - Mathf.Abs(newNeighbor.m_z - _originalTile.m_z);
 
             if (dif == 0)
-                return currNeighbor.m_neighbors[(int)nbors.right];
-        }
-        else if (_neiInd == (int)nbors.right && currNeighbor.m_neighbors[(int)nbors.bottom])
-        {
-            TileScript newNeighbor = currNeighbor.m_neighbors[(int)nbors.bottom].GetComponent<TileScript>();
-            int dif = Mathf.Abs(newNeighbor.m_x - _originalTile.m_x) - Mathf.Abs(newNeighbor.m_z - _originalTile.m_z);
-
-            if (dif == 0)
-                return currNeighbor.m_neighbors[(int)nbors.bottom];
-        }
-        else if (_neiInd == (int)nbors.bottom && currNeighbor.m_neighbors[(int)nbors.left])
-        {
-            TileScript newNeighbor = currNeighbor.m_neighbors[(int)nbors.left].GetComponent<TileScript>();
-            int dif = Mathf.Abs(newNeighbor.m_x - _originalTile.m_x) - Mathf.Abs(newNeighbor.m_z - _originalTile.m_z);
-
-            if (dif == 0)
-                return currNeighbor.m_neighbors[(int)nbors.left];
+                return _neighbor.m_neighbors[next];
         }
 
         return null;

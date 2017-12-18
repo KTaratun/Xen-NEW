@@ -17,7 +17,7 @@ public class CharacterScript : ObjectScript {
         LEFT_SHOULDER, NECK, RIGHT_SHOULDER, LEFT_TOE_END, RIGHT_TOE_END, LEFT_ARM,
         HEAD, RIGHT_ARM, LEFT_FORE_ARM, HEAD_TOP_END, RIGHT_FORE_ARM, LEFT_HAND,
         RIGHT_HAND}
-    public enum prtcles { GUN_SHOT, PROJECTILE_HIT, CHAR_MARK, GAIN_STATUS}
+    public enum prtcles { GUN_SHOT, PROJECTILE_HIT, CHAR_MARK, GAIN_STATUS, HEALTH_EYE}
 
     static public Color c_green = new Color(.45f, .7f, .4f, 1);
     static public Color c_red = new Color(.8f, .1f, .15f, 1);
@@ -198,17 +198,27 @@ public class CharacterScript : ObjectScript {
     private void UpdateOverheadItems()
     {
         // Update Health bar
+        //if (m_isAlive) //m_healthBar.activeSelf
+        //{
+        //    Transform outline = m_healthBar.transform.parent;
+        //
+        //    outline.LookAt(2 * outline.position - m_boardScript.m_camera.transform.position);
+        //    m_healthBar.transform.LookAt(2 * m_healthBar.transform.position - m_boardScript.m_camera.transform.position);
+        //    float ratio = (float)(m_stats[(int)sts.HP] - (float)m_tempStats[(int)sts.HP]) / (float)m_stats[(int)sts.HP];
+        //
+        //    Renderer hpRend = m_healthBar.GetComponent<Renderer>();
+        //    hpRend.material.color = new Color(ratio + 0.2f, 1 - ratio + 0.2f, 0.2f, 1);
+        //    m_healthBar.transform.localScale = new Vector3(0.95f - ratio, m_healthBar.transform.localScale.y, m_healthBar.transform.localScale.z);
+        //}
+        //else
+        //    m_statusSymbol.transform.LookAt(2 * m_statusSymbol.transform.position - m_boardScript.m_camera.transform.position);
+
         if (m_isAlive) //m_healthBar.activeSelf
         {
-            Transform outline = m_healthBar.transform.parent;
-
-            outline.LookAt(2 * outline.position - m_boardScript.m_camera.transform.position);
-            m_healthBar.transform.LookAt(2 * m_healthBar.transform.position - m_boardScript.m_camera.transform.position);
             float ratio = (float)(m_stats[(int)sts.HP] - (float)m_tempStats[(int)sts.HP]) / (float)m_stats[(int)sts.HP];
-
+        
             Renderer hpRend = m_healthBar.GetComponent<Renderer>();
-            hpRend.material.color = new Color(ratio + 0.2f, 1 - ratio + 0.2f, 0.2f, 1);
-            m_healthBar.transform.localScale = new Vector3(0.95f - ratio, m_healthBar.transform.localScale.y, m_healthBar.transform.localScale.z);
+            m_particles[(int)prtcles.HEALTH_EYE].GetComponent<ParticleSystem>().startColor = new Color(ratio + 0.2f, 1 - ratio + 0.2f, 0.2f, 1);
         }
         else
             m_statusSymbol.transform.LookAt(2 * m_statusSymbol.transform.position - m_boardScript.m_camera.transform.position);
@@ -280,7 +290,7 @@ public class CharacterScript : ObjectScript {
                 PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[(int)trn.MOV].interactable = false;
                 if (m_boardScript.m_currButton)
                 {
-                    GetComponent<Image>().color = Color.white;
+                    m_boardScript.m_currButton.GetComponent<Image>().color = Color.white;
                     m_boardScript.TurnMoveSelectOff();
                 }
             }
@@ -1645,6 +1655,19 @@ public class CharacterScript : ObjectScript {
         finalRng += int.Parse(DatabaseScript.GetActionData(_action, DatabaseScript.actions.RAD)) + m_tempStats[(int)sts.RAD];
 
         return finalRng;
+    }
+
+    static public bool IsWithinRange(CharacterScript _char, string _action, TileScript _origin, TileScript _target)
+    {
+        int finalRng = _char.ActFinalDistAfterMods(_action);
+
+        if (finalRng < TileScript.CaclulateDistance(_origin, _target) || _origin.CheckIfBlocked(_target) &&
+                UniqueActionProperties(_action, uniAct.IS_NOT_BLOCK) < 1 ||
+                (TileScript.targetRestriction)UniqueActionProperties(_action, uniAct.TAR_RES) == TileScript.targetRestriction.HORVERT && _origin.m_x != _target.m_x && _origin.m_z != _target.m_z ||
+                (TileScript.targetRestriction)UniqueActionProperties(_action, uniAct.TAR_RES) == TileScript.targetRestriction.DIAGONAL && Mathf.Abs(_origin.m_x - _target.m_x) - Mathf.Abs(_origin.m_z - _target.m_z) == 0)
+            return false;
+
+        return true;
     }
 
     //public void SparkRandomly()

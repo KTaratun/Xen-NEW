@@ -54,6 +54,8 @@ public class BoardScript : MonoBehaviour {
         m_camIsFrozen = false;
         m_netOBJs = new GameObject[60];
 
+        m_battle = false;
+
         GameObject[] projs = Resources.LoadAll<GameObject>("OBJs/Projectiles");
         m_projectiles = new GameObject[projs.Length];
 
@@ -75,9 +77,7 @@ public class BoardScript : MonoBehaviour {
         InitBoardTiles();
         AssignNeighbors();
 
-        if (m_field)
-            m_battle = false;
-        else
+        if (!m_field)
             BattleOverview();
     }
 
@@ -248,8 +248,8 @@ public class BoardScript : MonoBehaviour {
         if (Input.GetMouseButtonDown(0))
         {
             PanelScript rEndPan = PanelScript.GetPanel("Round End Panel");
-            if (rEndPan.m_inView && rEndPan.m_text[0].text == "BATTLE START" && !GameObject.Find("Network") ||
-                rEndPan.m_inView && rEndPan.m_text[0].text == "BATTLE START" && GameObject.Find("Network") && GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted)
+            if (rEndPan.m_inView && rEndPan.m_text[0].text == "BATTLE START" && !GameObject.Find("Network") && m_obstacles.Count == 0 ||
+                rEndPan.m_inView && rEndPan.m_text[0].text == "BATTLE START" && GameObject.Find("Network") && GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted && m_obstacles.Count == 0)
                 StartCoroutine(StartBattle());
             else if (rEndPan.m_inView && rEndPan.m_text[0].text[rEndPan.m_text[0].text.Length - 1] == 'S')
             {
@@ -1145,31 +1145,36 @@ public class BoardScript : MonoBehaviour {
         {
             CharacterScript charScript = m_characters[i].GetComponent<CharacterScript>();
 
-            if (charScript == m_currCharScript)
+            if (charScript == m_currCharScript || !charScript.m_isAlive)
                 continue;
 
-            charScript.m_RangeCheck[0].transform.parent.gameObject.SetActive(true);
+            bool atLeastOne = false;
 
-            if (charScript.m_isAlive)
+            for (int j = 0; j < m_currCharScript.m_actions.Length; j++)
             {
-                for (int j = 0; j < m_currCharScript.m_actions.Length; j++)
+                //if (CharacterScript.IsWithinRange(m_currCharScript, m_currCharScript.m_actions[j], _hTile, charScript.m_tile))
+                //{
+                //    charScript.m_RangeCheck[j].SetActive(true);
+                //    charScript.m_RangeCheck[j].GetComponent<TextMesh>().text = DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.NAME);
+                //    if (m_currCharScript.m_player.CheckEnergy(DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.ENERGY)))
+                //        charScript.m_RangeCheck[j].GetComponent<TextMesh>().offsetZ = -20;
+                //    else
+                //        charScript.m_RangeCheck[j].GetComponent<TextMesh>().offsetZ = 10;
+                //}
+                if (CharacterScript.IsWithinRange(m_currCharScript, m_currCharScript.m_actions[j], _hTile, charScript.m_tile) && m_currCharScript.m_player.CheckEnergy(DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.ENERGY)))
                 {
-                    int finalRng = m_currCharScript.ActFinalDistAfterMods(m_currCharScript.m_actions[j]);
-
-                    if (finalRng < TileScript.CaclulateDistance(_hTile, charScript.m_tile) || _hTile.CheckIfBlocked(charScript.m_tile) &&
-                            CharacterScript.UniqueActionProperties(m_currCharScript.m_actions[j], CharacterScript.uniAct.IS_NOT_BLOCK) < 1)
-                        charScript.m_RangeCheck[j].SetActive(false);
-                    else
-                    {
-                        charScript.m_RangeCheck[j].SetActive(true);
-                        charScript.m_RangeCheck[j].GetComponent<TextMesh>().text = DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.NAME);
-                        if (m_currCharScript.m_player.CheckEnergy(DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.ENERGY)))
-                            charScript.m_RangeCheck[j].GetComponent<TextMesh>().offsetZ = -20;
-                        else
-                            charScript.m_RangeCheck[j].GetComponent<TextMesh>().offsetZ = 10;
-                    }
+                    charScript.m_RangeCheck[j].SetActive(true);
+                    charScript.m_RangeCheck[j].GetComponent<TextMesh>().text = DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.NAME);
+                    atLeastOne = true;
                 }
+                else
+                    charScript.m_RangeCheck[j].SetActive(false);
             }
+
+            if (atLeastOne)
+                charScript.m_RangeCheck[0].transform.parent.gameObject.SetActive(true);
+            else
+                charScript.m_RangeCheck[0].transform.parent.gameObject.SetActive(false);
         }
     }
 
