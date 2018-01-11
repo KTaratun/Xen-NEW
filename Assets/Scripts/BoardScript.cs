@@ -478,7 +478,8 @@ public class BoardScript : MonoBehaviour {
                 charScript = hit.collider.gameObject.GetComponent<CharacterScript>();
         }
 
-        if (tScript && PanelScript.GetPanel("HUD Panel LEFT").m_panels[2].m_buttons[0].GetComponent<Image>().color == Color.cyan)
+        if (tScript && m_oldTile != tScript &&
+            PanelScript.GetPanel("HUD Panel LEFT").m_panels[2].m_buttons[0].GetComponent<Image>().color == Color.cyan)
             CheckRange(tScript);
 
         // If you hit a character/character tile, show their info
@@ -635,9 +636,6 @@ public class BoardScript : MonoBehaviour {
         m_currCharScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(true);
         m_currCharScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.green;
 
-        if (m_currCharScript.m_isAI)
-            m_currCharScript.AITurn();
-
         m_camIsFrozen = true;
     }
 
@@ -696,6 +694,7 @@ public class BoardScript : MonoBehaviour {
                 m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] = 0;
                 m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] = 0;
                 m_currCharScript.m_currAction = "";
+
                 NewTurn(false);
             }
     }
@@ -1149,26 +1148,40 @@ public class BoardScript : MonoBehaviour {
                 continue;
 
             bool atLeastOne = false;
+            int currInd = 0;
 
-            for (int j = 0; j < m_currCharScript.m_actions.Length; j++)
+            for (int j = 0; j < CharacterScript.MAX_ACTIONS; j++)
             {
-                //if (CharacterScript.IsWithinRange(m_currCharScript, m_currCharScript.m_actions[j], _hTile, charScript.m_tile))
-                //{
-                //    charScript.m_RangeCheck[j].SetActive(true);
-                //    charScript.m_RangeCheck[j].GetComponent<TextMesh>().text = DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.NAME);
-                //    if (m_currCharScript.m_player.CheckEnergy(DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.ENERGY)))
-                //        charScript.m_RangeCheck[j].GetComponent<TextMesh>().offsetZ = -20;
-                //    else
-                //        charScript.m_RangeCheck[j].GetComponent<TextMesh>().offsetZ = 10;
-                //}
-                if (CharacterScript.IsWithinRange(m_currCharScript, m_currCharScript.m_actions[j], _hTile, charScript.m_tile) && m_currCharScript.m_player.CheckEnergy(DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.ENERGY)))
+                charScript.m_RangeCheck[j].SetActive(false);
+
+                if (j > m_currCharScript.m_actions.Length - 1)
+                    continue;
+
+                if (!_hTile.m_holding && CharacterScript.IsWithinRange(m_currCharScript, m_currCharScript.m_actions[j], _hTile, charScript.m_tile) && 
+                    m_currCharScript.m_player.CheckEnergy(DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.ENERGY)))
                 {
-                    charScript.m_RangeCheck[j].SetActive(true);
-                    charScript.m_RangeCheck[j].GetComponent<TextMesh>().text = DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.NAME);
+                    charScript.m_RangeCheck[currInd].SetActive(true);
+                    charScript.m_RangeCheck[currInd].GetComponentInChildren<TextMesh>().text = DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.NAME);
+
+                    if (CharacterScript.CheckIfAttack(DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.NAME)))
+                        charScript.m_RangeCheck[currInd].GetComponentInChildren<SpriteRenderer>().sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
+                    else
+                        charScript.m_RangeCheck[currInd].GetComponentInChildren<SpriteRenderer>().sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
+
                     atLeastOne = true;
+                    currInd++;
                 }
-                else
-                    charScript.m_RangeCheck[j].SetActive(false);
+            }
+
+            for (int j = 0; j < currInd / 2; j++)
+            {
+                string temp = charScript.m_RangeCheck[j].GetComponentInChildren<TextMesh>().text;
+                charScript.m_RangeCheck[j].GetComponentInChildren<TextMesh>().text = charScript.m_RangeCheck[currInd - j - 1].GetComponentInChildren<TextMesh>().text;
+                charScript.m_RangeCheck[currInd - j - 1].GetComponentInChildren<TextMesh>().text = temp;
+
+                Sprite tmp = charScript.m_RangeCheck[j].GetComponentInChildren<SpriteRenderer>().sprite;
+                charScript.m_RangeCheck[j].GetComponentInChildren<SpriteRenderer>().sprite = charScript.m_RangeCheck[currInd - j - 1].GetComponentInChildren<SpriteRenderer>().sprite;
+                charScript.m_RangeCheck[currInd - j - 1].GetComponentInChildren<SpriteRenderer>().sprite = tmp;
             }
 
             if (atLeastOne)

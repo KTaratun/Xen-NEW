@@ -671,7 +671,7 @@ public class TeamMenuScript : MonoBehaviour {
 
     public void Rename()
     {
-        Text text = PanelScript.GetPanel("CharacterViewer Panel").m_text[36];
+        Text text = PanelScript.GetPanel("CharacterViewer Panel").m_text[35];
         m_currCharScript.m_name = text.text;
         m_currButton.GetComponentInChildren<Text>().text = text.text;
         PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);

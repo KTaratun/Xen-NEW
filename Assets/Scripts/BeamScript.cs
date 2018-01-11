@@ -92,9 +92,12 @@ public class BeamScript : MonoBehaviour {
 
     public void OnEnable()
     {
+        if (!GameObject.Find("Database") || !m_boardScript)
+            return;
+
         m_lineRenderer.SetPosition(0, m_origin.position);
         m_lineRenderer.SetPosition(1, m_origin.position);
-
+        
         string actName = DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME);
         m_lineRenderer.SetWidth(1.0f, 1.0f);
 

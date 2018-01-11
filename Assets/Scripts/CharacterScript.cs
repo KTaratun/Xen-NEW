@@ -24,6 +24,8 @@ public class CharacterScript : ObjectScript {
     static public Color c_white = new Color(.8f, .8f, .8f, 1);
     static public Color c_blue = new Color(.45f, .4f, 1, 1);
 
+    static public int MAX_ACTIONS = 6;
+
     // General
     public string m_color;
     public int m_level;
@@ -486,9 +488,6 @@ public class CharacterScript : ObjectScript {
         else if (UniqueActionProperties(m_currAction, uniAct.SOLO_BUFF) >= 0)
             soloBuff = true;
 
-        if (!m_isFree && PlayerScript.CheckIfGains(actEng) && gainOK || !m_isFree && !PlayerScript.CheckIfGains(actEng))
-            EnergyConversion(actEng);
-
         if (m_targets.Count > 0)
         {
             for (int i = 0; i < m_targets.Count; i++)
@@ -512,7 +511,9 @@ public class CharacterScript : ObjectScript {
         if (teamBuff || soloBuff && gainOK)
             Ability(gameObject, actName);
 
-        if (m_isFree)
+        if (!m_isFree && PlayerScript.CheckIfGains(actEng) && gainOK || !m_isFree && !PlayerScript.CheckIfGains(actEng))
+            EnergyConversion(actEng);
+        else
             PanelScript.GetPanel("Choose Panel").ClosePanel();
 
         m_exp += actEng.Length;
@@ -858,7 +859,7 @@ public class CharacterScript : ObjectScript {
             m_turnPanels[i].GetComponent<Image>().color = m_teamColor;
 
         m_isAlive = true;
-        m_healthBar.transform.parent.gameObject.SetActive(true);
+        //m_healthBar.transform.parent.gameObject.SetActive(true);
         m_statusSymbol.SetActive(false);
 
         //GetComponentInChildren<Renderer>().material.color = Color.white;
@@ -1178,12 +1179,15 @@ public class CharacterScript : ObjectScript {
         m_boardScript.m_camIsFrozen = true;
 
         List<AIActionScript> viableActions = new List<AIActionScript>();
+
+        // Loop through all possible targets and decide which one is the best option
         for (int i = 0; i < m_boardScript.m_characters.Count; i++)
         {
             CharacterScript target = m_boardScript.m_characters[i].GetComponent<CharacterScript>();
             if (!target.m_isAlive)
                 continue;
 
+            // Find absolute path towards target
             List<TileScript> path = null;
             if (!m_effects[(int)StatusScript.effects.IMMOBILE])
                 path = m_tile.AITilePlanning(target.m_tile);
@@ -1192,6 +1196,7 @@ public class CharacterScript : ObjectScript {
 
             print(m_name + " Chose a path to " + target.m_name + "\n");
 
+            // Determine which actions are within range from which tiles along path
             AIActionScript newAct = CheckViableActions(target, path);
             print(m_name + " Chose optimal action to use on " + target.m_name + "\n");
             if (newAct)
@@ -1324,24 +1329,24 @@ public class CharacterScript : ObjectScript {
 
         AIActionScript mostViable = null;
 
-        if (viableActs.Count > 0)
+        if (viableActs.Count > 0) // Single out best viable action with current target in mind
         {
             for (int i = 0; i < viableActs.Count; i++)
                 if (i == 0 || viableActs[i].m_value > mostViable.m_value)
                     mostViable = viableActs[i];
 
+            // Get rid of other options
             for (int i = 0; i < viableActs.Count; i++)
-            {
                 if (viableActs[i] != mostViable)
                     Destroy(viableActs[i]);
-            }
         }
-        else if (_target.m_player != m_player && _path.Count > 1)
+        else if (_target.m_player != m_player && _path.Count > 1) // If no targets are available, move towards primary target
         {
             mostViable = gameObject.AddComponent<AIActionScript>();
-            if (_path.Count > m_tempStats[(int)sts.MOV] - 1)
+
+            if (_path.Count > m_tempStats[(int)sts.MOV] - 1) // If target is outside of maximum movement, move as much as possible
                 mostViable.m_position = _path[m_tempStats[(int)sts.MOV] - 1];
-            else
+            else // If you can reach target, move to target's adjacent space
                 mostViable.m_position = _path[_path.Count - 1];
 
             mostViable.m_value = -TileScript.CaclulateDistance(mostViable.m_position, _target.m_tile);
@@ -1654,6 +1659,12 @@ public class CharacterScript : ObjectScript {
 
         finalRng += int.Parse(DatabaseScript.GetActionData(_action, DatabaseScript.actions.RAD)) + m_tempStats[(int)sts.RAD];
 
+        if ((TileScript.targetRestriction)UniqueActionProperties(_action, uniAct.TAR_RES) == TileScript.targetRestriction.DIAGONAL)
+            finalRng *= 2;
+
+        if (finalRng < 1)
+            finalRng = 1;
+
         return finalRng;
     }
 
@@ -1664,7 +1675,7 @@ public class CharacterScript : ObjectScript {
         if (finalRng < TileScript.CaclulateDistance(_origin, _target) || _origin.CheckIfBlocked(_target) &&
                 UniqueActionProperties(_action, uniAct.IS_NOT_BLOCK) < 1 ||
                 (TileScript.targetRestriction)UniqueActionProperties(_action, uniAct.TAR_RES) == TileScript.targetRestriction.HORVERT && _origin.m_x != _target.m_x && _origin.m_z != _target.m_z ||
-                (TileScript.targetRestriction)UniqueActionProperties(_action, uniAct.TAR_RES) == TileScript.targetRestriction.DIAGONAL && Mathf.Abs(_origin.m_x - _target.m_x) - Mathf.Abs(_origin.m_z - _target.m_z) == 0)
+                (TileScript.targetRestriction)UniqueActionProperties(_action, uniAct.TAR_RES) == TileScript.targetRestriction.DIAGONAL && Mathf.Abs(_origin.m_x - _target.m_x) - Mathf.Abs(_origin.m_z - _target.m_z) != 0)
             return false;
 
         return true;

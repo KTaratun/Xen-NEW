@@ -189,7 +189,7 @@ public class ButtonScript : MonoBehaviour {
             PanelScript.m_confirmPanel.m_inView && m_parent != PanelScript.m_confirmPanel ||
             m_boardScript && m_boardScript.m_camIsFrozen ||
             m_boardScript && m_boardScript.m_currCharScript.m_isAI ||
-            GameObject.Find("Network") && GameObject.Find("Network").GetComponent<ClientScript>().m_connectionId != m_boardScript.m_currCharScript.m_player.m_id)
+            GameObject.Find("Network") && m_boardScript && GameObject.Find("Network").GetComponent<ClientScript>().m_connectionId != m_boardScript.m_currCharScript.m_player.m_id)
             return;
 
         if (!CloseButton())
@@ -406,6 +406,9 @@ public class ButtonScript : MonoBehaviour {
 
     public bool CloseButton()
     {
+        if (!m_boardScript)
+            return true;
+
         TileScript selectedTileScript = m_boardScript.m_currCharScript.m_tile.GetComponent<TileScript>();
         if (selectedTileScript.m_radius.Count > 0)
             selectedTileScript.ClearRadius();
@@ -440,6 +443,9 @@ public class ButtonScript : MonoBehaviour {
 
     public void OpenButton()
     {
+        if (!m_boardScript)
+            return;
+
         m_oldColor = GetComponent<Image>().color;
         GetComponent<Image>().color = Color.cyan;
         if (GetComponent<PanelScript>())

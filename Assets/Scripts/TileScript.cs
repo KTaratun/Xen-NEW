@@ -443,18 +443,21 @@ public class TileScript : NetworkBehaviour {
 
         transform.SetPositionAndRotation(pos, rot);
 
-        RaycastHit raycastHit;
+        RaycastHit[] raycastHit = Physics.RaycastAll(ray, laserMaxLength);
         Vector3 endPosition = _target.gameObject.transform.position;
 
-        if (Physics.Raycast(ray, out raycastHit, laserMaxLength))
+        for (int i = 0; i < raycastHit.Length; i++)
         {
+            if (raycastHit[i].collider.gameObject == m_boardScript.m_currCharScript.gameObject)
+                continue;
+
             //endPosition = raycastHit.point;
-            if (_target.m_holding && raycastHit.collider.gameObject == _target.m_holding)
+            if (_target.m_holding && raycastHit[i].collider.gameObject == _target.m_holding)
                 return false;
             else
             {
-                if (raycastHit.collider && raycastHit.collider.tag == "Player" && !raycastHit.collider.GetComponent<CharacterScript>().m_isAlive ||
-                    raycastHit.collider && raycastHit.collider.tag == "PowerUp")
+                if (raycastHit[i].collider && raycastHit[i].collider.tag == "Player" && !raycastHit[i].collider.GetComponent<CharacterScript>().m_isAlive ||
+                    raycastHit[i].collider && raycastHit[i].collider.tag == "PowerUp")
                     return false;
                 else
                     return true;

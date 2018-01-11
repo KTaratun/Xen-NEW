@@ -297,7 +297,7 @@ public class PanelScript : MonoBehaviour {
                     tMenu.m_currCharScript = PlayerPrefScript.LoadChar(currB.name, tMenu.m_currCharScript);
 
                     // Fill out name
-                    m_text[32].text = m_cScript.m_name;
+                    m_text[31].text = m_cScript.m_name;
                     GetComponentInChildren<InputField>().text = m_cScript.m_name;
 
                     m_cScript.m_exp = 10;
@@ -596,6 +596,14 @@ public class PanelScript : MonoBehaviour {
             Text t = m_buttons[i].GetComponentInChildren<Text>();
             t.text = name;
 
+            Image[] image = m_buttons[i].GetComponentsInChildren<Image>(true);
+            image[10].gameObject.SetActive(true);
+
+            if (CharacterScript.CheckIfAttack(name))
+                image[10].sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
+            else
+                image[10].sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
+
             // REFACTOR: Obnoxious check to see if there is a current action and if i
             CharacterScript currCharScript = m_main.GetComponent<BoardScript>().m_currCharScript;
             string currCharActName = "";
@@ -685,6 +693,14 @@ public class PanelScript : MonoBehaviour {
             t.text = name[1];
             buttScript.SetTotalEnergy(eng[1]);
 
+            Image[] image = buttons[i].GetComponentsInChildren<Image>(true);
+            image[10].gameObject.SetActive(true);
+
+            if (CharacterScript.CheckIfAttack(name[1]))
+                image[10].sprite = Resources.Load<Sprite>("Symbols/Damage Symbol");
+            else
+                image[10].sprite = Resources.Load<Sprite>("Symbols/Defense Symbol");
+
 
             if (m_main && m_main.name == "Board")
             {
@@ -768,6 +784,9 @@ public class PanelScript : MonoBehaviour {
             m_buttons[i].onClick.RemoveAllListeners();
             m_buttons[i].interactable = false;
             m_buttons[i].GetComponent<Image>().color = new Color(1, 1, 1, 1);
+            Image[] image = m_buttons[i].GetComponentsInChildren<Image>(true);
+            image[10].gameObject.SetActive(false);
+
             if (m_buttons[i].GetComponent<PanelScript>())
                 m_buttons[i].GetComponent<PanelScript>().m_inView = false;
             Text t = m_buttons[i].GetComponentInChildren<Text>();

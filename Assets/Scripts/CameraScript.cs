@@ -177,6 +177,9 @@ public class CameraScript : MonoBehaviour {
                     m_target = null;
                     m_zoomIn = true;
                 }
+
+                if (!PanelScript.GetPanel("Round End Panel").m_inView && m_boardScript.m_currCharScript.m_isAI && m_boardScript.m_currCharScript.m_hasActed[0] == 0 && m_boardScript.m_currCharScript.m_hasActed[1] == 0)
+                    m_boardScript.m_currCharScript.AITurn();
             }
         }
 

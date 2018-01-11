@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ProjectileScript : ObjectScript {
 
-    public enum gren { BLAST, EXPLOSION, MAGNET }
+    public enum gren { BLAST, EXPLOSION, MAGNET, ELECTRIC }
 
     private Vector3 m_origin;
     public GameObject[] m_effects;
@@ -88,6 +88,21 @@ public class ProjectileScript : ObjectScript {
                 m_effects[(int)gren.MAGNET].SetActive(true);
             else if (DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME) == "ATK(Blast)")
                 m_effects[(int)gren.BLAST].SetActive(true);
+            else if (DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME) == "ATK(Synch)" ||
+                DatabaseScript.GetActionData(m_boardScript.m_currCharScript.m_currAction, DatabaseScript.actions.NAME) == "ATK(Lag)")
+            {
+                m_effects[(int)gren.ELECTRIC].SetActive(true);
+                Transform[] particles = m_effects[(int)gren.ELECTRIC].GetComponentsInChildren<Transform>(true);
+
+                for (int i = 2; i < 6; i++)
+                    particles[i].gameObject.SetActive(false);
+
+                for (int i = 0; i < m_boardScript.m_currCharScript.m_targets.Count; i++)
+                {
+                    particles[i + 2].gameObject.SetActive(true);
+                    particles[i + 2].SetPositionAndRotation(m_boardScript.m_currCharScript.m_targets[i].transform.position, Quaternion.identity);
+                }
+            }
             else
                 m_effects[(int)gren.EXPLOSION].SetActive(true);
 
