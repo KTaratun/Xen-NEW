@@ -21,7 +21,6 @@ public class PowerupScript : ObjectScript {
     private bool m_upward;
     public Color m_color;
     public string m_effect;
-    public ParticleSystem m_particle;
 
     // Use this for initialization
     protected new void Start ()
@@ -181,8 +180,18 @@ public class PowerupScript : ObjectScript {
         }
 
         mRend.material.color = m_color;
-        m_particle.startColor = m_color;
-        
+        ParticleSystem[] ps = GetComponentsInChildren<ParticleSystem>();
+
+        for (int i = 0; i < ps.Length; i++)
+        {
+            if (i == 1 || i == 2)
+            {
+                Color moddedColor = new Color(m_color.r - .3f, m_color.g - .3f, m_color.b - .3f);
+                ps[i].startColor = moddedColor;
+            }
+            else
+                ps[i].startColor = m_color;
+        }
     }
 
     //public void RandomPowerUp()

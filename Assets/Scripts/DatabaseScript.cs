@@ -18,8 +18,27 @@ public class DatabaseScript : MonoBehaviour {
 	// Use this for initialization
 	IEnumerator Start ()
     {
+        string strHostName = string.Empty;
+        // Getting Ip address of local machine...
+        // First get the host name of local machine.
+        strHostName = Dns.GetHostName();
+        //print("Local Machine's Host Name: " + strHostName);
+        // Then using host name, get the IP address list..
+        IPHostEntry ipEntry = Dns.GetHostEntry(strHostName);
+        IPAddress[] addr = ipEntry.AddressList;
+
+        //for (int i = 0; i < addr.Length; i++)
+        //{
+        //    print("IP Address " + i + addr[i].ToString());
+        //} 
+
+
+
+
         //string ip = "http://" + Network.player.ipAddress;
-        string ip = "http://192.168.1.16";
+        //string ip = "http://192.168.1.16";
+        //string ip = "http://kurt-hp";
+        string ip = "http://69.115.100.214";
 
         //if (!GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted)
         //{

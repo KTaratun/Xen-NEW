@@ -1339,7 +1339,7 @@ MonoBehaviour:
   m_effects:
   - {fileID: 1939777387749256}
   - {fileID: 1940691224815430}
-  - {fileID: 0}
+  - {fileID: 1014013591963030}
   - {fileID: 1778416085590982}
 --- !u!135 &135488631838199822
 SphereCollider:
