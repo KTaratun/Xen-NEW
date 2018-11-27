@@ -196,7 +196,6 @@ public class BoardScript : MonoBehaviour {
                     Renderer rend = newChar.transform.GetComponentInChildren<Renderer>();
                     rend.materials[0].color = cScript.m_teamColor;
 
-                    cScript.SetPopupSpheres("");
                     m_characters.Add(newChar);
                     
                     if (cScript.m_hasActed.Length == 0)
@@ -296,27 +295,17 @@ public class BoardScript : MonoBehaviour {
             int i = int.Parse(m_currButton.name);
             if (w < 0)
             {
-                while (i + 1 < 8)
+                if (i + 1 < 6)
                 {
-                    if (actPan.m_buttons[i + 1].GetComponentInChildren<Text>().text != "EMPTY" &&
-                        m_currCharScript.m_player.CheckEnergy(DatabaseScript.GetActionData(actPan.m_buttons[i + 1].GetComponent<ButtonScript>().m_action, DatabaseScript.actions.ENERGY)))
-                    {
-                        actPan.m_buttons[i + 1].GetComponent<ButtonScript>().Select();
-                        break;
-                    }
+                    actPan.m_buttons[i + 1].GetComponent<ButtonScript>().Select();
                     i++;
                 }
             }
             else if (w > 0)
             {
-                while (i - 1 >= 0)
+                if (i - 1 >= 0)
                 {
-                    if (i - 1 >= 0 && actPan.m_buttons[i - 1].GetComponentInChildren<Text>().text != "EMPTY" &&
-                         m_currCharScript.m_player.CheckEnergy(DatabaseScript.GetActionData(actPan.m_buttons[i - 1].GetComponent<ButtonScript>().m_action, DatabaseScript.actions.ENERGY)))
-                    {
-                        actPan.m_buttons[i - 1].GetComponent<ButtonScript>().Select();
-                        break;
-                    }
+                    actPan.m_buttons[i - 1].GetComponent<ButtonScript>().Select();
                     i--;
                 }
             }
@@ -972,7 +961,6 @@ public class BoardScript : MonoBehaviour {
     private CharacterScript ReadCharNetData(string[] _data, CharacterScript _char)
     {
         _char.m_name = _data[(int)PlayerPrefScript.netwrkPak.NAME];
-        _char.m_color = _data[(int)PlayerPrefScript.netwrkPak.COLOR];
 
         string[] acts = _data[(int)PlayerPrefScript.netwrkPak.ACTIONS].Split(',');
         string[] actionsForChar = new string[acts.Length];
@@ -1036,7 +1024,6 @@ public class BoardScript : MonoBehaviour {
                 char symbol = '|';
 
                 charString += charScript.m_name + symbol;
-                charString += charScript.m_color + symbol;
 
                 for (int k = 0; k < charScript.m_actions.Length; k++)
                     charString += DatabaseScript.GetActionData(charScript.m_actions[k], DatabaseScript.actions.ID) + ',';
@@ -1157,8 +1144,7 @@ public class BoardScript : MonoBehaviour {
                 if (j > m_currCharScript.m_actions.Length - 1)
                     continue;
 
-                if (!_hTile.m_holding && CharacterScript.IsWithinRange(m_currCharScript, m_currCharScript.m_actions[j], _hTile, charScript.m_tile) && 
-                    m_currCharScript.m_player.CheckEnergy(DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.ENERGY)))
+                if (!_hTile.m_holding && CharacterScript.IsWithinRange(m_currCharScript, m_currCharScript.m_actions[j], _hTile, charScript.m_tile))
                 {
                     charScript.m_RangeCheck[currInd].SetActive(true);
                     charScript.m_RangeCheck[currInd].GetComponentInChildren<TextMesh>().text = DatabaseScript.GetActionData(m_currCharScript.m_actions[j], DatabaseScript.actions.NAME);

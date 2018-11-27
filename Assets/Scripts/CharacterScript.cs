@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class CharacterScript : ObjectScript {
 
     public enum weaps { SWORD, HGUN };
-    public enum sts { HP, SPD, DMG, DEF, MOV, RNG, TEC, RAD, TOT };
+    public enum sts { HP, SPD, DMG, MOV, RNG, TOT };
     public enum trn { MOV, ACT };
     public enum uniAct { TAR_RES, IS_NOT_BLOCK, TAR_SELF, RNG_MOD, NO_RNG, // TARGETING
         SOLO_BUFF, TEAM_BUFF, BYPASS, DMG_MOD, FRIENDLY, // ATTACK
@@ -27,7 +27,6 @@ public class CharacterScript : ObjectScript {
     static public int MAX_ACTIONS = 6;
 
     // General
-    public string m_color;
     public int m_level;
     public int m_exp;
     public int m_gender;
@@ -159,7 +158,6 @@ public class CharacterScript : ObjectScript {
 
     private void InitColors()
     {
-        SetPopupSpheres("");
         // Set up the spheres that pop up over the characters heads when they gain or lose energy
         for (int i = 0; i < m_popupSpheres.Length; i++)
         {
@@ -168,12 +166,6 @@ public class CharacterScript : ObjectScript {
             for (int j = 0; j < meshRends.Length; j++)
                 meshRends[j].material.color = new Color(meshRends[j].material.color.r, meshRends[j].material.color.g, meshRends[j].material.color.b, 0);
         }
-
-        //if (m_boardScript && m_boardScript.m_currCharScript != this)
-        //{
-        //    Renderer rend = transform.GetComponentInChildren<Renderer>();
-        //    rend.materials[0].color = Color.red;
-        //}
     }
 
 
@@ -343,7 +335,7 @@ public class CharacterScript : ObjectScript {
         // If the action cannot be blocked
         bool isBlockable = true;
         if (UniqueActionProperties(m_currAction, uniAct.IS_NOT_BLOCK) >= 0 ||
-            m_tempStats[(int)sts.RAD] > 0)
+            m_effects[(int)StatusScript.effects.CAREFUL])
             isBlockable = false;
 
         bool targetSelf = false;
@@ -353,9 +345,6 @@ public class CharacterScript : ObjectScript {
             targetSelf = true;
 
         int finalRNG = int.Parse(actRng) + m_tempStats[(int)sts.RNG];
-        
-        if (UniqueActionProperties(m_currAction, uniAct.RNG_MOD) >= 0)
-            finalRNG += m_tempStats[(int)sts.TEC];
 
         if (finalRNG < 1)
             finalRNG = 1;
@@ -381,7 +370,10 @@ public class CharacterScript : ObjectScript {
         transform.SetPositionAndRotation(m_tile.transform.position, transform.rotation);
 
         int actRng = int.Parse(DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RNG)) + m_tempStats[(int)sts.RNG];
-        int actRad = int.Parse(DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RAD)) + m_tempStats[(int)sts.RAD];
+        int actRad = int.Parse(DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.RAD));
+        if (m_effects[(int)StatusScript.effects.CAREFUL])
+            actRad += 1;
+
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
 
         TileScript selectedTileScript = m_boardScript.m_selected;
@@ -477,7 +469,6 @@ public class CharacterScript : ObjectScript {
         m_boardScript.m_actionEndTimer += Time.deltaTime;
 
         string actName = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.NAME);
-        string actEng = DatabaseScript.GetActionData(m_currAction, DatabaseScript.actions.ENERGY);
 
         // ATTACK MODS
         bool teamBuff = false;
@@ -511,12 +502,7 @@ public class CharacterScript : ObjectScript {
         if (teamBuff || soloBuff && gainOK)
             Ability(gameObject, actName);
 
-        if (!m_isFree && PlayerScript.CheckIfGains(actEng) && gainOK || !m_isFree && !PlayerScript.CheckIfGains(actEng))
-            EnergyConversion(actEng);
-        else
-            PanelScript.GetPanel("Choose Panel").ClosePanel();
-
-        m_exp += actEng.Length;
+        PanelScript.GetPanel("Choose Panel").ClosePanel();
 
         m_isFree = false;
         m_targets.Clear();
@@ -562,20 +548,17 @@ public class CharacterScript : ObjectScript {
                 CharacterScript charScript = _currTarget.GetComponent<CharacterScript>();
 
                 // DAMAGE MODS
-                if (UniqueActionProperties(m_currAction, uniAct.BYPASS) >= 0 && charScript.m_tempStats[(int)sts.DEF] > 0)
-                {
-                    int def = charScript.m_tempStats[(int)sts.DEF] - UniqueActionProperties(m_currAction, uniAct.BYPASS) - m_tempStats[(int)sts.TEC];
+                //if (UniqueActionProperties(m_currAction, uniAct.BYPASS) >= 0 && charScript.m_tempStats[(int)sts.DEF] > 0)
+                //{
+                    int def = 0; // TODO: Make a DEF stat
                     if (def < 0)
                         def = 0;
 
                     finalDMG = (int.Parse(finalDMG) - def).ToString();
-                }
-                else
-                    finalDMG = (int.Parse(finalDMG) - charScript.m_tempStats[(int)sts.DEF]).ToString();
+                //}
+                //else
+                //    finalDMG = (int.Parse(finalDMG) - charScript.m_tempStats[(int)sts.DEF]).ToString();
             }
-
-            if (UniqueActionProperties(m_currAction, uniAct.DMG_MOD) >= 0)
-                finalDMG = (int.Parse(finalDMG) + m_tempStats[(int)sts.TEC]).ToString();
 
             _currTarget.ReceiveDamage(finalDMG, Color.white);
 
@@ -609,53 +592,78 @@ public class CharacterScript : ObjectScript {
         {
             // Simple status abilities
             case "ATK(Accelerate)":
-            case "ATK(Arm)":
-            case "ATK(Rust)":
-            case "ATK(Sight)":
-            case "SUP(Boost)":
-            case "SUP(Charge)":
-            case "SUP(Crush)":
-            case "ATK(Break)":
-            case "ATK(Crash)":
-            case "SUP(Explosive)":
-            case "ATK(Fortify)":
-            case "ATK(Hinder)":
-            case "ATK(Immobilize)":
-            case "ATK(Leg)":
-            case "ATK(Disrupt)":
-            case "SUP(Passage)":
-            case "SUP(Defense)":
-            //case "Protect":
-            case "SUP(Secure)":
-            case "ATK(Maintain)":
-            case "ATK(Nullify)":
-            case "ATK(Ruin)":
-            case "ATK(Smoke)":
-            case "SUP(Spot)":
-            case "ATK(Lock)":
-            case "ATK(Target)":
-            case "ATK(Ward)":
-            case "ATK(Weaken)":
-            case "ATK(Rev)":
-                StatusScript.NewStatus(_currTarget, this, m_currAction);
+                StatusScript.NewStatus(targetScript, _name, sts.MOV, 1, StatusScript.mode.TURN_END, 2, "Symbols/Move Symbol", StatusScript.c_buffColor);
                 break;
+            case "ATK(Arm)":
+                StatusScript.NewStatus(targetScript, _name, sts.DMG, -1, StatusScript.mode.TURN_END, 2, "Symbols/Damage Symbol", StatusScript.c_debuffColor);
+                break;
+            case "SUP(Boost)":
+                StatusScript.NewStatus(targetScript, _name, sts.DMG, 2, StatusScript.mode.TURN_END, 1, "Symbols/Damage Symbol", StatusScript.c_buffColor);
+                break;
+            case "ATK(Crash)": // This status doesn't work with status or stats, so we are just putting in placeholder stat changes for the function
+                targetScript.DisableRandomAction();
+                StatusScript.NewStatus(targetScript, _name, sts.HP, 0, StatusScript.mode.TURN_END, 1, "Symbols/Action Symbol", StatusScript.c_statusColor);
+                break;
+            //case "SUP(Crush)":
+            //    StatusScript.NewStatus(targetScript, _name, sts.DMG, 2, StatusScript.mode.TURN_END, 1, "Symbols/Damage Symbol", StatusScript.c_buffColor);
+            //    break;
+            //case "SUP(Defense)":
+            case "SUP(Explosive)":
+                StatusScript.NewStatus(targetScript, _name, StatusScript.effects.CAREFUL, StatusScript.mode.TURN_END, 2, "Symbols/Radius Symbol", StatusScript.c_statusColor);
+                break;
+            //case "ATK(Fortify)":
+            case "ATK(Hinder)":
+                StatusScript.NewStatus(targetScript, _name, StatusScript.effects.HINDER, StatusScript.mode.TURN_END, 2, "Symbols/Tech Symbol", StatusScript.c_statusColor);
+                break;
+            case "ATK(Immobilize)":
+                StatusScript.NewStatus(targetScript, _name, sts.MOV, -4, StatusScript.mode.TURN_END, 1, "Symbols/Move Symbol", StatusScript.c_debuffColor);
+                break;
+            case "ATK(Leg)":
+                StatusScript.NewStatus(targetScript, _name, sts.MOV, -1, StatusScript.mode.TURN_END, 2, "Symbols/Move Symbol", StatusScript.c_debuffColor);
+                break;
+            case "ATK(Lock)":
+                StatusScript.NewStatus(targetScript, _name, StatusScript.effects.STUN, StatusScript.mode.ROUND_END, 1, "Symbols/Action Symbol", StatusScript.c_statusColor);
+                break;
+            case "ATK(Maintain)":
+                StatusScript.NewStatus(targetScript, _name, StatusScript.effects.REGEN, StatusScript.mode.ROUND_END, 1, "Symbols/Action Symbol", StatusScript.c_statusColor);
+                break;
+            case "SUP(Passage)":
+                StatusScript.NewStatus(targetScript, _name, sts.MOV, 4, StatusScript.mode.TURN_END, 1, "Symbols/Move Symbol", StatusScript.c_buffColor);
+                break;
+            //case "Protect":
+            case "ATK(Rev)":
+                StatusScript.NewStatus(targetScript, _name, sts.DMG, 2, StatusScript.mode.TURN_END, 2, "Symbols/Damage Symbol", StatusScript.c_buffColor);
+                break;
+            case "ATK(Ruin)":
+                StatusScript.NewStatus(targetScript, _name, StatusScript.effects.SCARRING, StatusScript.mode.TURN_END, 2, "Symbols/Life Symbol", StatusScript.c_debuffColor);
+                break;
+            case "ATK(Rust)":
+                StatusScript.NewStatus(targetScript, _name, StatusScript.effects.BLEED, StatusScript.mode.TURN_END, 1, "Symbols/Life Symbol", StatusScript.c_statusColor);
+                break;
+            case "SUP(Secure)":
+                StatusScript.NewStatus(targetScript, _name, StatusScript.effects.REFLECT, StatusScript.mode.TURN_END, 2, "Symbols/Tech Symbol", StatusScript.c_statusColor);
+                break;
+            case "ATK(Sight)":
+                StatusScript.NewStatus(targetScript, _name, sts.RNG, -1, StatusScript.mode.TURN_END, 2, "Symbols/Range Symbol", StatusScript.c_debuffColor);
+                break;
+            case "ATK(Smoke)":
+                StatusScript.NewStatus(targetScript, _name, sts.MOV, -2, StatusScript.mode.TURN_END, 2, "Symbols/Move Symbol", StatusScript.c_debuffColor);
+                break;
+            case "SUP(Spot)":
+                StatusScript.NewStatus(targetScript, _name, sts.RNG, 4, StatusScript.mode.TURN_END, 2, "Symbols/Range Symbol", StatusScript.c_buffColor);
+                break;
+            case "ATK(Target)":
+                StatusScript.NewStatus(targetScript, _name, sts.RNG, 2, StatusScript.mode.TURN_END, 2, "Symbols/Range Symbol", StatusScript.c_buffColor);
+                break;
+            case "ATK(Ward)":
+                StatusScript.NewStatus(targetScript, _name, sts.DMG, -3, StatusScript.mode.TURN_END, 1, "Symbols/Damage Symbol", StatusScript.c_debuffColor);
+                break;
+            //case "ATK(Weaken)":
             case "ATK(Deplete)":
             case "ATK(Prismatic)":
             case "ATK(Syphon)":
-                if (_name == "ATK(Prismatic)" && m_tempStats[(int)sts.TEC] < -2 || _name == "ATK(Deplete)" && m_tempStats[(int)sts.TEC] < -1 ||
-                    _name == "ATK(Syphon)" && m_tempStats[(int)sts.TEC] < -2)
-                    break;
                 if (!m_isAI)
                     SelectorInit(targetScript, "Energy Selector");
-                else if (_name == "ATK(Deplete)")
-                    targetScript.m_player.RemoveRandomEnergy(2 + m_tempStats[(int)sts.TEC]);
-                else if (_name == "ATK(Prismatic)") // REFACTOR
-                    m_player.GainRandomEnergyAI(2 + m_tempStats[(int)sts.TEC]);
-                else if (_name == "ATK(Syphon)") // REFACTOR
-                {
-                    targetScript.m_player.RemoveRandomEnergy(2 + m_tempStats[(int)sts.TEC]);
-                    m_player.GainRandomEnergyAI(2 + m_tempStats[(int)sts.TEC]);
-                }
                 break;
             case "ATK(Copy)":
             case "ATK(Hack)":
@@ -674,18 +682,14 @@ public class CharacterScript : ObjectScript {
                 break;
             //case "Cleansing ATK":
             case "ATK(Salvage)":
-                HealHealth(2 + m_tempStats[(int)sts.TEC]);
-                if (m_tempStats[(int)sts.TEC] > 0)
-                    m_player.RemoveRandomEnergy(m_tempStats[(int)sts.TEC]);
+                HealHealth(2);
                 break;
             case "SUP(Restore)":
-                targetScript.HealHealth(3 + m_tempStats[(int)sts.TEC]);
-                if (m_tempStats[(int)sts.TEC] > 0)
-                    targetScript.m_player.RemoveRandomEnergy(m_tempStats[(int)sts.TEC]);
+                targetScript.HealHealth(3);
                 break;
             // Unique abilities
             case "ATK(Blast)":
-                Knockback(_currTarget.GetComponent<ObjectScript>(), m_boardScript.m_selected, 2 + m_tempStats[(int)sts.TEC]);
+                Knockback(_currTarget.GetComponent<ObjectScript>(), m_boardScript.m_selected, 2);
                 break;
             case "ATK(Mod)":
                 targetScript.m_stats[(int)sts.DMG]++;
@@ -719,11 +723,8 @@ public class CharacterScript : ObjectScript {
                 {
                     m_boardScript.m_isForcedMove = gameObject;
                     tileScript.ClearRadius();
-                    MovementSelection(3 + m_tempStats[(int)sts.TEC]);
+                    MovementSelection(3);
                 }
-                break;
-            case "ATK(Leak)":
-                targetScript.m_player.RemoveRandomEnergy(1);
                 break;
             case "ATK(Overclock)":
                 AlterSpeed(this, 3, true);
@@ -744,14 +745,14 @@ public class CharacterScript : ObjectScript {
                 {
                     tileScript.ClearRadius();
                     m_boardScript.m_isForcedMove = _currTarget;
-                    _currTarget.GetComponent<ObjectScript>().MovementSelection(3 + m_tempStats[(int)sts.TEC]);
+                    _currTarget.GetComponent<ObjectScript>().MovementSelection(3);
                 }
                 break;
             case "SUP(Reboot)":
-                targetScript.Revive(5 + m_tempStats[(int)sts.TEC]);
+                targetScript.Revive(5);
                 break;
             case "ATK(Smash)":
-                Knockback(_currTarget.GetComponent<ObjectScript>(), tileScript, 3 + m_tempStats[(int)sts.TEC]);
+                Knockback(_currTarget.GetComponent<ObjectScript>(), tileScript, 3);
                 break;
             //case "ATK(Purge)":
             //    StatusScript.DestroyAll(_currTarget);
@@ -1133,8 +1134,7 @@ public class CharacterScript : ObjectScript {
         for (int i = 0; i < m_actions.Length; i++)
         {
             string currAct = m_actions[i];
-            if (!PlayerScript.CheckIfGains(DatabaseScript.GetActionData(currAct, DatabaseScript.actions.ENERGY)) &&
-                m_isDiabled[i] == 0)
+            if (m_isDiabled[i] == 0)
                 viableActs.Add(i);
         }
         if (viableActs.Count < 1)
@@ -1153,8 +1153,6 @@ public class CharacterScript : ObjectScript {
     public void AlterSpeed(CharacterScript _targetScript, int _speed, bool _isTec)
     {
         int finalVal = _speed;
-        if (_isTec)
-            finalVal += m_tempStats[(int)sts.TEC];
 
         if (finalVal == 0)
             return;
@@ -1262,13 +1260,11 @@ public class CharacterScript : ObjectScript {
         for (int i = 0; i < m_actions.Length; i++)
         {
             string name = DatabaseScript.GetActionData(m_actions[i], DatabaseScript.actions.NAME);
-            string eng = DatabaseScript.GetActionData(m_actions[i], DatabaseScript.actions.ENERGY);
 
             m_currAction = m_actions[i];
             bool found = false;
 
-            if (m_effects[(int)StatusScript.effects.DELAY] && PlayerScript.CheckIfGains(eng) && eng.Length == 2 ||
-                m_effects[(int)StatusScript.effects.HINDER] && !CheckIfAttack(name) ||
+            if (m_effects[(int)StatusScript.effects.HINDER] && !CheckIfAttack(name) ||
                 m_effects[(int)StatusScript.effects.WARD] && CheckIfAttack(name) ||
                 m_isDiabled[i] > 0)
                 continue;
@@ -1310,7 +1306,7 @@ public class CharacterScript : ObjectScript {
                 }
             }
 
-            if (found && m_player.CheckEnergy(eng))
+            if (found)
             {
                 if (CheckIfAttack(name) && _target.m_player == m_player || !CheckIfAttack(name) && _target != m_player)
                     continue;
@@ -1450,149 +1446,12 @@ public class CharacterScript : ObjectScript {
             PanelScript.GetPanel("HUD Panel LEFT").PopulatePanel();
     }
 
-    private void EnergyConversion(string _energy)
-    {
-        // Update player's energy after using an action
-
-        // Assign _energy symbols
-        for (int i = 0; i < _energy.Length; i++)
-        {
-            if (_energy[i] == 'g')
-                m_player.m_energy[0] += 1;
-            else if (_energy[i] == 'r')
-                m_player.m_energy[1] += 1;
-            else if (_energy[i] == 'w')
-                m_player.m_energy[2] += 1;
-            else if (_energy[i] == 'b')
-                m_player.m_energy[3] += 1;
-            else if (_energy[i] == 'G')
-                m_player.m_energy[0] -= 1;
-            else if (_energy[i] == 'R')
-                m_player.m_energy[1] -= 1;
-            else if (_energy[i] == 'W')
-                m_player.m_energy[2] -= 1;
-            else if (_energy[i] == 'B')
-                m_player.m_energy[3] -= 1;
-        }
-
-        SetPopupSpheres(_energy);
-        m_player.SetEnergyPanel(this);
-    }
-
     static public int CheckActionLevel(string _actEng)
     {
         if (_actEng[0] == 'g' || _actEng[0] == 'r' || _actEng[0] == 'w' || _actEng[0] == 'b')
             return 0;
 
         return _actEng.Length;
-    }
-    
-    public int CheckActionColor(string _act)
-    {
-        string _eng = DatabaseScript.GetActionData(_act, DatabaseScript.actions.ENERGY);
-
-        if (_eng[0] == 'g' || _eng[0] == 'G')
-            return 0;
-        else if (_eng[0] == 'r' || _eng[0] == 'R')
-            return 1;
-        else if (_eng[0] == 'w' || _eng[0] == 'W')
-            return 2;
-        else if (_eng[0] == 'b' || _eng[0] == 'B')
-            return 3;
-
-        return -1;
-    }
-
-    public void SortActions()
-    {
-        for (int i = 0; i < m_actions.Length; i++)
-        {
-            int currEng = ConvertedCost(DatabaseScript.GetActionData(m_actions[i], DatabaseScript.actions.ENERGY));
-
-            for (int j = i + 1; j < m_actions.Length; j++)
-            {
-                int indexedEng = ConvertedCost(DatabaseScript.GetActionData(m_actions[j], DatabaseScript.actions.ENERGY));
-
-                if (currEng > indexedEng ||
-                    currEng == indexedEng && CheckActionColor(m_actions[i]) > CheckActionColor(m_actions[j]))
-                {
-                    string temp = m_actions[i];
-                    m_actions[i] = m_actions[j];
-                    m_actions[j] = temp;
-                }
-            }
-        }
-    }
-
-    static public int ConvertedCost(string _eng)
-    {
-        if (PlayerScript.CheckIfGains(_eng))
-            return -_eng.Length;
-        else
-            return _eng.Length;
-    }
-
-    public void SetPopupSpheres(string _energy)
-    {
-        GameObject[] colorSpheres = m_popupSpheres;
-        if (_energy.Length == 0)
-        {
-            if (m_color == "")
-                return;
-            _energy = m_color;
-            colorSpheres = m_colorDisplay;
-        }
-
-        GameObject spheres = null;
-        if (_energy.Length == 1)
-        {
-            colorSpheres[0].SetActive(true);
-            spheres = colorSpheres[0];
-        }
-        else if (_energy.Length == 2)
-        {
-            colorSpheres[1].SetActive(true);
-            spheres = colorSpheres[1];
-        }
-        else if (_energy.Length == 3)
-        {
-            colorSpheres[2].SetActive(true);
-            spheres = colorSpheres[2];
-        }
-        else if (_energy.Length == 4)
-        {
-            colorSpheres[3].SetActive(true);
-            spheres = colorSpheres[3];
-        }
-
-        Color color = Color.white;
-
-        SphereCollider[] orbs = spheres.GetComponentsInChildren<SphereCollider>();
-        int j = 0;
-
-        for (int i = 0; i < orbs.Length; i++)
-        {
-            Renderer orbRend = orbs[i].GetComponent<Renderer>();
-
-            
-            if (orbs[i].name == "Sphere Outline")
-                orbRend.material.color = new Color(0, 0, 0, 1);
-            else
-            {
-                if (_energy[j] == 'g' || _energy[j] == 'G')
-                    color = c_green;
-                else if (_energy[j] == 'r' || _energy[j] == 'R')
-                    color = c_red;
-                else if (_energy[j] == 'w' || _energy[j] == 'W')
-                    color = c_white;
-                else if (_energy[j] == 'b' || _energy[j] == 'B')
-                    color = c_blue;
-                
-                orbRend.material.color = color;
-                j++;
-            }
-
-        }
     }
 
     public bool checkTargetsTiles(ObjectScript _target, TileScript _tile)
@@ -1654,10 +1513,9 @@ public class CharacterScript : ObjectScript {
     {
         int finalRng = int.Parse(DatabaseScript.GetActionData(_action, DatabaseScript.actions.RNG)) + m_tempStats[(int)sts.RNG];
 
-        if (UniqueActionProperties(_action, uniAct.RNG_MOD) >= 1)
-            finalRng += m_tempStats[(int)sts.TEC];
-
-        finalRng += int.Parse(DatabaseScript.GetActionData(_action, DatabaseScript.actions.RAD)) + m_tempStats[(int)sts.RAD];
+        finalRng += int.Parse(DatabaseScript.GetActionData(_action, DatabaseScript.actions.RAD));
+        if (m_effects[(int)StatusScript.effects.CAREFUL])
+            finalRng += 1;
 
         if ((TileScript.targetRestriction)UniqueActionProperties(_action, uniAct.TAR_RES) == TileScript.targetRestriction.DIAGONAL)
             finalRng *= 2;

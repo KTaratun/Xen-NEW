@@ -347,8 +347,6 @@ public class PowerupScript : ObjectScript {
                 _char.m_player.m_energy[i]++;
         else if (m_name == powerups.DMG.ToString())
             _char.m_stats[(int)CharacterScript.sts.DMG]++;
-        else if (m_name == powerups.TEC.ToString())
-            _char.m_stats[(int)CharacterScript.sts.TEC]++;
         else if (m_name == powerups.MOV.ToString())
             _char.m_stats[(int)CharacterScript.sts.MOV]++;
         else if (m_name == powerups.RNG.ToString())
@@ -357,8 +355,8 @@ public class PowerupScript : ObjectScript {
             _char.HealHealth(3);
         else if (m_name == powerups.SPD.ToString())
             _char.m_tempStats[(int)CharacterScript.sts.SPD] += 3;
-        else if (m_name == powerups.WEAK.ToString())
-            _char.m_stats[(int)CharacterScript.sts.DEF]--;
+        //else if (m_name == powerups.WEAK.ToString())
+            // TODO: Make a DEF stat
         else if (m_name == powerups.HURT.ToString())
             _char.ReceiveDamage(3.ToString(), Color.white);
         else if (m_name == powerups.SLOW.ToString())

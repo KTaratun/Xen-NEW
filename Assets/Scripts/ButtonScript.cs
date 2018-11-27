@@ -378,7 +378,7 @@ public class ButtonScript : MonoBehaviour {
                 statScript.DestroyStatus(m_parent.m_cScript.transform.root.gameObject, true);
             else if (actName == "SUP(Extension)")
             {
-                statScript.m_lifeSpan += 3 + charScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                statScript.m_lifeSpan += 3;
 
                 //for (int i = 0; i < statScript.m_statMod.Length; i++)
                 //{
@@ -398,9 +398,9 @@ public class ButtonScript : MonoBehaviour {
         {
 
             if (actName == "ATK(Prismatic)")
-                    AddEnergy(2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
+                    AddEnergy(2);
             else if (actName == "ATK(Deplete)" || actName == "ATK(Syphon)")
-                SubtractEnergy(2 + charScript.m_tempStats[(int)CharacterScript.sts.TEC], m_main.m_cScript.m_player.m_energy);
+                SubtractEnergy(2, m_main.m_cScript.m_player.m_energy);
         }
     }
 
@@ -519,8 +519,6 @@ public class ButtonScript : MonoBehaviour {
         if (added > 2)
             if (actName == "ATK(Prismatic)" || actName == "ATK(Syphon)" || actName == "ATK(Deplete)")
                 charScript.ReceiveDamage((added - 2).ToString(), Color.white);
-
-        playScript.SetEnergyPanel(charScript);
 
         if (GameObject.Find("Network"))
         {

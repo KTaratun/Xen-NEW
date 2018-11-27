@@ -5,7 +5,7 @@ using System.Net;
 
 public class DatabaseScript : MonoBehaviour {
 
-    public enum actions { ID, NAME, ENERGY, DMG, RNG, RAD, EFFECT, TOT };
+    public enum actions { ID, NAME, NULL, DMG, RNG, RAD, EFFECT, TOT };
     public enum presets { ID, NAME, COLORS, ACTIONS, EQUIPMENT, TOT }
 
     public string[] m_actions;
@@ -37,8 +37,8 @@ public class DatabaseScript : MonoBehaviour {
 
         //string ip = "http://" + Network.player.ipAddress;
         //string ip = "http://192.168.1.16";
-        //string ip = "http://kurt-hp";
-        string ip = "http://69.115.100.214";
+        string ip = "http://kurt-hp";
+        //string ip = "http://69.115.100.214";
 
         //if (!GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted)
         //{

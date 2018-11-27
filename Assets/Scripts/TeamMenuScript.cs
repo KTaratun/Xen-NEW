@@ -50,7 +50,7 @@ public class TeamMenuScript : MonoBehaviour {
                     key = i.ToString() + ',' + j.ToString() + ",color";
                     string color = PlayerPrefs.GetString(key);
 
-                    SetCharSlot(team[j], name, color);
+                    SetCharSlot(team[j], name);
                     team[j].onClick = new Button.ButtonClickedEvent();
                     team[j].onClick.AddListener(() => PanelScript.GetPanel("CharacterViewer Panel").PopulatePanel());
                 }
@@ -58,13 +58,12 @@ public class TeamMenuScript : MonoBehaviour {
         }
     }
 
-    public void SetCharSlot(Button _button, string _name, string _color)
+    public void SetCharSlot(Button _button, string _name)
     {
         Text t = _button.GetComponentInChildren<Text>();
         t.text = _name;
 
         ButtonScript buttScript = _button.GetComponent<ButtonScript>();
-        buttScript.SetTotalEnergy(_color);
 
         _button.GetComponent<Image>().color = new Color(.85f, .85f, .85f, 1);
     }
@@ -87,20 +86,9 @@ public class TeamMenuScript : MonoBehaviour {
         if (!m_audio.isPlaying)
             m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Recruitment Sound 2"));
 
-        int color = Random.Range(0, 4);
-
         m_currCharScript.m_name = RandomName();
 
-        if (color == 0)
-            m_currCharScript.m_color = "G";
-        else if (color == 1)
-            m_currCharScript.m_color = "R";
-        else if (color == 2)
-            m_currCharScript.m_color = "W";
-        else if (color == 3)
-            m_currCharScript.m_color = "B";
-
-        int numActions = _lvl * 2;
+        int numActions = 3;
         int statAlts = _lvl;
         int hPBonus = _lvl * 2;
 
@@ -109,67 +97,20 @@ public class TeamMenuScript : MonoBehaviour {
         DatabaseScript dbScript = GameObject.Find("Database").GetComponent<DatabaseScript>();
 
         string newAct = "";
-        for (int i = 0; i < numActions; i++)
+        for (int i = 0; i < 2; i++)
         {
-            int min = 0;
-            int max = 3; // level 0 (+2 ENG)
-
-            if (i == 1)
-            {
-                min = 3; max = 6; // level 0 (+1 ENG)
-            }
-            else if (i == 2)
-            {
-                min = 6; max = 10; // level 1
-            }
-            else if (i == 3) // New characters can have two -1 actions
-            {
-                min = 6; max = 14; // level 1 or 2
-            }
-            else if (i == 4 || i == 5)
-            {
-                min = 10; max = 16; // level 2 or 3
-            }
-
-            int randAct;
-            bool actOK = true;
-            do
-            {
-                actOK = true;
-                randAct = Random.Range(min, max);
-                newAct = dbScript.m_actions[randAct + (color * 16)];
-
-                for (int j = 0; j < m_currCharScript.m_actions.Length; j++)
-                    if (newAct == m_currCharScript.m_actions[j])
-                        actOK = false;
-
-            } while (!actOK);
-
+            newAct = dbScript.m_actions[0];
             m_currCharScript.m_actions[i] = newAct;
         }
 
-        m_currCharScript.SortActions();
-
-        DatabaseScript db = GameObject.Find("Database").GetComponent<DatabaseScript>();
+        m_currCharScript.m_actions[2] = dbScript.m_actions[1];
 
         m_currCharScript.InitializeStats();
 
         m_currCharScript.m_stats[(int)CharacterScript.sts.HP] = 10 + hPBonus;
         m_currCharScript.m_tempStats[(int)CharacterScript.sts.HP] = m_currCharScript.m_stats[(int)CharacterScript.sts.HP];
 
-        for (int h = 0; h < statAlts; h++)
-        {
-            string[] stat = db.m_stat[Random.Range(0, db.m_stat.Length)].Split('|');
-            for (int i = 0; i < m_currCharScript.m_stats.Length; i++) // We're not using the 2 rare stats yet
-            {
-                string[] currStat = stat[i+1].Split(':');
-                m_currCharScript.m_stats[i] += int.Parse(currStat[1]);
-                m_currCharScript.m_tempStats[i] += int.Parse(currStat[1]);
-            }
-        }
-
-        int gender = Random.Range(0, 1);
-        m_currCharScript.m_gender = gender;
+        StatAlterations(m_currCharScript);
 
         m_currCharScript.m_level = 1 + ((_lvl - 1) * 2);
 
@@ -178,6 +119,113 @@ public class TeamMenuScript : MonoBehaviour {
         // Choose the number of random characters
         // Choose level range
         // Choose color restraints
+    }
+
+    private void StatAlterations(CharacterScript _charScript)
+    {
+        int num = Random.Range(0, 15);
+
+        switch (num)
+        {
+            case 0:
+                _charScript.m_stats[(int)CharacterScript.sts.HP] += 2;
+                _charScript.m_tempStats[(int)CharacterScript.sts.HP] += 2;
+                _charScript.m_stats[(int)CharacterScript.sts.SPD] -= 2;
+                _charScript.m_tempStats[(int)CharacterScript.sts.SPD] -= 2;
+                break;
+            case 1:
+                _charScript.m_stats[(int)CharacterScript.sts.HP] += 3;
+                _charScript.m_tempStats[(int)CharacterScript.sts.HP] += 3;
+                _charScript.m_stats[(int)CharacterScript.sts.DMG] -= 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.DMG] -= 1;
+                break;
+            case 2:
+                _charScript.m_stats[(int)CharacterScript.sts.HP] += 3;
+                _charScript.m_tempStats[(int)CharacterScript.sts.HP] += 3;
+                _charScript.m_stats[(int)CharacterScript.sts.MOV] -= 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.MOV] -= 1;
+                break;
+            case 3:
+                _charScript.m_stats[(int)CharacterScript.sts.SPD] += 2;
+                _charScript.m_tempStats[(int)CharacterScript.sts.SPD] += 2;
+                _charScript.m_stats[(int)CharacterScript.sts.HP] -= 2;
+                _charScript.m_tempStats[(int)CharacterScript.sts.HP] -= 2;
+                break;
+            case 4:
+                _charScript.m_stats[(int)CharacterScript.sts.SPD] += 3;
+                _charScript.m_tempStats[(int)CharacterScript.sts.SPD] += 3;
+                _charScript.m_stats[(int)CharacterScript.sts.DMG] -= 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.DMG] -= 1;
+                break;
+            case 5:
+                _charScript.m_stats[(int)CharacterScript.sts.SPD] += 3;
+                _charScript.m_tempStats[(int)CharacterScript.sts.SPD] += 3;
+                _charScript.m_stats[(int)CharacterScript.sts.MOV] -= 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.MOV] -= 1;
+                break;
+            case 6:
+                _charScript.m_stats[(int)CharacterScript.sts.DMG] += 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.DMG] += 1;
+                _charScript.m_stats[(int)CharacterScript.sts.HP] -= 3;
+                _charScript.m_tempStats[(int)CharacterScript.sts.HP] -= 3;
+                break;
+            case 7:
+                _charScript.m_stats[(int)CharacterScript.sts.DMG] += 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.DMG] += 1;
+                _charScript.m_stats[(int)CharacterScript.sts.SPD] -= 3;
+                _charScript.m_tempStats[(int)CharacterScript.sts.SPD] -= 3;
+                break;
+            case 8:
+                _charScript.m_stats[(int)CharacterScript.sts.DMG] += 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.DMG] += 1;
+                _charScript.m_stats[(int)CharacterScript.sts.MOV] -= 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.MOV] -= 1;
+                break;
+            case 9:
+                _charScript.m_stats[(int)CharacterScript.sts.MOV] += 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.MOV] += 1;
+                _charScript.m_stats[(int)CharacterScript.sts.HP] -= 3;
+                _charScript.m_tempStats[(int)CharacterScript.sts.HP] -= -3;
+                break;
+            case 10:
+                _charScript.m_stats[(int)CharacterScript.sts.MOV] += 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.MOV] += 1;
+                _charScript.m_stats[(int)CharacterScript.sts.SPD] -= 3;
+                _charScript.m_tempStats[(int)CharacterScript.sts.SPD] -= 3;
+                break;
+            case 11:
+                _charScript.m_stats[(int)CharacterScript.sts.MOV] += 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.MOV] += 1;
+                _charScript.m_stats[(int)CharacterScript.sts.DMG] -= 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.DMG] -= 1;
+                break;
+            case 12:
+                _charScript.m_stats[(int)CharacterScript.sts.RNG] += 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.RNG] += 1;
+                _charScript.m_stats[(int)CharacterScript.sts.HP] -= 3;
+                _charScript.m_tempStats[(int)CharacterScript.sts.HP] -= -3;
+                break;
+            case 13:
+                _charScript.m_stats[(int)CharacterScript.sts.RNG] += 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.RNG] += 1;
+                _charScript.m_stats[(int)CharacterScript.sts.SPD] -= 3;
+                _charScript.m_tempStats[(int)CharacterScript.sts.SPD] -= 3;
+                break;
+            case 14:
+                _charScript.m_stats[(int)CharacterScript.sts.RNG] += 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.RNG] += 1;
+                _charScript.m_stats[(int)CharacterScript.sts.DMG] -= 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.DMG] -= 1;
+                break;
+            case 15:
+                _charScript.m_stats[(int)CharacterScript.sts.RNG] += 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.RNG] += 1;
+                _charScript.m_stats[(int)CharacterScript.sts.MOV] -= 1;
+                _charScript.m_tempStats[(int)CharacterScript.sts.MOV] -= 1;
+                break;
+            default:
+                break;
+        }
     }
 
     public string RandomName()
@@ -199,10 +247,9 @@ public class TeamMenuScript : MonoBehaviour {
         return name;
     }
 
-    public void FillOutCharacterData(string _name, string _color, string[] _actions, string _stats, int _exp, int _level, int _gender)
+    public void FillOutCharacterData(string _name, string[] _actions, string _stats, int _exp, int _level, int _gender)
     {
         m_currCharScript.m_name = _name;
-        m_currCharScript.m_color = _color;
         m_currCharScript.m_actions = _actions;
         m_currCharScript.m_gender = _gender;
 
@@ -228,7 +275,7 @@ public class TeamMenuScript : MonoBehaviour {
     public void Select()
     {
         PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
-        SetCharSlot(m_currButton, m_currCharScript.m_name, m_currCharScript.m_color);
+        SetCharSlot(m_currButton, m_currCharScript.m_name);
 
         m_currButton.onClick = new Button.ButtonClickedEvent();
         m_currButton.onClick.AddListener(() => PanelScript.GetPanel("CharacterViewer Panel").PopulatePanel());
@@ -276,10 +323,9 @@ public class TeamMenuScript : MonoBehaviour {
         if (PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",name").Length == 0)
             return;
 
-        FillOutCharacterData(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",name"), PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",color"),
-            PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",actions").Split(';'), PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",stats"),
-            int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",exp")), int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",level")),
-            int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",gender")));
+        FillOutCharacterData(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",name"), PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",actions").Split(';'), 
+            PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",stats"), int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",exp")), 
+            int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",level")), int.Parse(PlayerPrefs.GetString(m_saveButton.name + "SAVE" + ",gender")));
 
         Select();
         PanelScript.GetPanel("Save/Load Panel").ClosePanel();
@@ -290,7 +336,7 @@ public class TeamMenuScript : MonoBehaviour {
         CharacterScript cScript = m_currCharScript;
 
         PlayerPrefScript.SaveChar(m_saveButton.name + "SAVE", cScript);
-        SetCharSlot(m_saveButton, cScript.m_name, cScript.m_color);
+        SetCharSlot(m_saveButton, cScript.m_name);
 
         PanelScript.CloseHistory();
     }
@@ -330,108 +376,6 @@ public class TeamMenuScript : MonoBehaviour {
         m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Save Game Sound 1"));
     }
 
-    public string NewRandomAction(Button[] _buttons)
-    {
-        DatabaseScript db = GameObject.Find("Database").GetComponent<DatabaseScript>();
-        string newAct = null;
-        bool actOK = true;
-        string color = "";
-
-        for (int i = 0; i < _buttons.Length; i++)
-            _buttons[i].image.color = Color.white;
-
-        // Copy our normal color in order to temporarily alter it
-        for (int i = 0; i < m_currCharScript.m_color.Length; i++)
-            color += m_currCharScript.m_color[i];
-
-        // Add all our level 0 colors to our color
-        for (int i = 0; i < m_currCharScript.m_actions.Length; i++)
-        {
-            if (PlayerScript.CheckIfGains(m_currCharScript.m_actions[i]))
-            {
-                string actEng = DatabaseScript.GetActionData(m_currCharScript.m_actions[i], DatabaseScript.actions.ENERGY);
-                bool newEng = false;
-                for (int j = 0; j < color.Length; j++)
-                {
-                    if (actEng[0] == 'g' && color[j] != 'G' || actEng[0] == 'r' && color[j] != 'R' ||
-                        actEng[0] == 'w' && color[j] != 'W' || actEng[0] == 'b' && color[j] != 'B')
-                        newEng = true;
-                }
-
-                if (newEng)
-                {
-                    if (actEng[0] == 'g')
-                        color += 'G';
-                    else if (actEng[0] == 'r')
-                        color += 'R';
-                    else if (actEng[0] == 'w')
-                        color += 'W';
-                    else if (actEng[0] == 'b')
-                        color += 'B';
-                }
-            }
-        }
-
-        do
-        {
-            actOK = true;
-            int roll = Random.Range(0, 10);
-            newAct = db.m_actions[Random.Range(0, db.m_actions.Length)];
-            string actEng = DatabaseScript.GetActionData(newAct, DatabaseScript.actions.ENERGY);
-
-            // If one of the other new buttons already has this action, skip it
-            for (int i = 0; i < _buttons.Length; i++)
-                if (newAct == _buttons[i].GetComponent<ButtonScript>().m_action)
-                    actOK = false;
-
-            // If the character already has this action, skip it
-            for (int i = 0; i < m_currCharScript.m_actions.Length; i++)
-                if (newAct == m_currCharScript.m_actions[i])
-                    actOK = false;
-
-            // If the action is outside your max color range, skip it
-            if (m_currCharScript.m_color.Length == 3)
-                for (int i = 0; i < actEng.Length; i++)
-                {
-                    bool withinColors = false;
-                    for (int j = 0; j < m_currCharScript.m_color.Length; j++)
-                    {
-                        if (actEng[i] == m_currCharScript.m_color[j])
-                            withinColors = true;
-
-                        if (j == m_currCharScript.m_color.Length - 1 && !withinColors)
-                            actOK = false;
-                    }
-                }
-
-            if (actOK)
-            {
-                // There is a random chance that the action will just go through even if it's not their color
-                actOK = false;
-                if (roll == 9 || PlayerScript.CheckIfGains(actEng))
-                    actOK = true;
-                else
-                {
-                    for (int i = 0; i < actEng.Length; i++)
-                    {
-                        actOK = false;
-                        for (int j = 0; j < color.Length; j++)
-                        {
-                            if (actEng[i] == color[j])
-                                actOK = true;
-                        }
-                        if (!actOK)
-                            break;
-                    }
-                }
-            }
-            
-
-        } while (!actOK);
-
-        return newAct;
-    }
-
     public void NewActionSelection()
     {
         PanelScript actPanScript = PanelScript.GetPanel("CharacterViewer Panel").m_panels[0].GetComponent<PanelScript>();
@@ -446,18 +390,7 @@ public class TeamMenuScript : MonoBehaviour {
         for (int i = 0; i < actPanScript.m_panels.Length; i++)
         {
             Button[] buttons = actPanScript.m_panels[i].GetComponentsInChildren<Button>();
-            if (PlayerScript.CheckIfGains(DatabaseScript.GetActionData(action, DatabaseScript.actions.ENERGY)) && i == 0 ||
-                !PlayerScript.CheckIfGains(DatabaseScript.GetActionData(action, DatabaseScript.actions.ENERGY)) &&
-                DatabaseScript.GetActionData(action, DatabaseScript.actions.ENERGY).Length == 1 && i == 1 ||
-                !PlayerScript.CheckIfGains(DatabaseScript.GetActionData(action, DatabaseScript.actions.ENERGY)) &&
-                DatabaseScript.GetActionData(action, DatabaseScript.actions.ENERGY).Length == 2 && i == 2 ||
-                !PlayerScript.CheckIfGains(DatabaseScript.GetActionData(action, DatabaseScript.actions.ENERGY)) &&
-                DatabaseScript.GetActionData(action, DatabaseScript.actions.ENERGY).Length == 3 && i == 3)
-            {
-                ColorActionButtons(buttons, true);
-            }
-            else
-                ColorActionButtons(buttons, false);
+            ColorActionButtons(buttons, false);
         }
     }
 
@@ -515,14 +448,7 @@ public class TeamMenuScript : MonoBehaviour {
             }
         }
 
-        m_currCharScript.SortActions();
-
-        int oldColorLen = m_currCharScript.m_color.Length;
-        m_currCharScript.m_color = PlayerScript.CheckCharColors(m_currCharScript.m_actions);
-        if (oldColorLen != m_currCharScript.m_color.Length)
-            PanelScript.GetPanel("CharacterViewer Panel").m_panels[1].GetComponent<PanelScript>().m_buttons[0].GetComponent<ButtonScript>().SetTotalEnergy(m_currCharScript.m_color);
-
-        SetCharSlot(m_currButton, m_currCharScript.m_name, m_currCharScript.m_color);
+        SetCharSlot(m_currButton, m_currCharScript.m_name);
         PlayerPrefScript.SaveChar(m_currButton.name, m_currCharScript);
 
 

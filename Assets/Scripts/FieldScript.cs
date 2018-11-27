@@ -70,7 +70,6 @@ public class FieldScript : MonoBehaviour {
             _char.m_isAI = false;
         else
             _char.m_isAI = true;
-        _char.m_color = PlayerScript.CheckCharColors(_char.m_actions);
 
         _char.m_isDiabled = new int[_char.m_actions.Length];
         for (int i = 0; i < _char.m_isDiabled.Length; i++)
@@ -93,10 +92,6 @@ public class FieldScript : MonoBehaviour {
         _char.m_isAlive = true;
         _char.m_effects = new bool[(int)StatusScript.effects.TOT];
 
-
-
-
-        _char.SetPopupSpheres("");
         m_board.m_characters.Add(_char.gameObject);
 
         if (_char.m_hasActed.Length == 0)

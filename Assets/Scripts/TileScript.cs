@@ -108,7 +108,7 @@ public class TileScript : NetworkBehaviour {
             if (tarRend.material.color == c_attack || tarRend.material.color == c_action)
                 if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.NON_RAD) >= 0 ||
                     int.Parse(DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RAD)) > 0 ||
-                    m_boardScript.m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0 &&
+                    m_boardScript.m_currCharScript.m_effects[(int)StatusScript.effects.CAREFUL] &&
                     CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.RAD_NOT_MODDABLE) != 1)
                 {
                     HandleRadius();
@@ -124,14 +124,17 @@ public class TileScript : NetworkBehaviour {
         CharacterScript currChar = m_boardScript.m_currCharScript;
         string actRng = DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RNG);
 
-        int rad = currChar.m_tempStats[(int)CharacterScript.sts.RAD] + int.Parse(DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RAD));
+        int rad = int.Parse(DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RAD));
+        if (currChar.m_effects[(int)StatusScript.effects.CAREFUL])
+            rad++;
+
         if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.NON_RAD) >= 0)
             rad = int.Parse(actRng) + currChar.m_tempStats[(int)CharacterScript.sts.RNG];
 
         bool targetSelf = false;
         Renderer tarRend = gameObject.GetComponent<Renderer>();
         if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.TAR_SELF) >= 0 ||
-            m_boardScript.m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0 && tarRend.material.color != c_attack)
+            m_boardScript.m_currCharScript.m_effects[(int)StatusScript.effects.CAREFUL] && tarRend.material.color != c_attack)
             targetSelf = true;
 
         targetRestriction tR = targetRestriction.NONE;
@@ -242,7 +245,7 @@ public class TileScript : NetworkBehaviour {
                     if (_color == Color.yellow && _owner.tag == "Player" && _owner.GetComponent<CharacterScript>().m_currAction.Length > 0 && tR.material.color == new Color(1, 1, 1, 0))
                     {
                         if (int.Parse(DatabaseScript.GetActionData(_owner.GetComponent<CharacterScript>().m_currAction, DatabaseScript.actions.RAD)) == 0 &&
-                            _owner.GetComponent<CharacterScript>().m_tempStats[(int)CharacterScript.sts.RAD] == 0)
+                            !_owner.GetComponent<CharacterScript>().m_effects[(int)StatusScript.effects.CAREFUL])
                             continue;
                     }
 

@@ -26,25 +26,23 @@ public class AIActionScript : MonoBehaviour {
         m_targets.Add(_target.gameObject);
         m_action = _action;
 
-        string eng = DatabaseScript.GetActionData(m_action, DatabaseScript.actions.ENERGY);
-        int dmg = int.Parse(DatabaseScript.GetActionData(m_action, DatabaseScript.actions.DMG)) + _owner.m_tempStats[(int)CharacterScript.sts.DMG] - _target.m_tempStats[(int)CharacterScript.sts.DEF];
-        int rad = int.Parse(DatabaseScript.GetActionData(m_action, DatabaseScript.actions.RAD)) + _owner.m_tempStats[(int)CharacterScript.sts.RAD];
+        int dmg = int.Parse(DatabaseScript.GetActionData(m_action, DatabaseScript.actions.DMG)) + _owner.m_tempStats[(int)CharacterScript.sts.DMG];
+        int rad = int.Parse(DatabaseScript.GetActionData(m_action, DatabaseScript.actions.RAD));
+        if (_owner.m_effects[(int)StatusScript.effects.CAREFUL])
+            rad += 1;
 
         if (rad > 0)
         {
             if (CalculateRadius(_action, _owner));
                 return;
         }
-
-        if (_target.m_tempStats[(int)CharacterScript.sts.HP] - dmg <= 0)
-            m_value += 100 - CharacterScript.ConvertedCost(eng);
-        else
-            m_value += 50 + CharacterScript.ConvertedCost(eng);
     }
 
     private bool CalculateRadius(string _action, CharacterScript _owner)
     {
-        int rad = int.Parse(DatabaseScript.GetActionData(m_action, DatabaseScript.actions.RAD)) + _owner.m_tempStats[(int)CharacterScript.sts.RAD];
+        int rad = int.Parse(DatabaseScript.GetActionData(m_action, DatabaseScript.actions.RAD));
+        if (_owner.m_effects[(int)StatusScript.effects.CAREFUL])
+            rad += 1;
 
         TileScript originalTile = m_targets[0].GetComponent<CharacterScript>().m_tile;
         originalTile.FetchTilesWithinRange(_owner, rad, Color.yellow, true, TileScript.targetRestriction.NONE, false);
