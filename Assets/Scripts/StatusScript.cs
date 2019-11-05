@@ -125,7 +125,7 @@ public class StatusScript : MonoBehaviour {
             case "ATK(Crash)":
                 if (tecVal < 0)
                     return;
-                m_charScript.DisableRandomAction();
+                ActionScript.DisableRandomAction(m_charScript);
                 m_mode = mode.TURN_END;
                 m_lifeSpan = 1 + tecVal;
                 m_sprite = Resources.Load<Sprite>("Symbols/Action Symbol");

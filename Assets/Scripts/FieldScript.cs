@@ -38,7 +38,7 @@ public class FieldScript : MonoBehaviour {
         string[] acts = new string[1];
         acts[0] = "ATK(Push)";
         m_mainChar.m_actions = acts;
-        m_mainChar.RetrieveActions();
+        ActionScript.RetrieveActions(m_mainChar);
 
         m_mainChar.m_isDiabled = new int[m_mainChar.m_actions.Length];
         for (int i = 0; i < m_mainChar.m_isDiabled.Length; i++)

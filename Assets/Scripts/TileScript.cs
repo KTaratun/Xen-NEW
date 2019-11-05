@@ -44,12 +44,12 @@ public class TileScript : NetworkBehaviour {
 
     public void OnMouseDown()
     {
-        if (PanelScript.CheckIfPanelOpen() || m_boardScript.m_camIsFrozen || m_boardScript.m_hoverButton || !m_boardScript.m_currCharScript)
+        if (PanelManagerScript.CheckIfPanelOpen() || m_boardScript.m_camIsFrozen || m_boardScript.m_hoverButton || !m_boardScript.m_currCharScript)
             return;
 
         Renderer renderer = GetComponent<Renderer>();
 
-        if (renderer.material.color == c_neutral && m_boardScript.m_selected != this && !PanelScript.GetPanel("Choose Panel").m_inView &&
+        if (renderer.material.color == c_neutral && m_boardScript.m_selected != this && !PanelManagerScript.GetPanel("Choose Panel").m_slideScript.m_inView &&
             m_boardScript.m_currCharScript && m_holding != m_boardScript.m_currCharScript.gameObject && m_boardScript.m_currCharScript.m_tile.m_radius.Count == 0)
         {
             if (m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player")
@@ -58,7 +58,7 @@ public class TileScript : NetworkBehaviour {
                 charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(false);
                 charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.white;
 
-                PanelScript.GetPanel("HUD Panel RIGHT").ClosePanel();
+                PanelManagerScript.GetPanel("HUD Panel RIGHT").m_slideScript.ClosePanel();
             }
             if (m_holding && m_holding.tag == "Player")
             {
@@ -68,7 +68,7 @@ public class TileScript : NetworkBehaviour {
             }
             m_boardScript.m_selected = this;
         }
-        else if (renderer.material.color == c_neutral && m_boardScript.m_selected == this && !PanelScript.GetPanel("Choose Panel").m_inView &&
+        else if (renderer.material.color == c_neutral && m_boardScript.m_selected == this && !PanelManagerScript.GetPanel("Choose Panel").m_slideScript.m_inView &&
             m_boardScript.m_currCharScript && m_holding != m_boardScript.m_currCharScript.gameObject)
         {
             if (m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player")
@@ -77,7 +77,7 @@ public class TileScript : NetworkBehaviour {
                 charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(false);
                 charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.white;
 
-                PanelScript.GetPanel("HUD Panel RIGHT").ClosePanel();
+                PanelManagerScript.GetPanel("HUD Panel RIGHT").m_slideScript.ClosePanel();
             }
             m_boardScript.m_selected = null;
         }
@@ -90,17 +90,17 @@ public class TileScript : NetworkBehaviour {
         // If selecting a tile while moving
         if (renderer.material.color == Color.blue) // If tile is blue when clicked, perform movement code
         {
-            Button[] buttons = PanelScript.m_confirmPanel.GetComponentsInChildren<Button>();
+            Button[] buttons = PanelManagerScript.m_confirmPanel.GetComponentsInChildren<Button>();
             buttons[1].GetComponent<ButtonScript>().m_object = m_boardScript.m_currCharScript.gameObject;
-            buttons[1].GetComponent<ButtonScript>().ConfirmationButton("Move");
+            InputManagerScript.ConfirmationButton(buttons[1], "Move");
         }
         // If selecting a tile that is holding a character while using an action
         else if (renderer.material.color == Color.red && m_holding || renderer.material.color == Color.green && m_holding ||
             renderer.material.color == Color.yellow) // Otherwise if color is red, perform action code
         {
-            Button[] buttons = PanelScript.m_confirmPanel.GetComponentsInChildren<Button>();
+            Button[] buttons = PanelManagerScript.m_confirmPanel.GetComponentsInChildren<Button>();
             buttons[1].GetComponent<ButtonScript>().m_object = m_boardScript.m_currCharScript.gameObject;
-            buttons[1].GetComponent<ButtonScript>().ConfirmationButton("Action");
+            InputManagerScript.ConfirmationButton(buttons[1], "Action");
         }
         else if (m_holding && m_holding.tag == "Player" && !m_boardScript.m_isForcedMove)
         {
@@ -116,7 +116,7 @@ public class TileScript : NetworkBehaviour {
                 //statusPanel.m_cScript = m_holding.GetComponent<CharacterScript>();
                 //statusPanel.PopulatePanel();
 
-                Button movB = PanelScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0];
+                Button movB = PanelManagerScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0];
                     movB.GetComponent<ButtonScript>().Select();
             }
         }
@@ -150,10 +150,10 @@ public class TileScript : NetworkBehaviour {
         // For special case, multi targeting attacks
         if (currChar.m_currAction.Length > 0)
             if (tarRend.material.color == c_attack || tarRend.material.color == c_action)
-                if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.NON_RAD) >= 0 ||
+                if (ActionScript.UniqueActionProperties(currChar.m_currAction, ActionScript.uniAct.NON_RAD) >= 0 ||
                     int.Parse(DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RAD)) > 0 ||
                     m_boardScript.m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0 &&
-                    CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.RAD_NOT_MODDABLE) != 1)
+                    ActionScript.UniqueActionProperties(currChar.m_currAction, ActionScript.uniAct.RAD_NOT_MODDABLE) != 1)
                 {
                     HandleRadius();
                     return;
@@ -169,21 +169,21 @@ public class TileScript : NetworkBehaviour {
         string actRng = DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RNG);
 
         int rad = currChar.m_tempStats[(int)CharacterScript.sts.RAD] + int.Parse(DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RAD));
-        if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.NON_RAD) >= 0)
+        if (ActionScript.UniqueActionProperties(currChar.m_currAction, ActionScript.uniAct.NON_RAD) >= 0)
             rad = int.Parse(actRng) + currChar.m_tempStats[(int)CharacterScript.sts.RNG];
 
         bool targetSelf = false;
         Renderer tarRend = gameObject.GetComponent<Renderer>();
-        if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.TAR_SELF) >= 0 ||
+        if (ActionScript.UniqueActionProperties(currChar.m_currAction, ActionScript.uniAct.TAR_SELF) >= 0 ||
             m_boardScript.m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0 && tarRend.material.color != c_attack)
             targetSelf = true;
 
         targetRestriction tR = targetRestriction.NONE;
-        if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.TAR_RES) >= 0)
-            tR = (targetRestriction)CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.TAR_RES);
+        if (ActionScript.UniqueActionProperties(currChar.m_currAction, ActionScript.uniAct.TAR_RES) >= 0)
+            tR = (targetRestriction)ActionScript.UniqueActionProperties(currChar.m_currAction, ActionScript.uniAct.TAR_RES);
 
         bool isBlockable = true;
-        if (CharacterScript.UniqueActionProperties(currChar.m_currAction, CharacterScript.uniAct.IS_NOT_BLOCK) >= 0 ||
+        if (ActionScript.UniqueActionProperties(currChar.m_currAction, ActionScript.uniAct.IS_NOT_BLOCK) >= 0 ||
             m_boardScript.m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0)
             isBlockable = false;
 
