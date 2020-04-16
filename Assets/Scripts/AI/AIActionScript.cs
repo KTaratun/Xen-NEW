@@ -20,34 +20,32 @@ public class AIActionScript : MonoBehaviour {
 		
 	}
 
-    public void CalculateValue(string _action, CharacterScript _owner, CharacterScript _target)
+    //public void CalculateValue(string _action, CharacterScript _owner, CharacterScript _target)
+    //{
+    //    m_value = 0;
+    //    m_targets.Add(_target.gameObject);
+    //    m_action = _action;
+
+    //    string eng = DatabaseScript.GetActionData(m_action, DatabaseScript.actions.ENERGY);
+    //    int dmg = int.Parse(DatabaseScript.GetActionData(m_action, DatabaseScript.actions.DMG)) + _owner.m_tempStats[(int)CharacterScript.sts.DMG] - _target.m_tempStats[(int)CharacterScript.sts.DEF];
+    //    int rad = int.Parse(DatabaseScript.GetActionData(m_action, DatabaseScript.actions.RAD)) + _owner.m_tempStats[(int)CharacterScript.sts.RAD];
+
+    //    if (rad > 0)
+    //    {
+    //        if (CalculateRadius(_action, _owner));
+    //            return;
+    //    }
+
+    //    if (_target.m_tempStats[(int)CharacterScript.sts.HP] - dmg <= 0)
+    //        m_value += 100 - ActionScript.ConvertedCost(eng);
+    //    else
+    //        m_value += 50 + ActionScript.ConvertedCost(eng);
+    //}
+
+    private bool CalculateRadius(ActionScript _action, CharacterScript _owner)
     {
-        m_value = 0;
-        m_targets.Add(_target.gameObject);
-        m_action = _action;
-
-        string eng = DatabaseScript.GetActionData(m_action, DatabaseScript.actions.ENERGY);
-        int dmg = int.Parse(DatabaseScript.GetActionData(m_action, DatabaseScript.actions.DMG)) + _owner.m_tempStats[(int)CharacterScript.sts.DMG] - _target.m_tempStats[(int)CharacterScript.sts.DEF];
-        int rad = int.Parse(DatabaseScript.GetActionData(m_action, DatabaseScript.actions.RAD)) + _owner.m_tempStats[(int)CharacterScript.sts.RAD];
-
-        if (rad > 0)
-        {
-            if (CalculateRadius(_action, _owner));
-                return;
-        }
-
-        if (_target.m_tempStats[(int)CharacterScript.sts.HP] - dmg <= 0)
-            m_value += 100 - ActionScript.ConvertedCost(eng);
-        else
-            m_value += 50 + ActionScript.ConvertedCost(eng);
-    }
-
-    private bool CalculateRadius(string _action, CharacterScript _owner)
-    {
-        int rad = int.Parse(DatabaseScript.GetActionData(m_action, DatabaseScript.actions.RAD)) + _owner.m_tempStats[(int)CharacterScript.sts.RAD];
-
         TileScript originalTile = m_targets[0].GetComponent<CharacterScript>().m_tile;
-        originalTile.FetchTilesWithinRange(_owner, rad, Color.yellow, true, TileScript.targetRestriction.NONE, false);
+        originalTile.FetchTilesWithinRange(_owner, _action.m_radius, TileScript.c_radius, true, TileScript.targetRestriction.NONE, false);
         //List<TileScript> tiles = originalTile.m_targetRadius;
 
         for (int i = 0; i < originalTile.m_targetRadius.Count; i++)

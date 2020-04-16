@@ -6,10 +6,14 @@ public class ProjectileScript : ObjectScript {
 
     private Vector3 m_origin;
 
+    private SlidingPanelManagerScript m_panMan;
+
     // Use this for initialization
-    new void Start () {
-		
-	}
+    new void Start () 
+    {
+        if (GameObject.Find("Scene Manager"))
+            m_panMan = GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>();
+    }
 
     // Update is called once per frame
     new void Update()
@@ -63,7 +67,7 @@ public class ProjectileScript : ObjectScript {
         }
 
         transform.SetPositionAndRotation(new Vector3(transform.position.x + transform.forward.x * charMovement,newY, transform.position.z + transform.forward.z * charMovement), transform.rotation);
-        if (!PanelManagerScript.GetPanel("Round End Panel").m_slideScript.m_inView)
+        if (!m_panMan.GetPanel("Round End Panel").m_inView)
             m_boardScript.m_camera.GetComponent<CameraScript>().m_target = gameObject;
 
         // Check to see if character is close enough to the point
@@ -90,6 +94,6 @@ public class ProjectileScript : ObjectScript {
             //m_boardScript.m_currCharScript.m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Explosion Sound 2"));
         }
 
-        ActionScript.Action(m_boardScript.m_currCharScript);
+        m_boardScript.m_currCharScript.m_currAction.Action();
     }
 }

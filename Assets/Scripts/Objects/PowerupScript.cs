@@ -23,11 +23,16 @@ public class PowerupScript : ObjectScript {
     public string m_effect;
     public ParticleSystem m_particle;
 
+    private SlidingPanelManagerScript m_panMan;
+
     // Use this for initialization
     protected new void Start ()
     {
         base.Start();
-	}
+
+        if (GameObject.Find("Scene Manager"))
+            m_panMan = GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>();
+    }
 
     public void Init(int _ind)
     {
@@ -359,7 +364,7 @@ public class PowerupScript : ObjectScript {
         _char.PlayAnimation(CharacterScript.prtcles.GAIN_STATUS, m_color);
 
         if (m_boardScript.m_currCharScript == _char)
-            PanelManagerScript.GetPanel("HUD Panel LEFT").PopulatePanel();
+            m_panMan.GetPanel("HUD Panel LEFT").PopulatePanel();
 
         Destroy(gameObject);
     }

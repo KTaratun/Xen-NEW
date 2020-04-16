@@ -10,6 +10,7 @@ public class TileScript : NetworkBehaviour {
     public enum targetRestriction { NONE, HORVERT, DIAGONAL};
 
     static public Color c_attack = new Color(1, 0, 0, 0.5f);
+    static public Color c_radius = Color.yellow;
     static public Color c_action = new Color(0, 1, 0, 0.5f);
     static public Color c_move = new Color(0, 0, 1, 0.5f);
     static public Color c_neutral = new Color(1, 1, 1, 0.5f);
@@ -22,14 +23,19 @@ public class TileScript : NetworkBehaviour {
     public int m_x;
     public int m_z;
     public BoardScript m_boardScript;
-    private Color m_oldColor;
+    public Color m_oldColor;
     public GameObject m_traversed; // Used for path planning and to determine future occupancy of a tile
     public TileScript m_parent; // Used for determining path for AI
+
+    private SlidingPanelManagerScript m_panMan;
     //private LineRenderer m_line;
 
     // Use this for initialization
     void Start()
     {
+        if (GameObject.Find("Scene Manager"))
+            m_panMan = GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>();
+
         m_traversed = null;
         m_radius = new List<TileScript>();
         m_oldColor = Color.black;
@@ -44,12 +50,12 @@ public class TileScript : NetworkBehaviour {
 
     public void OnMouseDown()
     {
-        if (PanelManagerScript.CheckIfPanelOpen() || m_boardScript.m_camIsFrozen || m_boardScript.m_hoverButton || !m_boardScript.m_currCharScript)
+        if (m_panMan.CheckIfPanelOpen() || m_boardScript.m_camIsFrozen || m_boardScript.m_hoverButton || !m_boardScript.m_currCharScript)
             return;
 
         Renderer renderer = GetComponent<Renderer>();
 
-        if (renderer.material.color == c_neutral && m_boardScript.m_selected != this && !PanelManagerScript.GetPanel("Choose Panel").m_slideScript.m_inView &&
+        if (renderer.material.color == c_neutral && m_boardScript.m_selected != this && !m_panMan.GetPanel("Choose Panel").m_inView &&
             m_boardScript.m_currCharScript && m_holding != m_boardScript.m_currCharScript.gameObject && m_boardScript.m_currCharScript.m_tile.m_radius.Count == 0)
         {
             if (m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player")
@@ -58,7 +64,7 @@ public class TileScript : NetworkBehaviour {
                 charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(false);
                 charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.white;
 
-                PanelManagerScript.GetPanel("HUD Panel RIGHT").m_slideScript.ClosePanel();
+                m_panMan.GetPanel("HUD Panel RIGHT").ClosePanel();
             }
             if (m_holding && m_holding.tag == "Player")
             {
@@ -68,7 +74,7 @@ public class TileScript : NetworkBehaviour {
             }
             m_boardScript.m_selected = this;
         }
-        else if (renderer.material.color == c_neutral && m_boardScript.m_selected == this && !PanelManagerScript.GetPanel("Choose Panel").m_slideScript.m_inView &&
+        else if (renderer.material.color == c_neutral && m_boardScript.m_selected == this && !m_panMan.GetPanel("Choose Panel").m_inView &&
             m_boardScript.m_currCharScript && m_holding != m_boardScript.m_currCharScript.gameObject)
         {
             if (m_boardScript.m_selected && m_boardScript.m_selected.m_holding && m_boardScript.m_selected.m_holding.tag == "Player")
@@ -77,7 +83,7 @@ public class TileScript : NetworkBehaviour {
                 charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(false);
                 charScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.white;
 
-                PanelManagerScript.GetPanel("HUD Panel RIGHT").m_slideScript.ClosePanel();
+                m_panMan.GetPanel("HUD Panel RIGHT").ClosePanel();
             }
             m_boardScript.m_selected = null;
         }
@@ -89,19 +95,11 @@ public class TileScript : NetworkBehaviour {
 
         // If selecting a tile while moving
         if (renderer.material.color == Color.blue) // If tile is blue when clicked, perform movement code
-        {
-            Button[] buttons = PanelManagerScript.m_confirmPanel.GetComponentsInChildren<Button>();
-            buttons[1].GetComponent<ButtonScript>().m_object = m_boardScript.m_currCharScript.gameObject;
-            InputManagerScript.ConfirmationButton(buttons[1], "Move");
-        }
+            m_panMan.GetPanel("Confirmation Panel").GetComponent<ConfirmationPanelScript>().ConfirmationButton("Move");
         // If selecting a tile that is holding a character while using an action
         else if (renderer.material.color == Color.red && m_holding || renderer.material.color == Color.green && m_holding ||
-            renderer.material.color == Color.yellow) // Otherwise if color is red, perform action code
-        {
-            Button[] buttons = PanelManagerScript.m_confirmPanel.GetComponentsInChildren<Button>();
-            buttons[1].GetComponent<ButtonScript>().m_object = m_boardScript.m_currCharScript.gameObject;
-            InputManagerScript.ConfirmationButton(buttons[1], "Action");
-        }
+            renderer.material.color == c_radius) // Otherwise if color is red, perform action code
+            m_panMan.GetPanel("Confirmation Panel").GetComponent<ConfirmationPanelScript>().ConfirmationButton("Action");
         else if (m_holding && m_holding.tag == "Player" && !m_boardScript.m_isForcedMove)
         {
             if (m_boardScript.m_selected != this)
@@ -109,14 +107,14 @@ public class TileScript : NetworkBehaviour {
 
             m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_holding;
 
-            if (m_holding == m_boardScript.m_currCharScript.gameObject && m_boardScript.m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] < 2)// &&
+            if (m_holding == m_boardScript.m_currCharScript.gameObject && m_boardScript.m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] == false)// &&
                 //NetworkConnection. == m_holding.GetComponent<CharacterScript>().m_player.m_num)
             {
                 //PanelScript statusPanel = PanelScript.GetPanel("Status Panel");
                 //statusPanel.m_cScript = m_holding.GetComponent<CharacterScript>();
                 //statusPanel.PopulatePanel();
 
-                Button movB = PanelManagerScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0];
+                Button movB = m_panMan.GetPanel("HUD Panel LEFT").transform.Find("Move Pass Panel").transform.Find("Move").GetComponent<Button>();
                     movB.GetComponent<ButtonScript>().Select();
             }
         }
@@ -128,66 +126,71 @@ public class TileScript : NetworkBehaviour {
             return;
 
         CharacterScript currChar = m_boardScript.m_currCharScript;
-        TileScript oldTile = m_boardScript.m_oldTile;
 
-        if (oldTile)
-        {
-            Renderer oTR = oldTile.GetComponent<Renderer>();
-            if (oTR.material.color == Color.yellow)
-                oldTile.ClearRadius();
-            else if (oTR.material.color.a != 0)
-                oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a - 0.5f);
-
-            // Hacky fix for when you spawn colored m_tiles for range and your cursor starts on one of the m_tiles. If it has no alpha and isn't white
-            if (oTR.material.color.a == 0f && oTR.material.color.r + oTR.material.color.g + oTR.material.color.b != 3)
-                oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a + 0.5f);
-        }
+        if (m_boardScript.m_oldTile)
+            HandleOld();
 
         Renderer tarRend = gameObject.GetComponent<Renderer>();
 
         // TARGET RED TILE
 
         // For special case, multi targeting attacks
-        if (currChar.m_currAction.Length > 0)
+        if (currChar.m_currAction)
             if (tarRend.material.color == c_attack || tarRend.material.color == c_action)
-                if (ActionScript.UniqueActionProperties(currChar.m_currAction, ActionScript.uniAct.NON_RAD) >= 0 ||
-                    int.Parse(DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RAD)) > 0 ||
+                if (currChar.m_currAction.UniqueActionProperties(ActionScript.uniAct.NON_RAD) >= 0 ||
+                    currChar.m_currAction.m_radius > 0 ||
                     m_boardScript.m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0 &&
-                    ActionScript.UniqueActionProperties(currChar.m_currAction, ActionScript.uniAct.RAD_NOT_MODDABLE) != 1)
+                    currChar.m_currAction.UniqueActionProperties(ActionScript.uniAct.RAD_NOT_MODDABLE) != 1)
                 {
                     HandleRadius();
                     return;
                 }
 
         tarRend.material.color = new Color(tarRend.material.color.r, tarRend.material.color.g, tarRend.material.color.b, tarRend.material.color.a + 0.5f);
+
         m_boardScript.m_oldTile = this;
+    }
+
+    public void HandleOld()
+    {
+        TileScript oldTile = m_boardScript.m_oldTile;
+
+        Renderer oTR = oldTile.GetComponent<Renderer>();
+        if (oTR.material.color == c_radius)
+            oldTile.ClearRadius();
+        else if (oTR.material.color.a != 0)
+            oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a - 0.5f);
+
+        // Hacky fix for when you spawn colored m_tiles for range and your cursor starts on one of the m_tiles. If it has no alpha and isn't white
+        if (oTR.material.color.a == 0f && oTR.material.color.r + oTR.material.color.g + oTR.material.color.b != 3)
+            oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a + 0.5f);
     }
 
     public void HandleRadius()
     {
         CharacterScript currChar = m_boardScript.m_currCharScript;
-        string actRng = DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RNG);
+        ActionScript act = currChar.m_currAction;
 
-        int rad = currChar.m_tempStats[(int)CharacterScript.sts.RAD] + int.Parse(DatabaseScript.GetActionData(currChar.m_currAction, DatabaseScript.actions.RAD));
-        if (ActionScript.UniqueActionProperties(currChar.m_currAction, ActionScript.uniAct.NON_RAD) >= 0)
-            rad = int.Parse(actRng) + currChar.m_tempStats[(int)CharacterScript.sts.RNG];
+        int rad = currChar.m_tempStats[(int)CharacterScript.sts.RAD] + act.m_radius;
+        if (act.UniqueActionProperties(ActionScript.uniAct.NON_RAD) >= 0)
+            rad = act.m_range + currChar.m_tempStats[(int)CharacterScript.sts.RNG];
 
         bool targetSelf = false;
         Renderer tarRend = gameObject.GetComponent<Renderer>();
-        if (ActionScript.UniqueActionProperties(currChar.m_currAction, ActionScript.uniAct.TAR_SELF) >= 0 ||
+        if (act.UniqueActionProperties(ActionScript.uniAct.TAR_SELF) >= 0 ||
             m_boardScript.m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0 && tarRend.material.color != c_attack)
             targetSelf = true;
 
         targetRestriction tR = targetRestriction.NONE;
-        if (ActionScript.UniqueActionProperties(currChar.m_currAction, ActionScript.uniAct.TAR_RES) >= 0)
-            tR = (targetRestriction)ActionScript.UniqueActionProperties(currChar.m_currAction, ActionScript.uniAct.TAR_RES);
+        if (act.UniqueActionProperties(ActionScript.uniAct.TAR_RES) >= 0)
+            tR = (targetRestriction)act.UniqueActionProperties(ActionScript.uniAct.TAR_RES);
 
         bool isBlockable = true;
-        if (ActionScript.UniqueActionProperties(currChar.m_currAction, ActionScript.uniAct.IS_NOT_BLOCK) >= 0 ||
+        if (act.UniqueActionProperties(ActionScript.uniAct.IS_NOT_BLOCK) >= 0 ||
             m_boardScript.m_currCharScript.m_tempStats[(int)CharacterScript.sts.RAD] > 0)
             isBlockable = false;
 
-        FetchTilesWithinRange(currChar, rad, Color.yellow, targetSelf, tR, isBlockable);
+        FetchTilesWithinRange(currChar, rad, c_radius, targetSelf, tR, isBlockable);
         m_boardScript.m_oldTile = this;
     }
 
@@ -202,19 +205,19 @@ public class TileScript : NetworkBehaviour {
         // Handle attacks with radius
         TileScript originalTileScript = this;
 
-        if (_owner.tag == "Player" && _owner.GetComponent<CharacterScript>().m_currAction.Length > 0 && _color != c_move)
+        if (_owner.tag == "Player" && _owner.GetComponent<CharacterScript>().m_currAction && _color != c_move)
         {
-            string range = DatabaseScript.GetActionData(_owner.GetComponent<CharacterScript>().m_currAction, DatabaseScript.actions.RNG);
-            string radius = DatabaseScript.GetActionData(_owner.GetComponent<CharacterScript>().m_currAction, DatabaseScript.actions.RAD);
+            int range = _owner.GetComponent<CharacterScript>().m_currAction.m_range;
+            int radius = _owner.GetComponent<CharacterScript>().m_currAction.m_radius;
 
-            if (int.Parse(range) == 0 && int.Parse(radius) > 0)
+            if (range == 0 && radius > 0)
             {
-                _range = int.Parse(radius);
+                _range = radius;
                 _targetSelf = false;
                 originalTileScript = _owner.m_tile;
             }
 
-            if (int.Parse(radius) > 0)
+            if (radius > 0)
                 _isBlockable = false;
         }
 
@@ -224,11 +227,12 @@ public class TileScript : NetworkBehaviour {
         if (_targetSelf || !_targetSelf && originalTileScript != _owner.m_tile.GetComponent<TileScript>())//|| !_targetSelf && this != currCharScript.m_tile.GetComponent<TileScript>())// || !_targetSelf && this != originalTileScript
         {
             Renderer myRend = originalTileScript.gameObject.GetComponent<Renderer>();
+
             m_oldColor = myRend.material.color;
             
             myRend.material.color = _color;
             
-            if (_color == Color.yellow)
+            if (_color == c_radius)
                 m_targetRadius.Add(originalTileScript);
             else
                 m_radius.Add(originalTileScript);
@@ -270,7 +274,6 @@ public class TileScript : NetworkBehaviour {
 
                     // if color is movement color and the current tile is holding someone
                     if (m_holding && m_holding.tag == "Player" && _color == c_move && tScript.m_holding && tScript.m_holding.tag != "PowerUp" ||
-                        m_holding && m_holding.tag == "PowerUp" && _color == c_move && tScript.m_holding && tScript.m_holding.tag != "Player" ||
                         !_targetSelf && tScript == _owner.m_tile.GetComponent<TileScript>())
                         continue;
 
@@ -283,22 +286,22 @@ public class TileScript : NetworkBehaviour {
                     Renderer tR = currNeighbor.GetComponent<Renderer>();
 
                     // If the fetch was yellow but doesn't have radius, then we want to select all tiles in a specific direction ie. Piercing, thrust and diagnal
-                    if (_color == Color.yellow && _owner.tag == "Player" && _owner.GetComponent<CharacterScript>().m_currAction.Length > 0 && tR.material.color == new Color(1, 1, 1, 0))
+                    if (_color == c_radius && _owner.tag == "Player" && _owner.GetComponent<CharacterScript>().m_currAction && tR.material.color == new Color(1, 1, 1, 0))
                     {
-                        if (int.Parse(DatabaseScript.GetActionData(_owner.GetComponent<CharacterScript>().m_currAction, DatabaseScript.actions.RAD)) == 0 &&
+                        if (_owner.GetComponent<CharacterScript>().m_currAction.m_radius == 0 &&
                             _owner.GetComponent<CharacterScript>().m_tempStats[(int)CharacterScript.sts.RAD] == 0)
                             continue;
                     }
 
                     if (tR.material.color != _color)
                     {
-                        if (_color == Color.yellow)
+                        if (_color == c_radius)
                             tScript.m_oldColor = tR.material.color;
 
                         tR.material.color = _color;
                         storingList.Add(tScript);
 
-                        if (_color == Color.yellow)
+                        if (_color == c_radius)
                             m_targetRadius.Add(currNeighbor);
                         else
                             m_radius.Add(currNeighbor);
@@ -306,6 +309,35 @@ public class TileScript : NetworkBehaviour {
                 }
                 workingList.RemoveAt(0);
             }
+        }
+    }
+
+    static public void FetchAllEmptyTiles()
+    {
+        BoardScript bS = GameObject.Find("Board").GetComponent<BoardScript>();
+
+        for (int i = 0; i < bS.m_tiles.Length; i++)
+        {
+            if (!bS.m_tiles[i].m_holding)
+            {
+                Renderer tRend = bS.m_tiles[i].GetComponent<Renderer>();
+                //bS.m_tiles[i].m_oldColor = tRend.material.color;
+                bS.m_currCharScript.m_tile.m_radius.Add(bS.m_tiles[i]);
+                tRend.material.color = c_move;
+            }
+        }
+    }
+
+    public void ClearTile()
+    {
+        Renderer tRend = GetComponent<Renderer>();
+
+        if (m_oldColor == Color.black)
+            tRend.material.color = new Color(1, 1, 1, 0f);
+        else
+        {
+            tRend.material.color = m_oldColor;
+            m_oldColor = Color.black;
         }
     }
 
@@ -318,18 +350,8 @@ public class TileScript : NetworkBehaviour {
             radTiles = m_targetRadius;
 
         for (int i = 0; i < radTiles.Count; i++)
-        {
-            TileScript radTileScript = radTiles[i].GetComponent<TileScript>();
-            Renderer sRend = radTileScript.GetComponent<Renderer>();
+            radTiles[i].GetComponent<TileScript>().ClearTile();
 
-            if (radTileScript.m_oldColor == Color.black)
-                sRend.material.color = new Color(1, 1, 1, 0f);
-            else
-            {
-                sRend.material.color = radTileScript.m_oldColor;
-                radTileScript.m_oldColor = Color.black;
-            }
-        }
         radTiles.Clear();
     }
 

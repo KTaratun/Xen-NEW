@@ -13,15 +13,18 @@ public class CameraScript : MonoBehaviour {
     // References
     public BoardScript m_boardScript;
     public FieldScript m_fieldScript;
+    private SlidingPanelManagerScript m_panMan;
 
 
-
-	// Use this for initialization
-	void Start ()
+    // Use this for initialization
+    void Start ()
     {
         if (m_rotate != true)
             m_rotate = false;
-	}
+
+        if (GameObject.Find("Scene Manager"))
+            m_panMan = GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>();
+    }
 	
 	// Update is called once per frame
 	void Update ()
@@ -164,12 +167,12 @@ public class CameraScript : MonoBehaviour {
             // If the distance is small enough, snap the camera in position to avoid overshooting
             if (Vector3.Distance(m_freeCam.transform.position, m_target.transform.position) < 3.0f && camZoomComplete)
             {
-                if (PanelManagerScript.GetPanel("Round End Panel").m_slideScript.m_inView && m_boardScript.m_currCharScript && m_target != m_boardScript.m_currCharScript.gameObject)
+                if (m_panMan.GetPanel("Round End Panel").m_inView && m_boardScript.m_currCharScript && m_target != m_boardScript.m_currCharScript.gameObject)
                     m_boardScript.m_actionEndTimer += Time.deltaTime;
                 else
                 {
-                    if (PanelManagerScript.GetPanel("Round End Panel").m_slideScript.m_inView && m_boardScript.m_currCharScript)
-                        PanelManagerScript.GetPanel("Round End Panel").m_slideScript.ClosePanel();
+                    if (m_panMan.GetPanel("Round End Panel").m_inView && m_boardScript.m_currCharScript)
+                        m_panMan.GetPanel("Round End Panel").ClosePanel();
 
                     if (m_boardScript.m_actionEndTimer == 0)
                         m_boardScript.m_camIsFrozen = false;

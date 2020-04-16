@@ -12,11 +12,16 @@ public class PlayerScript : MonoBehaviour {
     public int[] m_energy;
     public BoardScript m_bScript;
 
-	// Use this for initialization
-	void Start ()
+    private SlidingPanelManagerScript m_panMan;
+
+    // Use this for initialization
+    void Start ()
     {
         //m_energy = new int[4];
-	}
+
+        if (GameObject.Find("Scene Manager"))
+            m_panMan = GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>();
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -27,9 +32,9 @@ public class PlayerScript : MonoBehaviour {
     {
         Text[] text = null;
         if (_caller == m_bScript.m_currCharScript)
-            text = PanelManagerScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.ENG_PAN].GetComponentsInChildren<Text>();
+            text = m_panMan.GetPanel("HUD Panel LEFT").transform.Find("Energy Panel").GetComponentsInChildren<Text>();
         else
-            text = PanelManagerScript.GetPanel("HUD Panel RIGHT").m_panels[(int)PanelScript.HUDPan.ENG_PAN].GetComponentsInChildren<Text>();
+            text = m_panMan.GetPanel("HUD Panel RIGHT").transform.Find("Energy Panel").GetComponentsInChildren<Text>();
 
         for (int i = 0; i < text.Length; i++)
             text[i].text = m_energy[i].ToString();
@@ -70,13 +75,13 @@ public class PlayerScript : MonoBehaviour {
         return true;
     }
 
-    static public string CheckCharColors(string[] _actions)
+    static public string CheckCharColors(ActionScript[] _actions)
     {
         string colors = "";
 
         for (int i = 0; i < _actions.Length; i++)
         {
-            string actEng = DatabaseScript.GetActionData(_actions[i], DatabaseScript.actions.ENERGY);
+            string actEng = _actions[i].m_energy;
 
             for (int j = 0; j < actEng.Length; j++)
             {
@@ -109,6 +114,34 @@ public class PlayerScript : MonoBehaviour {
         }
 
         return colors;
+    }
+
+    public void AddRandomEnergy(int _num)
+    {
+        List<int> viableEnergy = new List<int>();
+
+        for (int i = 0; i < m_characters.Count; i++)
+        {
+            if (!m_characters[i].m_isAlive)
+                continue;
+
+            string col = m_characters[i].m_color;
+
+            for (int j = 0; j < col.Length; j++)
+            {
+                if (col[j] == 'G')
+                    viableEnergy.Add((int)eng.GRN);
+                else if (col[j] == 'R')
+                    viableEnergy.Add((int)eng.RED);
+                else if (col[j] == 'W')
+                    viableEnergy.Add((int)eng.WHT);
+                else if (col[j] == 'B')
+                    viableEnergy.Add((int)eng.BLU);
+            }
+        }
+
+        for (int i = 0; i < _num; i++)
+            m_energy[viableEnergy[Random.Range(0, viableEnergy.Count)]]++;
     }
 
     public void RemoveRandomEnergy(int _num)

@@ -54,7 +54,7 @@ public class AnimationScript : StateMachineBehaviour {
                 animator.GetComponentInParent<CharacterScript>().m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Ability Sound 1"));
             }
 
-            ActionScript.Action(animator.GetComponentInParent<CharacterScript>());
+            animator.GetComponentInParent<CharacterScript>().m_currAction.Action();
             m_hasDoneAction = true;
         }
         else if (stateInfo.fullPathHash == Animator.StringToHash("Base.Throw") &&

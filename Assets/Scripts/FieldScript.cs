@@ -37,12 +37,8 @@ public class FieldScript : MonoBehaviour {
 
         string[] acts = new string[1];
         acts[0] = "ATK(Push)";
-        m_mainChar.m_actions = acts;
-        ActionScript.RetrieveActions(m_mainChar);
-
-        m_mainChar.m_isDiabled = new int[m_mainChar.m_actions.Length];
-        for (int i = 0; i < m_mainChar.m_isDiabled.Length; i++)
-            m_mainChar.m_isDiabled[i] = 0;
+        //m_mainChar.m_actions = acts;
+        //ActionScript.RetrieveActions(m_mainChar);
 
         // Load in stats
         string[] stats = { "12", "10", "5", "0", "0", "0", "0", "0" };
@@ -65,16 +61,12 @@ public class FieldScript : MonoBehaviour {
     {
         _char.gameObject.name = _name;
         _char.m_name = _name;
-        _char.m_actions = _acts;
+        //_char.m_actions = _acts;
         if (_team == 0)
             _char.m_isAI = false;
         else
             _char.m_isAI = true;
-        _char.m_color = PlayerScript.CheckCharColors(_char.m_actions);
-
-        _char.m_isDiabled = new int[_char.m_actions.Length];
-        for (int i = 0; i < _char.m_isDiabled.Length; i++)
-            _char.m_isDiabled[i] = 0;
+        //_char.m_color = PlayerScript.CheckCharColors(_char.m_actions);
 
         // Load in stats
         if (_char.m_stats.Length == 0)
@@ -100,10 +92,10 @@ public class FieldScript : MonoBehaviour {
         m_board.m_characters.Add(_char.gameObject);
 
         if (_char.m_hasActed.Length == 0)
-            _char.m_hasActed = new int[2];
+            _char.m_hasActed = new bool[2];
 
-        _char.m_hasActed[0] = 0;
-        _char.m_hasActed[1] = 0;
+        _char.m_hasActed[0] = false;
+        _char.m_hasActed[1] = false;
 
         // Link to player
         PlayerScript playScript = m_board.m_players.GetComponents<PlayerScript>()[_team];

@@ -32,6 +32,7 @@ public class BoardScript : MonoBehaviour {
     public bool m_camIsFrozen; // This is used to disable camera movement input from the player
     public int m_environmentalDensity; // This dictates how many environmental objs per tile
     public int m_livingPlayersInRound; // This is mainly for the turn panels. This tells them how far to move when I player finishes their turn.
+    public List<CharacterScript> m_priorityQueue; // This queue is chosen for the next round before normal rolls.
     public float m_actionEndTimer; // This is used to delay camera movement when focusing on a target
     public GameObject m_isForcedMove; // This is to keep track of whichever player is turning an action out of order
 
@@ -43,11 +44,20 @@ public class BoardScript : MonoBehaviour {
     public GameObject m_grenade;
     public GameObject m_laser;
 
-
+    private SlidingPanelManagerScript m_panMan;
+    private ActionLoaderScript m_actLoad;
 
     // Use this for initialization
     void Start()
     {
+        if (GameObject.Find("Scene Manager"))
+        {
+            m_panMan = GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>();
+            m_actLoad = GameObject.Find("Scene Manager").GetComponent<ActionLoaderScript>();
+        }
+
+        m_priorityQueue = new List<CharacterScript>();
+
         m_actionEndTimer = 0;
         m_roundCount = 0;
         m_newTurn = false;
@@ -65,7 +75,7 @@ public class BoardScript : MonoBehaviour {
         m_audio = gameObject.AddComponent<AudioSource>();
         m_isForcedMove = null;
 
-        GameObject.Find("Scene Manager").GetComponent<PanelManagerScript>().MenuPanelInit("Board Canvas", gameObject);
+        GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>().MenuPanelInit("Board Canvas", gameObject);
 
         InitBoardTiles();
         AssignNeighbors();
@@ -93,14 +103,15 @@ public class BoardScript : MonoBehaviour {
         {
             for (int x = 0; x < m_width; x++)
             {
-                GameObject newtile = Instantiate(Resources.Load<GameObject>("OBJs/Tile"));
+                GameObject newTile = Instantiate(Resources.Load<GameObject>("OBJs/Tile"));
+                newTile.transform.parent = transform.Find("Tiles");
 
-                Renderer ntR = newtile.GetComponent<Renderer>();
+                Renderer ntR = newTile.GetComponent<Renderer>();
                 ntR.material.color = new Color(1, 1, 1, 0f);
 
-                newtile.transform.SetPositionAndRotation(new Vector3(x * ntR.bounds.size.x + (r.bounds.min.x + ntR.bounds.size.x / 2), transform.position.y + 0.05f, z * ntR.bounds.size.z + (r.bounds.min.z + ntR.bounds.size.z / 2)), new Quaternion());
+                newTile.transform.SetPositionAndRotation(new Vector3(x * ntR.bounds.size.x + (r.bounds.min.x + ntR.bounds.size.x / 2), transform.position.y + 0.05f, z * ntR.bounds.size.z + (r.bounds.min.z + ntR.bounds.size.z / 2)), new Quaternion());
 
-                TileScript tScript = newtile.GetComponent<TileScript>();
+                TileScript tScript = newTile.GetComponent<TileScript>();
                 tScript.m_x = x;
                 tScript.m_z = z;
                 tScript.m_boardScript = GetComponent<BoardScript>();
@@ -145,6 +156,8 @@ public class BoardScript : MonoBehaviour {
             int randomOBJ = Random.Range(0, environmentalOBJs.Length);
 
             GameObject newOBJ = Instantiate(environmentalOBJs[randomOBJ]);
+            newOBJ.transform.parent = transform.Find("Obstacles");
+
             newOBJ.GetComponent<ObjectScript>().m_name = randomOBJ.ToString();
             newOBJ.GetComponent<ObjectScript>().RandomRotation();
             newOBJ.GetComponent<ObjectScript>().PlaceRandomly(this);
@@ -165,7 +178,7 @@ public class BoardScript : MonoBehaviour {
             playScript.m_bScript = this;
             playScript.m_energy = new int[4];
 
-            for (int j = 0; j < 6; j++)
+            for (int j = 0; j < 4; j++)
             {
                 string key = i.ToString() + ',' + j.ToString();
                 string name = PlayerPrefs.GetString(key + ",name");
@@ -179,26 +192,19 @@ public class BoardScript : MonoBehaviour {
                     
                     cScript = PlayerPrefScript.LoadChar(key, cScript);
                     
-                    if (i == 0)
-                        cScript.m_teamColor = new Color(1, .5f, 0, 1);
-                    else if (i == 1)
-                        cScript.m_teamColor = new Color(.5f, 0, 1, 1);
-                    else if (i == 2)
-                        cScript.m_teamColor = new Color(.8f, 1, 0, 1);
-                    else if (i == 3)
-                        cScript.m_teamColor = Color.magenta;
-                    
                     Renderer rend = newChar.transform.GetComponentInChildren<Renderer>();
                     rend.materials[0].color = cScript.m_teamColor;
+
+                    m_actLoad.AddActions(cScript);
 
                     cScript.SetPopupSpheres("");
                     m_characters.Add(newChar);
                     
                     if (cScript.m_hasActed.Length == 0)
-                        cScript.m_hasActed = new int[2];
+                        cScript.m_hasActed = new bool[2];
                     
-                    cScript.m_hasActed[0] = 0;
-                    cScript.m_hasActed[1] = 0;
+                    cScript.m_hasActed[0] = false;
+                    cScript.m_hasActed[1] = false;
                     
                     // Link to player
                     cScript.m_player = playScript;
@@ -209,18 +215,6 @@ public class BoardScript : MonoBehaviour {
                 }
             }
         }
-
-        if (m_characters.Count == 0)
-            TestChars();
-    }
-
-    private void TestChars()
-    {
-        CharacterScript[] chars = new CharacterScript[4];
-
-        chars[0].m_name = "Charlie";
-        chars[0].m_color = "R";
-        chars[0].m_actions = 
     }
 
 
@@ -254,11 +248,11 @@ public class BoardScript : MonoBehaviour {
     {
         if (Input.GetMouseButtonDown(0))
         {
-            PanelScript rEndPan = PanelManagerScript.GetPanel("Round End Panel");
-            if (rEndPan.m_slideScript.m_inView && rEndPan.m_text[0].text == "BATTLE START" && !GameObject.Find("Network") ||
-                rEndPan.m_slideScript.m_inView && rEndPan.m_text[0].text == "BATTLE START" && GameObject.Find("Network") && GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted)
+            SlidingPanelScript rEndPan = m_panMan.GetPanel("Round End Panel");
+            if (rEndPan.m_inView && rEndPan.transform.Find("Text").GetComponent<Text>().text == "BATTLE START" && !GameObject.Find("Network") ||
+                rEndPan.m_inView && rEndPan.transform.Find("Text").GetComponent<Text>().text == "BATTLE START" && GameObject.Find("Network") && GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted)
                 StartCoroutine(StartBattle());
-            else if (rEndPan.m_slideScript.m_inView && rEndPan.m_text[0].text[rEndPan.m_text[0].text.Length - 1] == 'S')
+            else if (rEndPan.m_inView && rEndPan.transform.Find("Text").GetComponent<Text>().text[rEndPan.transform.Find("Text").GetComponent<Text>().text.Length - 1] == 'S')
             {
                 m_battle = false;
                 SceneManager.LoadScene("Menu");
@@ -277,32 +271,33 @@ public class BoardScript : MonoBehaviour {
         //}
 
         float w = Input.GetAxis("Mouse ScrollWheel");
-        PanelScript actPan = PanelManagerScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.ACT_PAN].GetComponent<PanelScript>();
 
-        if (Input.GetKeyDown(KeyCode.Q) && !PanelManagerScript.GetPanel("Choose Panel").m_slideScript.m_inView) //Formally getmousebuttondown(1);
+        ActionPanelScript actPan = m_panMan.GetPanel("HUD Panel LEFT").transform.Find("Action Panel").GetComponent<ActionPanelScript>();
+
+        if (Input.GetKeyDown(KeyCode.Q) && !m_panMan.GetPanel("Choose Panel").m_inView) //Formally getmousebuttondown(1);
             OnRightClick();
         else if (Input.GetKeyDown(KeyCode.Escape))
-            PanelManagerScript.GetPanel("Options Panel").PopulatePanel();
-        else if (Input.GetKeyDown(KeyCode.LeftShift) && m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] == 0)
-            PanelManagerScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[0].GetComponent<ButtonScript>().Select();
-        else if (Input.GetKeyDown(KeyCode.Space) && !PanelManagerScript.GetPanel("Choose Panel").m_slideScript.m_inView)
-        {
-            if (m_currButton)
-            {
-                m_currButton.GetComponent<Image>().color = Color.white;
-                m_currButton.GetComponent<ButtonScript>().m_main.m_slideScript.ClosePanel();
-                m_currButton = null;
-                TileScript selectedTileScript = m_currCharScript.m_tile.GetComponent<TileScript>();
-                if (selectedTileScript.m_radius.Count > 0)
-                    selectedTileScript.ClearRadius();
-            }
-            InputManagerScript.ConfirmationButton(PanelManagerScript.GetPanel("Confirmation Panel").m_buttons[1], "Pass");
-        }
+            m_panMan.GetPanel("Options Panel").PopulatePanel();
+        else if (Input.GetKeyDown(KeyCode.LeftShift) && m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] == false)
+            m_panMan.GetPanel("HUD Panel LEFT").transform.Find("Move Pass Panel/Move").GetComponent<ButtonScript>().Select();
+        //else if (Input.GetKeyDown(KeyCode.Space) && !m_panMan.GetPanel("Choose Panel").m_inView)
+        //{
+        //    if (m_currButton)
+        //    {
+        //        m_currButton.GetComponent<Image>().color = Color.white;
+        //        m_currButton.GetComponent<ButtonScript>().m_main.ClosePanel();
+        //        m_currButton = null;
+        //        TileScript selectedTileScript = m_currCharScript.m_tile.GetComponent<TileScript>();
+        //        if (selectedTileScript.m_radius.Count > 0)
+        //            selectedTileScript.ClearRadius();
+        //    }
+        //    m_panMan.GetPanel("Confirmation Panel").GetComponent<ConfirmationPanelScript>().ConfirmationButton("Pass");
+        //}
         else if (Input.GetKey(KeyCode.E) && w != 0)
         {
             if (!m_currButton)
             {
-                actPan.m_buttons[0].GetComponent<ButtonScript>().Select();
+                actPan.transform.GetChild(0).GetComponent<ButtonScript>().Select();
                 return;
             }
 
@@ -311,10 +306,12 @@ public class BoardScript : MonoBehaviour {
             {
                 while (i + 1 < 8)
                 {
-                    if (actPan.m_buttons[i + 1].GetComponentInChildren<Text>().text != "EMPTY" &&
-                        m_currCharScript.m_player.CheckEnergy(DatabaseScript.GetActionData(actPan.m_buttons[i + 1].GetComponent<ButtonScript>().m_action, DatabaseScript.actions.ENERGY)))
+                    Button currButt = actPan.transform.GetChild(i + 1).GetComponent<Button>();
+
+                    if (currButt.GetComponentInChildren<Text>().text != "EMPTY" &&
+                        m_currCharScript.m_player.CheckEnergy(currButt.GetComponent<ActionButtonScript>().m_action.m_energy))
                     {
-                        actPan.m_buttons[i + 1].GetComponent<ButtonScript>().Select();
+                        currButt.GetComponent<ButtonScript>().Select();
                         break;
                     }
                     i++;
@@ -324,10 +321,12 @@ public class BoardScript : MonoBehaviour {
             {
                 while (i - 1 >= 0)
                 {
-                    if (i - 1 >= 0 && actPan.m_buttons[i - 1].GetComponentInChildren<Text>().text != "EMPTY" &&
-                         m_currCharScript.m_player.CheckEnergy(DatabaseScript.GetActionData(actPan.m_buttons[i - 1].GetComponent<ButtonScript>().m_action, DatabaseScript.actions.ENERGY)))
+                    Button currButt = actPan.transform.GetChild(i - 1).GetComponent<Button>();
+
+                    if (i - 1 >= 0 && currButt.GetComponentInChildren<Text>().text != "EMPTY" &&
+                         m_currCharScript.m_player.CheckEnergy(currButt.GetComponent<ActionButtonScript>().m_action.m_energy))
                     {
-                        actPan.m_buttons[i - 1].GetComponent<ButtonScript>().Select();
+                        currButt.GetComponent<ButtonScript>().Select();
                         break;
                     }
                     i--;
@@ -344,30 +343,31 @@ public class BoardScript : MonoBehaviour {
             num = 2;
         else if (Input.GetKeyDown(KeyCode.Alpha4))
             num = 3;
-        else if (Input.GetKeyDown(KeyCode.Alpha5))
-            num = 4;
-        else if (Input.GetKeyDown(KeyCode.Alpha6))
-            num = 5;
-        else if (Input.GetKeyDown(KeyCode.Alpha7))
-            num = 6;
-        else if (Input.GetKeyDown(KeyCode.Alpha8))
-            num = 7;
+        //else if (Input.GetKeyDown(KeyCode.Alpha5))
+        //    num = 4;
+        //else if (Input.GetKeyDown(KeyCode.Alpha6))
+        //    num = 5;
+        //else if (Input.GetKeyDown(KeyCode.Alpha7))
+        //    num = 6;
+        //else if (Input.GetKeyDown(KeyCode.Alpha8))
+        //    num = 7;
 
         Text t = null;
         Button butt = null;
-        if (num > -1)
+        if (num >= 0)
         {
-            butt = actPan.GetComponent<PanelScript>().m_buttons[num];
+            butt = actPan.transform.GetChild(num).GetComponent<Button>();
             t = butt.GetComponentInChildren<Text>();
         }
 
         if (num >= 0 && t.text != "EMPTY" && butt.interactable == true)
         {
-            butt.GetComponent<ButtonScript>().Select();
+            m_currCharScript.m_tile.ClearRadius();
+            butt.GetComponent<ActionButtonScript>().Select();
             if (m_highlightedTile && m_highlightedTile.m_holding && m_highlightedTile.m_holding.tag == "Player")
                 if (m_highlightedTile.gameObject.GetComponent<Renderer>().material.color != TileScript.c_attack &&
-                    m_highlightedTile.gameObject.GetComponent<Renderer>().material.color != Color.yellow)
-                    PanelManagerScript.GetPanel("ActionViewer Panel").m_panels[2].m_slideScript.m_inView = false;
+                    m_highlightedTile.gameObject.GetComponent<Renderer>().material.color != TileScript.c_radius)
+                    m_panMan.GetPanel("ActionViewer Panel").transform.Find("ActionView").GetComponent<SlidingPanelScript>().m_inView = false;
         }
     }
 
@@ -377,20 +377,20 @@ public class BoardScript : MonoBehaviour {
         if (m_currButton && !m_camIsFrozen)
         {
             m_currButton.GetComponent<Image>().color = m_currButton.GetComponent<ButtonScript>().m_oldColor;
-            if (m_currButton.GetComponent<PanelScript>())
-                m_currButton.GetComponent<PanelScript>().m_slideScript.m_inView = false;
+            if (m_currButton.GetComponent<SlidingPanelScript>())
+                m_currButton.GetComponent<SlidingPanelScript>().m_inView = false;
             m_currButton = null;
             TileScript selectedTileScript = m_currCharScript.m_tile.GetComponent<TileScript>();
             if (selectedTileScript.m_radius.Count > 0)
                 selectedTileScript.ClearRadius();
 
-            PanelManagerScript.GetPanel("ActionViewer Panel").m_slideScript.ClosePanel();
+            m_panMan.GetPanel("ActionViewer Panel").ClosePanel();
         }
 
         // If right click while the confirmation panel is up, do nothing but close that specific panel
-        if (PanelManagerScript.m_confirmPanel.m_slideScript.m_inView)
+        if (m_panMan.m_confirmPanel.m_inView)
         {
-            PanelManagerScript.RemoveFromHistory("");
+            m_panMan.RemoveFromHistory("");
             return;
         }
 
@@ -399,8 +399,8 @@ public class BoardScript : MonoBehaviour {
         if (currTScript.m_radius.Count == 0 || m_isForcedMove)
             return;
 
-        PanelScript actPreviewScript = PanelManagerScript.GetPanel("ActionPreview");
-        actPreviewScript.m_slideScript.ClosePanel();
+        SlidingPanelScript actPreviewScript = m_panMan.GetPanel("ActionPreview");
+        actPreviewScript.ClosePanel();
 
         if (m_highlightedTile)
             m_highlightedTile.ClearRadius();
@@ -419,9 +419,9 @@ public class BoardScript : MonoBehaviour {
                 m_camIsFrozen = false;
 
                 if (!m_selected)
-                    PanelManagerScript.GetPanel("HUD Panel RIGHT").m_slideScript.ClosePanel();
+                    m_panMan.GetPanel("HUD Panel RIGHT").ClosePanel();
 
-                if (m_currRound.Count == m_livingPlayersInRound - 1 && m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] == 0)
+                if (m_currRound.Count == m_livingPlayersInRound - 1 && m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] == false)
                     m_camera.GetComponent<CameraScript>().m_target = m_currCharScript.gameObject;
             }
         }
@@ -433,10 +433,11 @@ public class BoardScript : MonoBehaviour {
     {
         // Don't hover under these conditions
         if (m_camIsFrozen && !m_currButton || !m_currCharScript || m_currCharScript && 
-                m_currCharScript.m_targets.Count > 0 || 
-                PanelManagerScript.CheckIfPanelOpen())
+                m_currCharScript.m_targets.Count > 0 ||
+                m_panMan.CheckIfPanelOpen() ||
+                m_hoverButton)
         {
-            if (m_oldTile && !m_selected)
+            if (m_oldTile && !m_selected && !m_hoverButton)
             {
                 Renderer oTR = m_oldTile.GetComponent<Renderer>();
                 if (oTR.material.color.a != 0)
@@ -461,14 +462,18 @@ public class BoardScript : MonoBehaviour {
                     oTR.material.color = new Color(oTR.material.color.r, oTR.material.color.g, oTR.material.color.b, oTR.material.color.a - 0.5f);
                 if (m_highlightedTile.m_targetRadius.Count > 0)
                     m_highlightedTile.ClearRadius();
-                if (m_highlightedTile.m_holding)
-                    DeselectHighlightedTile();
+                if (m_highlightedTile.m_holding && m_highlightedTile.m_holding.tag == "Player")
+                {
+                    m_highlightedTile.m_holding.GetComponent<CharacterScript>().DeselectCharacter();
+                    m_highlightedTile = null;
+                }
 
                 m_highlightedTile = null;
             }
 
-            if (!PanelManagerScript.GetPanel("StatusViewer Panel").m_cScript)
-                PanelManagerScript.GetPanel("StatusViewer Panel").m_slideScript.ClosePanel();
+            if (!m_panMan.GetPanel("StatusViewer Panel").m_cScript && m_panMan.GetPanel("StatusViewer Panel").transform.Find("Status Image").GetComponent<SlidingPanelScript>().m_inView)
+                m_panMan.GetPanel("StatusViewer Panel").GetComponent<SlidingPanelScript>().ClosePanel();
+
             return;
         }
 
@@ -498,57 +503,30 @@ public class BoardScript : MonoBehaviour {
 
         // If you hit a character/character tile and while you are aiming with an attack, show the new health after a hit
         if (charScript && tScript.gameObject.GetComponent<Renderer>().material.color == new Color(1, 0, 0, 1) ||
-            charScript && tScript.gameObject.GetComponent<Renderer>().material.color == Color.yellow)
+            charScript && tScript.gameObject.GetComponent<Renderer>().material.color == TileScript.c_radius)
         {
-            PanelManagerScript.GetPanel("ActionViewer Panel").m_panels[2].m_cScript = charScript;
-            PanelManagerScript.GetPanel("ActionViewer Panel").m_panels[2].PopulatePanel();
+            m_panMan.GetPanel("ActionViewer Panel").transform.Find("ActionView Slide/DamagePreview").GetComponent<DamagePreviewPanelScript>().m_cScript = charScript;
+            m_panMan.GetPanel("ActionViewer Panel").transform.Find("ActionView Slide/DamagePreview").GetComponent<DamagePreviewPanelScript>().PopulatePanel();
         }
-
+        
         if (m_highlightedTile && tScript != m_highlightedTile)
         {
-            if (!PanelManagerScript.GetPanel("StatusViewer Panel").m_cScript)
-                PanelManagerScript.GetPanel("StatusViewer Panel").m_slideScript.ClosePanel();
+            if (m_highlightedTile.m_holding && m_highlightedTile.m_holding.tag == "PowerUp" && 
+                m_panMan.GetPanel("StatusViewer Panel").GetComponent<SlidingPanelScript>().m_inView)
+                m_panMan.GetPanel("StatusViewer Panel").GetComponent<SlidingPanelScript>().ClosePanel();
+
             if (m_highlightedTile.m_holding && m_highlightedTile.m_holding.tag == "Player")
-                DeselectHighlightedTile();
+            {
+                m_highlightedTile.m_holding.GetComponent<CharacterScript>().DeselectCharacter();
+                m_highlightedTile = null;
+            }
         }
 
         if (tScript)
             m_highlightedTile = tScript;
 
         if (tScript && tScript.m_holding && tScript.m_holding.tag == "PowerUp")
-        {
-            PanelManagerScript.GetPanel("StatusViewer Panel").m_cScript = null;
-            PanelManagerScript.GetPanel("StatusViewer Panel").PopulatePanel();
-        }
-    }
-
-    private void DeselectHighlightedTile()
-    {
-        PanelManagerScript.GetPanel("ActionViewer Panel").m_panels[2].m_slideScript.ClosePanel();
-
-        if (m_selected && m_selected.m_holding && m_selected.m_holding.tag == "Player" && 
-            m_selected.m_holding.GetComponent<CharacterScript>().m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor == Color.magenta || 
-            PanelManagerScript.GetPanel("Choose Panel").m_slideScript.m_inView)
-            return;
-
-        PanelScript hudPanScript = PanelManagerScript.GetPanel("HUD Panel RIGHT");
-
-        if (m_highlightedTile.m_holding.GetComponent<CharacterScript>())
-        {
-            CharacterScript colScript = m_highlightedTile.m_holding.GetComponent<CharacterScript>();
-
-            for (int i = 0; i < colScript.m_turnPanels.Count; i++)
-            {
-                Image turnPanImage = colScript.m_turnPanels[i].GetComponent<Image>();
-                if (colScript.m_effects[(int)StatusScript.effects.STUN] || !colScript.m_isAlive)
-                    turnPanImage.color = new Color(1, .5f, .5f, 1);
-                else
-                    turnPanImage.color = new Color(colScript.m_teamColor.r + 0.3f, colScript.m_teamColor.g + 0.3f, colScript.m_teamColor.b + 0.3f, 1);
-            }
-        }
-
-        hudPanScript.m_slideScript.ClosePanel();
-        m_highlightedTile = null;
+            m_panMan.GetPanel("StatusViewer Panel").GetComponent<StatusViewerPanel>().PopulatePanel();
     }
 
 
@@ -560,8 +538,8 @@ public class BoardScript : MonoBehaviour {
         cam.m_zoomIn = false;
         m_camIsFrozen = true;
         cam.m_target = gameObject;
-        PanelScript rEndPan = PanelManagerScript.GetPanel("Round End Panel");
-        rEndPan.m_slideScript.m_inView = true;
+        SlidingPanelScript rEndPan = m_panMan.GetPanel("Round End Panel");
+        rEndPan.m_inView = true;
         rEndPan.GetComponentInChildren<Text>().text = "BATTLE START";
         m_battle = true;
     }
@@ -580,8 +558,8 @@ public class BoardScript : MonoBehaviour {
 
         m_camera.GetComponent<CameraScript>().m_zoomIn = true;
         m_camera.GetComponent<CameraScript>().m_rotate = false;
-        PanelManagerScript.GetPanel("HUD Panel LEFT").m_slideScript.m_inView = true;
-        PanelManagerScript.GetPanel("Round Panel").m_slideScript.m_inView = true;
+        m_panMan.GetPanel("HUD Panel LEFT").m_inView = true;
+        m_panMan.GetPanel("Round Panel").m_inView = true;
 
         yield return new WaitForSeconds(.1f);
 
@@ -636,15 +614,17 @@ public class BoardScript : MonoBehaviour {
         if (m_currCharScript.m_turnPanels.Count > 0)
             m_currCharScript.m_turnPanels.RemoveAt(0);
 
-        PanelScript HUDLeftScript = PanelManagerScript.GetPanel("HUD Panel LEFT");
+        PanelScript HUDLeftScript = m_panMan.GetPanel("HUD Panel LEFT");
         HUDLeftScript.m_cScript = m_currCharScript;
         HUDLeftScript.PopulatePanel();
+
+        m_panMan.m_confirmPanel.m_cScript = m_currCharScript;
 
         m_currCharScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(true);
         m_currCharScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.green;
 
-        if (m_currCharScript.m_isAI)
-            m_currCharScript.AITurn();
+        //if (m_currCharScript.m_isAI)
+        //    m_currCharScript.AITurn();
 
         m_camIsFrozen = true;
     }
@@ -679,16 +659,16 @@ public class BoardScript : MonoBehaviour {
 
         if (m_currCharScript.m_anim.GetCurrentAnimatorStateInfo(0).fullPathHash == Animator.StringToHash("Base.Idle Melee") ||
             m_currCharScript.m_anim.GetCurrentAnimatorStateInfo(0).fullPathHash == Animator.StringToHash("Base.Death") || _isForced)
-            if (m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] + m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] > 3 &&
-                !m_isForcedMove && !m_camIsFrozen && !PanelManagerScript.GetPanel("Choose Panel").m_slideScript.m_inView && m_actionEndTimer == 0 || _isForced)
+            if (m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] == true && m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] == true &&
+                !m_isForcedMove && !m_camIsFrozen && !m_panMan.GetPanel("Choose Panel").m_inView && m_actionEndTimer == 0 || _isForced)
             {
                 if (GameObject.Find("Network") && !GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted &&
                     !_isForced)
                 {
                     ClientScript c = GameObject.Find("Network").GetComponent<ClientScript>();
                     c.Send("TURNEND~", c.m_reliableChannel);
-                    m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] = 0;
-                    m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] = 0;
+                    m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] = false;
+                    m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] = false;
                     return;
                 }
                 else if (GameObject.Find("Network") && GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted)
@@ -698,11 +678,11 @@ public class BoardScript : MonoBehaviour {
                 }
 
                 print(m_currCharScript.m_name + " has ended their turn.\n");
-                PanelManagerScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[(int)CharacterScript.trn.MOV].interactable = true;
+                m_panMan.GetPanel("HUD Panel LEFT").transform.Find("Move Pass Panel/Move").GetComponent<Button>().interactable = true;
                 StatusScript.UpdateStatus(m_currCharScript.gameObject, StatusScript.mode.TURN_END);
-                m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] = 0;
-                m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] = 0;
-                m_currCharScript.m_currAction = "";
+                m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] = false;
+                m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] = false;
+                m_currCharScript.m_currAction = null;
                 NewTurn(false);
             }
     }
@@ -722,6 +702,21 @@ public class BoardScript : MonoBehaviour {
                 tempChars.Add(m_characters[i]);
                 m_livingPlayersInRound++;
             }
+
+        if (m_priorityQueue.Count > 0)
+        {
+            for (int i = 0; i < m_priorityQueue.Count; i++)
+            {
+                if (m_priorityQueue[i].m_isAlive)
+                {
+                    m_currRound.Add(m_priorityQueue[i].gameObject);
+                    roundOrder.Add(m_priorityQueue[i].m_id);
+                    m_priorityQueue[i].m_tempStats[(int)CharacterScript.sts.SPD] -= 10;
+                }
+            }
+
+            m_priorityQueue.Clear();
+        }
 
         int numPool;
         do
@@ -776,15 +771,15 @@ public class BoardScript : MonoBehaviour {
 
         m_livingPlayersInRound = m_currRound.Count;
         m_roundCount++;
-        PanelScript roundPanScript = PanelManagerScript.GetPanel("Round Panel");
+        PanelScript roundPanScript = m_panMan.GetPanel("Round Panel");
         roundPanScript.PopulatePanel();
 
-        PanelManagerScript.GetPanel("Turn Panel").m_turnPanel.NewTurnOrder();
+        GameObject.Find("Turn Panel").GetComponent<TurnPanelScript>().NewTurnOrder();
 
         ObjectScript obj = SpawnItem(-1, -1, -1);
 
-        PanelScript roundPan = PanelManagerScript.GetPanel("Round End Panel");
-        roundPan.m_slideScript.m_inView = true;
+        SlidingPanelScript roundPan = m_panMan.GetPanel("Round End Panel");
+        roundPan.m_inView = true;
         roundPan.GetComponentInChildren<Text>().text = "NEW ROUND";
 
         if (GameObject.Find("Network"))
@@ -797,19 +792,19 @@ public class BoardScript : MonoBehaviour {
 
     public void GameOver(PlayerScript _winningTeam)
     {
-        PanelScript roundPan = PanelManagerScript.GetPanel("Round End Panel");
-        roundPan.m_slideScript.m_inView = true;
-        roundPan.m_text[0].text = _winningTeam.name + " WINS";
+        SlidingPanelScript roundPan = m_panMan.GetPanel("Round End Panel");
+        roundPan.m_inView = true;
+        roundPan.transform.Find("Text").GetComponent<Text>().text = _winningTeam.name + " WINS";
         m_camera.GetComponent<CameraScript>().m_rotate = true;
         m_currCharScript = null;
     }
 
     public void Pass()
     {
-        m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] = 2;
-        m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] = 2;
-        PanelManagerScript.CloseHistory();
-        PanelManagerScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[1].GetComponent<Image>().color = Color.white;
+        m_currCharScript.m_hasActed[(int)CharacterScript.trn.MOV] = true;
+        m_currCharScript.m_hasActed[(int)CharacterScript.trn.ACT] = true;
+        m_panMan.CloseHistory();
+        m_panMan.GetPanel("HUD Panel LEFT").transform.Find("Move Pass Panel/Pass").GetComponent<Image>().color = Color.white;
         m_currButton = null;
     }
 
@@ -841,15 +836,6 @@ public class BoardScript : MonoBehaviour {
 
                 CharacterScript cScript = newChar.GetComponent<CharacterScript>();
                 cScript = ReadCharNetData(data, cScript);
-
-                if (i == 0)
-                    cScript.m_teamColor = new Color(1, .5f, 0, 1);
-                else if (i == 1)
-                    cScript.m_teamColor = new Color(.5f, 0, 1, 1);
-                else if (i == 2)
-                    cScript.m_teamColor = new Color(.8f, 1, 0, 1);
-                else if (i == 3)
-                    cScript.m_teamColor = Color.magenta;
 
                 cScript.CharInit();
                 m_characters.Add(newChar);
@@ -896,16 +882,6 @@ public class BoardScript : MonoBehaviour {
 
             int team = int.Parse(character[(int)PlayerPrefScript.netwrkPak.TEAM]);
 
-            // Color character
-            if (team == 0)
-                cScript.m_teamColor = new Color(1, .5f, 0, 1);
-            else if (team == 1)
-                cScript.m_teamColor = new Color(.5f, 0, 1, 1);
-            else if (team == 2)
-                cScript.m_teamColor = new Color(.8f, 1, 0, 1);
-            else if (team == 3)
-                cScript.m_teamColor = Color.magenta;
-
             cScript.CharInit();
             m_characters.Add(newChar);
 
@@ -932,8 +908,8 @@ public class BoardScript : MonoBehaviour {
 
         m_camera.GetComponent<CameraScript>().m_zoomIn = true;
         m_camera.GetComponent<CameraScript>().m_rotate = false;
-        PanelManagerScript.GetPanel("HUD Panel LEFT").m_slideScript.m_inView = true;
-        PanelManagerScript.GetPanel("Round Panel").m_slideScript.m_inView = true;
+        m_panMan.GetPanel("HUD Panel LEFT").m_inView = true;
+        m_panMan.GetPanel("Round Panel").m_inView = true;
     }
 
     public void ClientRoundInit(string _data)
@@ -950,15 +926,15 @@ public class BoardScript : MonoBehaviour {
 
         m_livingPlayersInRound = m_currRound.Count;
         m_roundCount++;
-        PanelScript roundPanScript = PanelManagerScript.GetPanel("Round Panel");
+        PanelScript roundPanScript = m_panMan.GetPanel("Round Panel");
         roundPanScript.PopulatePanel();
 
-        PanelManagerScript.GetPanel("Turn Panel").m_turnPanel.NewTurnOrder();
+        m_panMan.GetPanel("Turn Panel").GetComponent<TurnPanelScript>().NewTurnOrder();
 
         SpawnItem(int.Parse(powerUp[0]), int.Parse(powerUp[1]), int.Parse(powerUp[2]));
 
-        PanelScript roundPan = PanelManagerScript.GetPanel("Round End Panel");
-        roundPan.m_slideScript.m_inView = true;
+        SlidingPanelScript roundPan = m_panMan.GetPanel("Round End Panel");
+        roundPan.m_inView = true;
         roundPan.GetComponentInChildren<Text>().text = "NEW ROUND";
 
         NewTurn(true);
@@ -976,10 +952,11 @@ public class BoardScript : MonoBehaviour {
         {
             int ind = int.Parse(acts[k]) - 1;
             DatabaseScript db = GameObject.Find("Database").GetComponent<DatabaseScript>();
+            
             actionsForChar[k] = db.m_actions[ind];
         }
 
-        _char.m_actions = actionsForChar;
+        //_char.m_actions = actionsForChar;
         _char.m_exp = int.Parse(_data[(int)PlayerPrefScript.netwrkPak.EXP]);
         _char.m_level = int.Parse(_data[(int)PlayerPrefScript.netwrkPak.LVL]);
         _char.m_gender = int.Parse(_data[(int)PlayerPrefScript.netwrkPak.GENDER]);
@@ -1030,8 +1007,8 @@ public class BoardScript : MonoBehaviour {
                 charString += charScript.m_name + symbol;
                 charString += charScript.m_color + symbol;
 
-                for (int k = 0; k < charScript.m_actions.Length; k++)
-                    charString += DatabaseScript.GetActionData(charScript.m_actions[k], DatabaseScript.actions.ID) + ',';
+                //for (int k = 0; k < charScript.m_actions.Length; k++)
+                //    charString += DatabaseScript.GetActionData(charScript.m_actions[k], DatabaseScript.actions.ID) + ',';
                 charString = charString.Trim(','); charString += symbol;
 
                 charString += charScript.m_exp.ToString() + symbol;

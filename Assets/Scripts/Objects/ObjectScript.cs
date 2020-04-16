@@ -14,9 +14,14 @@ public class ObjectScript : MonoBehaviour {
     public int m_width;
     public TileScript.nbors m_facing;
 
+    private SlidingPanelManagerScript m_panMan;
+
     // Use this for initialization
     protected void Start ()
     {
+        if (GameObject.Find("Scene Manager"))
+            m_panMan = GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>();
+
         m_totalHealth = 5 * m_width;
         m_currHealth = m_totalHealth;
         m_facing = TileScript.nbors.bottom;
@@ -32,7 +37,8 @@ public class ObjectScript : MonoBehaviour {
         {
             Vector3 myPos = new Vector3(transform.position.x, 0, transform.position.z);
             Vector3 newPos = new Vector3(m_tile.transform.position.x, 0, m_tile.transform.position.z);
-            if (m_tile && myPos != newPos)
+
+            if (m_tile && Vector3.Distance(myPos, newPos) > 0.1f)
             {
                 MovementUpdate();
                 myPos = new Vector3(transform.position.x, 0, transform.position.z);
@@ -59,6 +65,7 @@ public class ObjectScript : MonoBehaviour {
         m_tile.FetchTilesWithinRange(GetComponent<CharacterScript>(), move, new Color(0, 0, 1, 0.5f), false, TileScript.targetRestriction.NONE, false);
     }
 
+    // The entry point for all movement
     virtual public void MovingStart(TileScript newScript, bool _isForced, bool _isNetForced)
     {
         if (m_tile == newScript || newScript == null)
@@ -92,7 +99,7 @@ public class ObjectScript : MonoBehaviour {
         if (!_isForced)
             m_boardScript.m_selected = null;
 
-        PanelManagerScript.CloseHistory();
+        m_panMan.CloseHistory();
     }
 
     virtual public void MovementUpdate()
@@ -110,7 +117,7 @@ public class ObjectScript : MonoBehaviour {
         float dis = Vector3.Distance(myPos, newPos);
 
         transform.SetPositionAndRotation(new Vector3(transform.position.x + transform.forward.x * charMovement, transform.position.y, transform.position.z + transform.forward.z * charMovement), transform.rotation);
-        if (!PanelManagerScript.GetPanel("Round End Panel").m_slideScript.m_inView)
+        if (!m_panMan.GetPanel("Round End Panel").m_inView)
             m_boardScript.m_camera.GetComponent<CameraScript>().m_target = gameObject;
 
         // Check to see if character is close enough to the point
@@ -125,7 +132,7 @@ public class ObjectScript : MonoBehaviour {
 
     virtual public void MovingFinish()
     {
-        if (!PanelManagerScript.GetPanel("Round End Panel").m_slideScript.m_inView)
+        if (!m_panMan.GetPanel("Round End Panel").m_inView)
             m_boardScript.m_camera.GetComponent<CameraScript>().m_target = null;
 
         if (tag == "PowerUp" && m_tile.m_holding && m_tile.m_holding.tag == "Player")
@@ -135,7 +142,7 @@ public class ObjectScript : MonoBehaviour {
 
         m_boardScript.m_currButton = null;
 
-        if (!PanelManagerScript.GetPanel("Round End Panel").m_slideScript.m_inView)
+        if (!m_panMan.GetPanel("Round End Panel").m_inView)
         {
             m_boardScript.m_camIsFrozen = false;
             m_boardScript.m_isForcedMove = null;
@@ -177,13 +184,13 @@ public class ObjectScript : MonoBehaviour {
         transform.Rotate(0, randomRot * 90, 0);
 
         if (randomRot == 0)
-            m_facing = TileScript.nbors.left;
+            m_facing = TileScript.nbors.bottom;
         else if (randomRot == 1)
-            m_facing = TileScript.nbors.right;
+            m_facing = TileScript.nbors.left;
         else if (randomRot == 2)
             m_facing = TileScript.nbors.top;
         else if (randomRot == 3)
-            m_facing = TileScript.nbors.bottom;
+            m_facing = TileScript.nbors.right;
     }
 
     public void SetRotation(TileScript.nbors _facing)
@@ -192,7 +199,7 @@ public class ObjectScript : MonoBehaviour {
         m_facing = _facing;
     }
 
-    public void PlaceRandomly(BoardScript bScript)
+    virtual public void PlaceRandomly(BoardScript bScript)
     {
         m_boardScript = bScript;
 
@@ -218,12 +225,12 @@ public class ObjectScript : MonoBehaviour {
                     isPlacable = true;
                     script.m_neighbors[(int)m_facing].GetComponent<TileScript>().m_holding = gameObject;
                 }
-
             }
+
         } while (!isPlacable);
 
         script.m_holding = gameObject;
-        transform.SetPositionAndRotation(m_boardScript.m_tiles[randX + randZ * m_boardScript.m_width].transform.position, transform.rotation);
+        transform.position = m_boardScript.m_tiles[randX + randZ * m_boardScript.m_width].transform.position;
         m_tile = m_boardScript.m_tiles[randX + randZ * m_boardScript.m_width];
     }
 

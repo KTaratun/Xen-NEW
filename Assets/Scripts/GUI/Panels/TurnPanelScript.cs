@@ -5,11 +5,28 @@ using UnityEngine.UI;
 
 public class TurnPanelScript : PanelScript {
 
+    private PanelScript[] m_panels;
+    private BoardScript m_board;
+
     // Use this for initialization
     void Start ()
     {
-        for (int i = 0; i < m_panels.Length; i++)
-            m_panels[i].gameObject.SetActive(false);
+        int numTurnPanels = 10;
+
+        m_panels = new PanelScript[numTurnPanels];
+
+        for (int i = 0; i < numTurnPanels; i++)
+        {
+            GameObject turnPanel = Instantiate(Resources.Load<GameObject>("GUI/Next"));
+
+            turnPanel.transform.SetParent(gameObject.transform);
+            m_panels[i] = turnPanel.GetComponent<PanelScript>();
+            //m_panels[i].GetComponent<EnergyButtonScript>().EnergyInit();
+            //m_panels[i].gameObject.SetActive(false);
+        }
+
+        if (GameObject.Find("Board").GetComponent<BoardScript>())
+            m_board = GameObject.Find("Board").GetComponent<BoardScript>();
     }
 	
 	// Update is called once per frame
@@ -21,7 +38,6 @@ public class TurnPanelScript : PanelScript {
     // Turn Panel
     private void TurnSlide()
     {
-        BoardScript bScript = m_main.GetComponent<BoardScript>();
         GameObject pan = null;
         float width = 90.0f;
         float start = 190.0f;
@@ -59,7 +75,7 @@ public class TurnPanelScript : PanelScript {
         //
         //    bScript.m_newTurn = false;
         //}
-        if (bScript.m_currRound.Count < m_panels.Length - 1 && bScript.m_newTurn) // if one of the panels is removed, move it every frame unitl it slides off to the left
+        if (m_board.m_currRound.Count < m_panels.Length - 1 && m_board.m_newTurn) // if one of the panels is removed, move it every frame unitl it slides off to the left
         {
             if (pan.transform.position.y < 750)
                 pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x, pan.transform.position.y + 10.0f, pan.transform.position.z), pan.transform.rotation);
@@ -67,7 +83,7 @@ public class TurnPanelScript : PanelScript {
             {
                 pan.SetActive(false);
                 if (pan.GetComponent<Image>().color != new Color(1, .5f, .5f, 1))
-                    bScript.m_newTurn = false;
+                    m_board.m_newTurn = false;
             }
         }
         else
@@ -106,32 +122,33 @@ public class TurnPanelScript : PanelScript {
 
     private void TurnPanelInit(int _ind, CharacterScript _charScript)
     {
-        m_panels[_ind].gameObject.SetActive(true);
+        PanelScript currPan = m_panels[_ind];
+        currPan.gameObject.SetActive(true);
 
-        _charScript.m_turnPanels.Add(m_panels[_ind].gameObject);
+        _charScript.m_turnPanels.Add(currPan.gameObject);
 
         if (_charScript.m_effects[(int)StatusScript.effects.STUN] && _ind == 0)
-            m_panels[_ind].GetComponent<Image>().color = new Color(1, .5f, .5f, 1);
+            currPan.GetComponent<Image>().color = new Color(1, .5f, .5f, 1);
         else
-            m_panels[_ind].GetComponent<Image>().color = new Color(_charScript.m_teamColor.r + 0.3f, _charScript.m_teamColor.g + 0.3f, _charScript.m_teamColor.b + 0.3f, 1);
+            currPan.GetComponent<Image>().color = _charScript.m_teamColor;
 
-        Text t = m_panels[_ind].GetComponentInChildren<Text>();
+        Text t = currPan.GetComponentInChildren<Text>();
         t.text = _charScript.m_name;
 
-        if (m_panels[_ind].GetComponentInChildren<Button>())
+        if (currPan.GetComponentInChildren<Button>())
         {
-            Button button = m_panels[_ind].GetComponentInChildren<Button>();
-            ButtonScript buttScript = button.GetComponent<ButtonScript>();
+            TurnButtonScript buttScript = currPan.GetComponentInChildren<Button>().GetComponent<TurnButtonScript>();
+            buttScript.m_cScript = _charScript;
             buttScript.SetTotalEnergy(_charScript.m_color);
-            buttScript.m_object = _charScript.gameObject;
+            buttScript.m_object = _charScript.gameObject; 
         }
     }
 
     public void NewTurnOrder()
     {
-        BoardScript bScript = m_main.GetComponent<BoardScript>();
-        float width = 90.0f;
-        float start = 190.0f;
+        BoardScript bScript = m_board.GetComponent<BoardScript>();
+        float width = 75.0f;
+        float start = -360.0f;
         int roundCountModded = bScript.m_currRound.Count - 1;
 
         if (roundCountModded == 0)
@@ -147,7 +164,7 @@ public class TurnPanelScript : PanelScript {
 
         for (int i = 0; i < roundCountModded; i++)
         {
-            m_panels[i].transform.SetPositionAndRotation(new Vector3(start + width * i, m_panels[i].transform.position.y + i * 10, m_panels[i].transform.position.z), m_panels[i].transform.rotation);
+            m_panels[i].transform.position = new Vector3(start + transform.position.x + width * i, transform.position.y);
             TurnPanelInit(i, bScript.m_currRound[i + 1].GetComponent<CharacterScript>()); // +1 because we are avoiding the first index
         }
     }

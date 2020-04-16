@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class CharacterScript : ObjectScript {
 
     public enum weaps { SWORD, HGUN };
-    public enum sts { HP, SPD, DMG, DEF, MOV, RNG, TEC, RAD, TOT };
+    public enum sts { SPD, DMG, DEF, MOV, RNG, TEC, RAD, TOT };
     public enum trn { MOV, ACT };
     public enum bod { HIPS, LEFT_UP_LEG, RIGHT_UP_LEG, SPINE, LEFT_LEG, RIGHT_LEG,
         SPINE_1, LEFT_FOOT, RIGHT_FOOT, SPINE_2, LEFT_TOE_BASE, RIGHT_TOE_BASE,
@@ -32,16 +32,15 @@ public class CharacterScript : ObjectScript {
     public Color m_teamColor;
     public int[] m_stats;
     public int[] m_tempStats;
-    public string[] m_actions;
-    public string m_currAction;
+    public List<ActionScript> m_actions = new List<ActionScript>();
+    public ActionScript m_currAction;
     public List<GameObject> m_targets;
+    public string[] m_actNames;
 
     // State Info
     public bool m_isAlive;
-    public bool m_isFree;
-    public int[] m_isDiabled;
     public bool m_isAI;
-    public int[] m_hasActed;
+    public bool[] m_hasActed;
     public StatusScript[] m_statuses;
     public int m_currStatus;
     public bool[] m_effects;
@@ -60,13 +59,17 @@ public class CharacterScript : ObjectScript {
     public Animator m_anim;
     public GameObject[] m_particles;
     public AudioSource m_audio;
-
+    private SlidingPanelManagerScript m_panMan;
 
 
     // Use this for initialization
     new void Start ()
     {
-        base.Start();
+        //base.Start();
+
+        if (GameObject.Find("Scene Manager"))
+            m_panMan = GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>();
+
         // Stats
         if (m_stats.Length == 0)
             InitializeStats();
@@ -87,14 +90,13 @@ public class CharacterScript : ObjectScript {
             m_anim = GetComponentInChildren<Animator>();
 
         m_popupText.SetActive(false);
-        m_isFree = false;
 
         InitBones();
         InitColors();
 
         // If characters have just action names, find full action data
-        if (m_actions.Length > 0)
-            Invoke("RetrieveActions", .1f);
+        //if (m_actions.Length > 0)
+        //    Invoke("RetrieveActions", .1f);
 
         if (!m_isAlive)
             CharInit();
@@ -105,8 +107,6 @@ public class CharacterScript : ObjectScript {
 
     public void CharInit()
     {
-        m_isDiabled = new int[m_actions.Length];
-
         m_isAlive = true;
         m_effects = new bool[(int)StatusScript.effects.TOT];
 
@@ -114,21 +114,21 @@ public class CharacterScript : ObjectScript {
         rend.materials[0].color = m_teamColor;
 
         if (m_hasActed.Length == 0)
-            m_hasActed = new int[2];
+            m_hasActed = new bool[2];
     }
 
     public void InitializeStats()
     {
         m_stats = new int[(int)sts.TOT];
 
-        m_stats[(int)sts.HP] = 12;
+        if (m_totalHealth == 0)
+            m_totalHealth = 12;
+
+        m_currHealth = m_totalHealth;
+        
+        m_stats[(int)sts.MOV] = 4;
         m_stats[(int)sts.SPD] = 10;
-        m_stats[(int)sts.MOV] = 5;
-
-
-        //m_accessories = new string[2];
-        //m_accessories[0] = "Ring of DEATH";
-      
+     
         m_level = 1;
     }
 
@@ -199,7 +199,7 @@ public class CharacterScript : ObjectScript {
 
             outline.LookAt(2 * outline.position - m_boardScript.m_camera.transform.position);
             m_healthBar.transform.LookAt(2 * m_healthBar.transform.position - m_boardScript.m_camera.transform.position);
-            float ratio = (float)(m_stats[(int)sts.HP] - (float)m_tempStats[(int)sts.HP]) / (float)m_stats[(int)sts.HP];
+            float ratio = (float)(m_totalHealth - m_currHealth) / (float)m_totalHealth;
 
             Renderer hpRend = m_healthBar.GetComponent<Renderer>();
             hpRend.material.color = new Color(ratio + 0.2f, 1 - ratio + 0.2f, 0.2f, 1);
@@ -264,8 +264,8 @@ public class CharacterScript : ObjectScript {
 
         if (!_isForced)
         {
-            m_hasActed[(int)trn.MOV] += 2;
-            PanelManagerScript.GetPanel("HUD Panel LEFT").m_panels[(int)PanelScript.HUDPan.MOV_PASS].GetComponent<PanelScript>().m_buttons[(int)trn.MOV].interactable = false;
+            m_hasActed[(int)trn.MOV] = true;
+            m_panMan.GetPanel("HUD Panel LEFT").transform.Find("Move Pass Panel").transform.Find("Move").GetComponent<Button>().interactable = false;
             if (m_boardScript.m_currButton)
                 m_boardScript.m_currButton.GetComponent<Image>().color = Color.white;
         }
@@ -283,17 +283,17 @@ public class CharacterScript : ObjectScript {
         if (m_isAlive)
             m_anim.Play("Idle Melee", -1, 0);
 
-        if (m_isAI && m_currAction.Length > 0 && m_targets.Count > 0 && !m_boardScript.m_isForcedMove)
-        {
-            m_boardScript.m_selected = m_targets[0].GetComponent<CharacterScript>().m_tile;
-            transform.LookAt(m_boardScript.m_selected.transform);
-            if (TileScript.CaclulateDistance(m_tile, m_boardScript.m_selected) > 1)
-                m_anim.Play("Ranged", -1, 0);
-            else
-                m_anim.Play("Melee", -1, 0);
-
-            print(m_name + " has started attacking.\n");
-        }
+        //if (m_isAI && m_currAction.Length > 0 && m_targets.Count > 0 && !m_boardScript.m_isForcedMove)
+        //{
+        //    m_boardScript.m_selected = m_targets[0].GetComponent<CharacterScript>().m_tile;
+        //    transform.LookAt(m_boardScript.m_selected.transform);
+        //    if (TileScript.CaclulateDistance(m_tile, m_boardScript.m_selected) > 1)
+        //        m_anim.Play("Ranged", -1, 0);
+        //    else
+        //        m_anim.Play("Melee", -1, 0);
+        //
+        //    print(m_name + " has started attacking.\n");
+        //}
 
         print(m_name + " has finished moving.\n");
     }
@@ -323,10 +323,10 @@ public class CharacterScript : ObjectScript {
         int parsedDMG;
         if (int.TryParse(_dmg, out parsedDMG))
         {
-            if (m_tempStats[(int)sts.HP] - parsedDMG <= 0)
+            if (m_currHealth - parsedDMG <= 0)
                 Dead();
             else
-                m_tempStats[(int)sts.HP] -= parsedDMG;
+                m_currHealth -= parsedDMG;
         }
 
         int res = 0;
@@ -336,7 +336,7 @@ public class CharacterScript : ObjectScript {
 
     public void Dead()
     {
-        m_tempStats[(int)sts.HP] = 0;
+        m_currHealth = 0;
         for (int i = 0; i < m_turnPanels.Count; i++)
             m_turnPanels[i].GetComponent<Image>().color = new Color(1, .5f, .5f, 1);
 
@@ -362,19 +362,19 @@ public class CharacterScript : ObjectScript {
         m_popupText.SetActive(true);
         textMesh.color = Color.green;
 
-        if (m_tempStats[(int)sts.HP] + _hp > m_stats[(int)sts.HP])
+        if (m_currHealth + _hp > m_currHealth)
         {
-            _hp = m_stats[(int)sts.HP] - m_tempStats[(int)sts.HP];
-            m_tempStats[(int)sts.HP] = m_stats[(int)sts.HP];
+            _hp = m_totalHealth - m_currHealth;
+            m_currHealth = m_totalHealth;
         }
         else
-            m_tempStats[(int)sts.HP] += _hp;
+            m_currHealth += _hp;
 
         textMesh.text = _hp.ToString();
 
         if (this == m_boardScript.m_currCharScript)
         {
-            PanelScript actPanScript = PanelManagerScript.GetPanel("HUD Panel LEFT");
+            PanelScript actPanScript = m_panMan.GetPanel("HUD Panel LEFT");
             actPanScript.PopulatePanel();
         }
     }
@@ -401,23 +401,47 @@ public class CharacterScript : ObjectScript {
     // Utilities
     public void HighlightCharacter()
     {
-        if (PanelManagerScript.GetPanel("HUD Panel RIGHT").m_slideScript.m_inView)
+        if (m_panMan.GetPanel("HUD Panel RIGHT").m_inView)
             return;
+
+        // Change color of turn panel to indicate where the character is in the turn order
+        for (int i = 0; i < m_turnPanels.Count; i++)
+        {
+            Image turnPanImage = m_turnPanels[i].GetComponent<Image>();
+            turnPanImage.color = Color.cyan;
+        }
 
         if (this != m_boardScript.m_currCharScript && m_isAlive)
         {
-            // Change color of turn panel to indicate where the character is in the turn order
-            for (int i = 0; i < m_turnPanels.Count; i++)
-            {
-                Image turnPanImage = m_turnPanels[i].GetComponent<Image>();
-                turnPanImage.color = Color.cyan;
-            }
-
             // Reveal right HUD with highlighted character's data
-            PanelScript hudPanScript = PanelManagerScript.GetPanel("HUD Panel RIGHT");
+            PanelScript hudPanScript = m_panMan.GetPanel("HUD Panel RIGHT");
             hudPanScript.m_cScript = this;
             hudPanScript.PopulatePanel();
         }
+    }
+
+    public void DeselectCharacter()
+    {
+        if (m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor == Color.magenta ||
+            m_panMan.GetPanel("Choose Panel").m_inView)
+            return;
+
+        for (int i = 0; i < m_turnPanels.Count; i++)
+        {
+            Image turnPanImage = m_turnPanels[i].GetComponent<Image>();
+            if (m_effects[(int)StatusScript.effects.STUN] || !m_isAlive)
+                turnPanImage.color = new Color(1, .5f, .5f, 1);
+            else
+                turnPanImage.color = m_teamColor;
+        }
+
+        if (m_panMan.GetPanel("ActionViewer Panel").transform.Find("ActionView Slide/DamagePreview").GetComponent<DamagePreviewPanelScript>().m_inView)
+        {
+            m_panMan.GetPanel("ActionViewer Panel").transform.Find("ActionView Slide/DamagePreview").GetComponent<DamagePreviewPanelScript>().m_cScript = null;
+            m_panMan.GetPanel("ActionViewer Panel").transform.Find("ActionView Slide/DamagePreview").GetComponent<DamagePreviewPanelScript>().m_inView = false;
+        }
+
+        m_panMan.GetPanel("HUD Panel RIGHT").ClosePanel();
     }
 
     public void SetPopupSpheres(string _energy)
@@ -484,11 +508,85 @@ public class CharacterScript : ObjectScript {
     }
 
 
+    // Action Related
+    public void SortActions()
+    {
+        for (int i = 0; i < m_actions.Count; i++)
+        {
+            int currEng = m_actions[i].ConvertedCost();
+
+            for (int j = i + 1; j < m_actions.Count; j++)
+            {
+                int indexedEng = m_actions[j].ConvertedCost();
+
+                if (currEng > indexedEng ||
+                    currEng == indexedEng && m_actions[i].CheckActionColor() > m_actions[j].CheckActionColor())
+                {
+                    ActionScript temp = m_actions[i];
+                    m_actions[i] = m_actions[j];
+                    m_actions[j] = temp;
+                }
+            }
+        }
+    }
+
+    public void DisableRandomAction()
+    {
+        List<ActionScript> viableActs = new List<ActionScript>();
+        for (int i = 0; i < m_actions.Count; i++)
+        {
+            ActionScript currAct = m_actions[i];
+            if (currAct.m_isDisabled == 0)
+                viableActs.Add(currAct);
+        }
+
+        if (viableActs.Count > 0)
+        {
+            int randomAct = Random.Range(0, viableActs.Count);
+            viableActs[randomAct].m_isDisabled++;
+        }
+
+        viableActs.Clear();
+    }
+
+    public void DisableSelectedAction(int _ind)
+    {
+        //m_isDiabled[_ind] = 2; // 1 == temp, 2 == perm
+        //m_boardScript.m_isForcedMove = null;
+        //m_panMan.CloseHistory();
+    }
+
+    public void RevealRandomAction()
+    {
+        List<ActionScript> actsHidden = new List<ActionScript>();
+        for (int h = 0; h < m_actions.Count; h++)
+        {
+            ActionScript currAct = m_actions[h];
+            if (!currAct.m_isRevealed)
+                actsHidden.Add(currAct);
+        }
+
+        if (actsHidden.Count > 0)
+        {
+            int randomAct = Random.Range(0, actsHidden.Count);
+            actsHidden[randomAct].m_isRevealed = true;
+        }
+
+        actsHidden.Clear();
+    }
+
+    public void HideAllActions()
+    {
+        for (int h = 0; h < m_actions.Count; h++)
+            m_actions[h].m_isRevealed = false;
+    }
+
+
     // The only reason why this exists is because statusscript needs a way to get to HUD LEFT
     public void UpdateStatusImages()
     {
         if (this == m_boardScript.m_currCharScript)
-            PanelManagerScript.GetPanel("HUD Panel LEFT").PopulatePanel();
+            m_panMan.GetPanel("HUD Panel LEFT").PopulatePanel();
     }
 
     public void PlayAnimation(prtcles _ani, Color _color)
@@ -509,190 +607,4 @@ public class CharacterScript : ObjectScript {
     //    int randPart = Random.Range(0, m_body.Count);
     //    m_particle.transform.SetPositionAndRotation(m_body[randPart].transform.position, m_particle.transform.rotation);
     //}
-
-
-    // MOVE TO AICONTROLLER
-    public void AITurn()
-    {
-        if (!m_anim)
-            m_anim = GetComponentInChildren<Animator>();
-
-        print(m_name + " started their turn.\n");
-
-        m_boardScript.m_camIsFrozen = true;
-
-        List<AIActionScript> viableActions = new List<AIActionScript>();
-        for (int i = 0; i < m_boardScript.m_characters.Count; i++)
-        {
-            CharacterScript target = m_boardScript.m_characters[i].GetComponent<CharacterScript>();
-            if (!target.m_isAlive)
-                continue;
-
-            List<TileScript> path = null;
-            if (!m_effects[(int)StatusScript.effects.IMMOBILE])
-                path = m_tile.AITilePlanning(target.m_tile);
-            else
-                path = new List<TileScript>();
-
-            print(m_name + " Chose a path to " + target.m_name + "\n");
-
-            AIActionScript newAct = CheckViableActions(target, path);
-            print(m_name + " Chose optimal action to use on " + target.m_name + "\n");
-            if (newAct)
-                viableActions.Add(newAct);
-        }
-
-        AIActionScript mostViable = null;
-        for (int i = 0; i < viableActions.Count; i++)
-            if (i == 0 || viableActions[i].m_value > mostViable.m_value)
-                mostViable = viableActions[i];
-
-        if (mostViable && mostViable.m_value > 0)
-            print(m_name + " decided that attacking " + mostViable.m_targets[0].name + " with " +
-                DatabaseScript.GetActionData(mostViable.m_action, DatabaseScript.actions.NAME) + " is most viable. \n");
-        else
-            print(m_name + " decided that moving is most viable. \n");
-
-        if (mostViable && mostViable.m_value > 0)
-        {
-            m_targets = mostViable.m_targets;
-            m_currAction = mostViable.m_action;
-            if (mostViable.m_position)
-                MovingStart(mostViable.m_position, false, false);
-            else
-            {
-                m_boardScript.m_selected = m_targets[0].GetComponent<CharacterScript>().m_tile;
-                transform.LookAt(m_boardScript.m_selected.transform);
-                if (TileScript.CaclulateDistance(m_tile, m_boardScript.m_selected) > 1)
-                    m_anim.Play("Ranged", -1, 0);
-                else
-                    m_anim.Play("Melee", -1, 0);
-
-                m_hasActed[0] = 3;
-                m_hasActed[1] = 3;
-            }
-        }
-        else
-        {
-            m_currAction = "";
-            if (mostViable)
-                MovingStart(mostViable.m_position, false, false);
-            else
-                m_boardScript.m_camIsFrozen = false;
-            m_hasActed[0] = 3;
-            m_hasActed[1] = 3;
-        }
-
-        for (int i = 0; i < viableActions.Count; i++)
-            Destroy(viableActions[i]);
-
-        print(m_name + " has exited AITurn.\n");
-
-        // check all targets
-        // value will be based on distance if outside of range after moving
-        // if within range of an attack before or after moving, value is based on end result of best potential action on target
-    }
-
-    public AIActionScript CheckViableActions(CharacterScript _target, List<TileScript> _path)
-    {
-        List<AIActionScript> viableActs = new List<AIActionScript>();
-        TileScript newTile = null;
-
-        for (int i = 0; i < m_actions.Length; i++)
-        {
-            string name = DatabaseScript.GetActionData(m_actions[i], DatabaseScript.actions.NAME);
-            string eng = DatabaseScript.GetActionData(m_actions[i], DatabaseScript.actions.ENERGY);
-
-            m_currAction = m_actions[i];
-            bool found = false;
-
-            if (m_effects[(int)StatusScript.effects.DELAY] && PlayerScript.CheckIfGains(eng) && eng.Length == 2 ||
-                m_effects[(int)StatusScript.effects.HINDER] && !ActionScript.CheckIfAttack(name) ||
-                m_effects[(int)StatusScript.effects.WARD] && ActionScript.CheckIfAttack(name) ||
-                m_isDiabled[i] > 0)
-                continue;
-            else if (_target != this)
-            {
-                for (int j = 0; j < _path.Count; j++)
-                {
-                    if (j > m_tempStats[(int)sts.MOV])
-                        break;
-
-                    ActionScript.ActionTargeting(this, _path[j]);
-
-                    for (int k = 0; k < _path[j].m_radius.Count; k++)
-                    {
-                        if (_path[j].m_radius[k].m_holding && _path[j].m_radius[k].m_holding == _target.gameObject)
-                        {
-                            found = true;
-                            newTile = _path[j];
-                            break;
-                        }
-                    }
-                    _path[j].ClearRadius();
-                    if (found)
-                        break;
-                }
-                if (_path.Count == 0)
-                {
-                    ActionScript.ActionTargeting(this, m_tile);
-
-                    for (int k = 0; k < m_tile.m_radius.Count; k++)
-                    {
-                        if (m_tile.m_radius[k].m_holding && m_tile.m_radius[k].m_holding == _target.gameObject)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                    m_tile.ClearRadius();
-                }
-            }
-
-            if (found && m_player.CheckEnergy(eng))
-            {
-                if (ActionScript.CheckIfAttack(name) && _target.m_player == m_player || !ActionScript.CheckIfAttack(name) && _target != m_player)
-                    continue;
-
-                AIActionScript newAct = gameObject.AddComponent<AIActionScript>();
-                if (newTile)
-                    newAct.m_position = newTile;
-                else
-                    newAct.m_position = null;
-
-                newAct.m_targets = new List<GameObject>();
-                newAct.CalculateValue(m_actions[i], this, _target);
-                viableActs.Add(newAct);
-            }
-        }
-
-        AIActionScript mostViable = null;
-
-        if (viableActs.Count > 0)
-        {
-            for (int i = 0; i < viableActs.Count; i++)
-                if (i == 0 || viableActs[i].m_value > mostViable.m_value)
-                    mostViable = viableActs[i];
-
-            for (int i = 0; i < viableActs.Count; i++)
-            {
-                if (viableActs[i] != mostViable)
-                    Destroy(viableActs[i]);
-            }
-        }
-        else if (_target.m_player != m_player && _path.Count > 1)
-        {
-            mostViable = gameObject.AddComponent<AIActionScript>();
-            if (_path.Count > m_tempStats[(int)sts.MOV] - 1)
-                mostViable.m_position = _path[m_tempStats[(int)sts.MOV] - 1];
-            else
-                mostViable.m_position = _path[_path.Count - 1];
-
-            mostViable.m_value = -TileScript.CaclulateDistance(mostViable.m_position, _target.m_tile);
-        }
-        else
-            return null;
-
-        return mostViable;
-    }
 }

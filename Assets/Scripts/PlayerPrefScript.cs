@@ -16,16 +16,17 @@ public class PlayerPrefScript : MonoBehaviour {
 		
 	}
 
-    static public void SaveChar(string _key, CharacterScript _charScript)
+    static public void SaveChar(string _key, CharacterScript _charScript, Color _buttonColor)
     {
         // Save out pertinent character data
         PlayerPrefs.SetString(_key + ",name", _charScript.m_name);
         PlayerPrefs.SetString(_key + ",color", _charScript.m_color);
-        PlayerPrefs.SetString(_key + ",actions", string.Join(";", _charScript.m_actions));
+        PlayerPrefs.SetString(_key + ",actions", string.Join(";", _charScript.m_actNames));
         PlayerPrefs.SetString(_key + ",exp", _charScript.m_exp.ToString());
         PlayerPrefs.SetString(_key + ",level", _charScript.m_level.ToString());
         PlayerPrefs.SetString(_key + ",gender", _charScript.m_gender.ToString());
         PlayerPrefs.SetString(_key + ",AI", _charScript.m_isAI.ToString());
+        PlayerPrefs.SetString(_key + ",TeamColor", _buttonColor.ToString());
 
         // Write out stats
         string stats = null;
@@ -36,21 +37,21 @@ public class PlayerPrefScript : MonoBehaviour {
             stats += _charScript.m_stats[i];
         }
         PlayerPrefs.SetString(_key + ",stats", stats);
+        PlayerPrefs.SetString(_key + ",HP", _charScript.m_totalHealth.ToString());
     }
 
     static public CharacterScript LoadChar(string _key, CharacterScript _charScript)
     {
         _charScript.m_name = PlayerPrefs.GetString(_key + ",name");
         _charScript.m_color = PlayerPrefs.GetString(_key + ",color");
-        _charScript.m_actions = PlayerPrefs.GetString(_key + ",actions").Split(';');
+        _charScript.m_actNames = PlayerPrefs.GetString(_key + ",actions").Split(';');
         _charScript.m_exp = int.Parse(PlayerPrefs.GetString(_key + ",exp"));
         _charScript.m_level = int.Parse(PlayerPrefs.GetString(_key + ",level"));
         _charScript.m_gender = int.Parse(PlayerPrefs.GetString(_key + ",gender"));
         _charScript.m_isAI = bool.Parse(PlayerPrefs.GetString(_key + ",AI"));
 
-        _charScript.m_isDiabled = new int[_charScript.m_actions.Length];
-        for (int i = 0; i < _charScript.m_isDiabled.Length; i++)
-            _charScript.m_isDiabled[i] = 0;
+        string[] teamColor = PlayerPrefs.GetString(_key + ",TeamColor").Split('(')[1].Split(',');
+        _charScript.m_teamColor = new Color(float.Parse(teamColor[0]), float.Parse(teamColor[1]), float.Parse(teamColor[2]));
 
         // Load in stats
         string[] stats = PlayerPrefs.GetString(_key + ",stats").Split(',');
@@ -68,6 +69,9 @@ public class PlayerPrefScript : MonoBehaviour {
             _charScript.m_tempStats[i] = int.Parse(stats[i]);
         }
 
+        _charScript.m_totalHealth = int.Parse(PlayerPrefs.GetString(_key + ",HP"));
+        _charScript.m_currHealth = _charScript.m_totalHealth;
+
         _charScript.m_isAlive = true;
         _charScript.m_effects = new bool[(int)StatusScript.effects.TOT];
 
@@ -84,7 +88,7 @@ public class PlayerPrefScript : MonoBehaviour {
         netString += PlayerPrefs.GetString(key + ",color") + symbol;
         string[] actions = PlayerPrefs.GetString(key + ",actions").Split(';');
         for (int i = 0; i < actions.Length; i++)
-            netString += DatabaseScript.GetActionData(actions[i], DatabaseScript.actions.ID) + ',';
+            netString += actions[i] + ',';
         netString = netString.Trim(','); netString += symbol;
         netString += PlayerPrefs.GetString(key + ",exp") + symbol;
         netString += PlayerPrefs.GetString(key + ",level") + symbol;
