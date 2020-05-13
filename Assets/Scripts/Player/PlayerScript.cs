@@ -13,6 +13,7 @@ public class PlayerScript : MonoBehaviour {
     public BoardScript m_bScript;
 
     private SlidingPanelManagerScript m_panMan;
+    private GameManagerScript m_gamMan;
 
     // Use this for initialization
     void Start ()
@@ -20,7 +21,10 @@ public class PlayerScript : MonoBehaviour {
         //m_energy = new int[4];
 
         if (GameObject.Find("Scene Manager"))
+        {
             m_panMan = GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>();
+            m_gamMan = GameObject.Find("Scene Manager").GetComponent<GameManagerScript>();
+        }
     }
 	
 	// Update is called once per frame
@@ -31,7 +35,7 @@ public class PlayerScript : MonoBehaviour {
     public void SetEnergyPanel(CharacterScript _caller)
     {
         Text[] text = null;
-        if (_caller == m_bScript.m_currCharScript)
+        if (_caller == m_gamMan.m_currCharScript)
             text = m_panMan.GetPanel("HUD Panel LEFT").transform.Find("Energy Panel").GetComponentsInChildren<Text>();
         else
             text = m_panMan.GetPanel("HUD Panel RIGHT").transform.Find("Energy Panel").GetComponentsInChildren<Text>();

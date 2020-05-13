@@ -32,7 +32,7 @@ public class ActionButtonScript : EnergyButtonScript {
         if (m_boardScript)
         {
             if (m_boardScript.m_highlightedTile && m_boardScript.m_highlightedTile.m_targetRadius.Count > 0)
-                m_boardScript.m_highlightedTile.ClearRadius();
+                TileLinkScript.ClearRadius(m_boardScript.m_highlightedTile);
 
             m_boardScript.m_hoverButton = GetComponent<Button>();
         }
@@ -45,7 +45,7 @@ public class ActionButtonScript : EnergyButtonScript {
             if (m_boardScript.m_highlightedTile)
             {
                 if (m_boardScript.m_highlightedTile.m_radius.Count > 1)
-                    m_boardScript.m_highlightedTile.ClearRadius();
+                    TileLinkScript.ClearRadius(m_boardScript.m_highlightedTile);
                 else
                     m_boardScript.m_highlightedTile.ClearTile();
                 m_boardScript.m_oldTile = null;
@@ -53,7 +53,7 @@ public class ActionButtonScript : EnergyButtonScript {
         }
 
         if (m_boardScript && m_boardScript.m_camIsFrozen ||
-            m_boardScript && m_boardScript.m_currCharScript.m_isAI ||
+            m_gamMan && m_gamMan.m_currCharScript.m_isAI ||
             m_boardScript.m_currButton)
             return;
 
@@ -77,8 +77,8 @@ public class ActionButtonScript : EnergyButtonScript {
         {
             if (GetComponent<Button>().GetComponent<Image>().color == PanelScript.b_isFree)
             {
-                m_boardScript.m_currCharScript.m_currAction = m_action;
-                m_action.ActionTargeting(m_boardScript.m_currCharScript.m_tile);
+                m_gamMan.m_currCharScript.m_currAction = m_action;
+                m_action.ActionTargeting(m_gamMan.m_currCharScript.m_tile);
             }
             else
             {
@@ -97,14 +97,14 @@ public class ActionButtonScript : EnergyButtonScript {
         if (m_boardScript)
             m_boardScript.m_hoverButton = null;
 
-        if (GetComponent<Button>().GetComponentInChildren<Text>().text == "EMPTY" || m_boardScript && m_boardScript.m_currCharScript.m_isAI)
+        if (GetComponent<Button>().GetComponentInChildren<Text>().text == "EMPTY" || m_gamMan && m_gamMan.m_currCharScript.m_isAI)
             return;
 
         if (m_boardScript && !m_boardScript.m_currButton || !m_boardScript)
         {
             m_actionViewer.ClosePanel();
-            if (m_boardScript)
-                m_boardScript.m_currCharScript.m_currAction = null;
+            if (m_gamMan)
+                m_gamMan.m_currCharScript.m_currAction = null;
         }
 
         if (m_boardScript && !m_boardScript.m_currButton && GetComponent<Image>().color != Color.cyan)
@@ -116,7 +116,7 @@ public class ActionButtonScript : EnergyButtonScript {
                 selectedTileScript = m_panMan.GetPanel("HUD Panel RIGHT").m_cScript.m_tile;
 
             //if (selectedTileScript.m_radius.Count > 0)
-            selectedTileScript.ClearRadius();
+            TileLinkScript.ClearRadius(selectedTileScript);
 
             //if (m_boardScript.m_highlightedTile)
             //{
@@ -151,8 +151,8 @@ public class ActionButtonScript : EnergyButtonScript {
         if (transform.parent.parent.name == "HUD Panel RIGHT")
             return;
 
-        m_boardScript.m_currCharScript.m_currAction = m_action;
-        m_main.m_cScript = m_boardScript.m_currCharScript;
+        m_gamMan.m_currCharScript.m_currAction = m_action;
+        m_main.m_cScript = m_gamMan.m_currCharScript;
 
         if (m_boardScript.m_currButton)
         {
@@ -163,14 +163,14 @@ public class ActionButtonScript : EnergyButtonScript {
             if (gameObject == m_boardScript.m_currButton.gameObject)
             {
                 m_boardScript.m_currButton = null;
-                m_boardScript.m_currCharScript.m_currAction = null;
+                m_gamMan.m_currCharScript.m_currAction = null;
 
                 return;
             }
             else
             {
-                TileScript selectedTileScript = m_boardScript.m_currCharScript.m_tile.GetComponent<TileScript>();
-                selectedTileScript.ClearRadius();
+                TileScript selectedTileScript = m_gamMan.m_currCharScript.m_tile.GetComponent<TileScript>();
+                TileLinkScript.ClearRadius(selectedTileScript);
 
                 m_actionViewer.m_cScript = m_main.m_cScript;
                 m_actionViewer.PopulatePanel();
@@ -184,19 +184,16 @@ public class ActionButtonScript : EnergyButtonScript {
         if (GetComponent<SlidingPanelScript>())
             GetComponent<SlidingPanelScript>().m_inView = true;
 
-        if (m_panMan.GetPanel("Choose Panel").m_inView)
-            m_boardScript.m_isForcedMove = null;
-
         m_panMan.GetPanel("ActionViewer Panel").transform.Find("ActionView Slide").GetComponent<SlidingPanelScript>().ClosePanel();
 
         if (m_oldColor == PanelScript.b_isSpecial)
         {
-            m_boardScript.m_selected.ClearRadius();
+            TileLinkScript.ClearRadius(m_boardScript.m_selected);
             m_panMan.GetPanel("HUD Panel RIGHT").ClosePanel();
             return;
         }
 
-        m_action.ActionTargeting(m_boardScript.m_currCharScript.m_tile);
+        m_action.ActionTargeting(m_gamMan.m_currCharScript.m_tile);
         
         if (m_panMan.GetPanel("HUD Panel RIGHT").m_inView)
             m_panMan.GetPanel("HUD Panel RIGHT").PopulatePanel();

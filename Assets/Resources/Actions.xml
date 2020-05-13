@@ -7,62 +7,71 @@
       <DMG>0</DMG>
       <RNG>2</RNG>
       <RAD>0</RAD>
-      <Description>Target gains 1* DEF for 2 rounds.</Description>
+      <Animation>Ability</Animation>
+      <Description>Target gains 2* DEF for 2 rounds.</Description>
     </Action>
     <Action Name = "SUP(Restore)">
       <Energy>w</Energy>
       <DMG>0</DMG>
-      <RNG>2</RNG>
+      <RNG>3</RNG>
       <RAD>0</RAD>
+      <Animation>Ability</Animation>
       <Description>Target gains 2* HP.</Description>
     </Action>
     <Action Name = "ATK(Sight)">
       <Energy>w</Energy>
-      <DMG>3</DMG>
+      <DMG>4</DMG>
       <RNG>2</RNG>
       <RAD>0</RAD>
+      <Animation>Ranged</Animation>
       <Description>Target loses 1* RNG for 1 turn.</Description>
     </Action>
     <Action Name = "ATK(Nullify)">
       <Energy>w</Energy>
-      <DMG>4</DMG>
+      <DMG>5</DMG>
       <RNG>1</RNG>
       <RAD>0</RAD>
+      <Animation>Melee</Animation>
       <Description>Target cannot be affected by friendly abilities for 1 turn.</Description>
     </Action>
     <Action Name = "ATK(Leg)">
       <Energy>W</Energy>
-      <DMG>5</DMG>
+      <DMG>6</DMG>
       <RNG>2</RNG>
       <RAD>0</RAD>
+      <Animation>Ranged</Animation>
       <Description>Target receives -1 MOV for 1* turns.</Description>
     </Action>
     <Action Name = "ATK(Body)">
       <Energy>W</Energy>
-      <DMG>4</DMG>
+      <DMG>5</DMG>
       <RNG>0</RNG>
       <RAD>1</RAD>
+      <Animation>Melee</Animation>
       <Description>Target receives -1 DEF for 2* turns.</Description>
     </Action>
     <Action Name = "SUP(Defrag)">
       <Energy>W</Energy>
       <DMG>0</DMG>
-      <RNG>3</RNG>
+      <RNG>4</RNG>
       <RAD>0</RAD>
+      <Animation>Ability</Animation>
       <Description>Remove debuffs from target and they are not affected by opponent's abilities for 2 rounds.</Description>
     </Action>
     <Action Name = "ATK(Caution)">
       <Energy>W</Energy>
-      <DMG>6</DMG>
+      <DMG>7</DMG>
       <RNG>1</RNG>
       <RAD>0</RAD>
+      <Animation>Melee</Animation>
       <Description>Gain 1* DEF for 2 turns.</Description>
     </Action>
     <Action Name = "ATK(Mind)">
       <Energy>WW</Energy>
-      <DMG>7</DMG>
+      <DMG>8</DMG>
       <RNG>2</RNG>
       <RAD>0</RAD>
+      <Animation>Ranged</Animation>
       <Description>Target loses 3* TEC for 1 turn.</Description>
     </Action>
     <Action Name = "ATK(Arm)">
@@ -70,6 +79,7 @@
       <DMG>6</DMG>
       <RNG>0</RNG>
       <RAD>1</RAD>
+      <Animation>Sweep</Animation>
       <Description>Target loses 3* DMG for 1 turn.</Description>
     </Action>
     <Action Name = "ATK(Whole)">
@@ -77,6 +87,7 @@
       <DMG>8</DMG>
       <RNG>1</RNG>
       <RAD>0</RAD>
+      <Animation>Melee</Animation>
       <Description>Target loses 1 DMG, 1 TEC, 1 MOV and 1 RNG for 1 turn.</Description>
     </Action>
     <Action Name = "SUP(Reboot)">
@@ -84,6 +95,7 @@
       <DMG>0</DMG>
       <RNG>2</RNG>
       <RAD>0</RAD>
+      <Animation>Ability</Animation>
       <Description>Restore target unit to half their starting life total modded by your TEC.</Description>
     </Action>
   </White>
@@ -94,13 +106,15 @@
       <DMG>0</DMG>
       <RNG>2</RNG>
       <RAD>0</RAD>
+      <Animation>Ability</Animation>
       <Description>Target gains 2* MOV for 1 turn.</Description>
     </Action>
     <Action Name = "SUP(Spot)">
       <Energy>g</Energy>
       <DMG>0</DMG>
-      <RNG>2</RNG>
+      <RNG>3</RNG>
       <RAD>0</RAD>
+      <Animation>Ability</Animation>
       <Description>Target gains 2* RNG for 2 rounds.</Description>
     </Action>
     <Action Name = "ATK(Push)">
@@ -108,20 +122,23 @@
       <DMG>4</DMG>
       <RNG>1</RNG>
       <RAD>0</RAD>
+      <Animation>Kick</Animation>
       <Description>Move target 3* spaces. Doesn't deal damage to friendly units.</Description>
     </Action>
     <Action Name = "ATK(Aim)">
       <Energy>g</Energy>
-      <DMG>2</DMG>
+      <DMG>3</DMG>
       <RNG>4</RNG>
       <RAD>0</RAD>
+      <Animation>Ranged</Animation>
       <Description></Description>
     </Action>
     <Action Name = "ATK(Pull)">
       <Energy>G</Energy>
-      <DMG>4</DMG>
+      <DMG>5</DMG>
       <RNG>3</RNG>
       <RAD>0</RAD>
+      <Animation>Ranged</Animation>
       <Description>Pull target to your adjacent space. Doesn't deal damage to friendly units.</Description>
     </Action>
     <Action Name = "ATK(Dash)">
@@ -129,41 +146,47 @@
       <DMG>6</DMG>
       <RNG>1</RNG>
       <RAD>0</RAD>
+      <Animation>Melee</Animation>
       <Description>Move 3* spaces after attacking.</Description>
     </Action>
     <Action Name = "ATK(Blast)">
       <Energy>G</Energy>
-      <DMG>3</DMG>
+      <DMG>4</DMG>
       <RNG>3</RNG>
       <RAD>1</RAD>
+      <Animation>Throw</Animation>
       <Description>Knockback targets 1* space. Doesn't deal damage to friendly units.</Description>
     </Action>
     <Action Name = "ATK(Target)">
       <Energy>G</Energy>
       <DMG>5</DMG>
-      <RNG>4</RNG>
+      <RNG>5</RNG>
       <RAD>0</RAD>
+      <Animation>Ranged</Animation>
       <Description></Description>
     </Action>
     <Action Name = "ATK(Magnet)">
       <Energy>GG</Energy>
-      <DMG>4</DMG>
+      <DMG>5</DMG>
       <RNG>4</RNG>
       <RAD>2</RAD>
+      <Animation>Throw</Animation>
       <Description>Pull all targets hit into center of impact. Doesn't hurt friendly units.</Description>
     </Action>
     <Action Name = "ATK(Snipe)">
       <Energy>GG</Energy>
       <DMG>7</DMG>
-      <RNG>5</RNG>
+      <RNG>6</RNG>
       <RAD>0</RAD>
+      <Animation>Ranged</Animation>
       <Description>TEC affects RNG.</Description>
     </Action>
     <Action Name = "ATK(Diagonal)">
       <Energy>GG</Energy>
-      <DMG>0</DMG>
+      <DMG>6</DMG>
       <RNG>2</RNG>
       <RAD>0</RAD>
+      <Animation>Ranged</Animation>
       <Description>Target diagnally.</Description>
     </Action>
     <Action Name = "SUP(Passage)">
@@ -171,6 +194,7 @@
       <DMG>0</DMG>
       <RNG>3</RNG>
       <RAD>0</RAD>
+      <Animation>Ability</Animation>
       <Description>Move target to any space on the board.</Description>
     </Action>
   </Green>
@@ -181,20 +205,23 @@
       <DMG>0</DMG>
       <RNG>2</RNG>
       <RAD>0</RAD>
-      <Description>Target receives +1* DMG for 2 rounds.</Description>
+      <Animation>Ability</Animation>
+      <Description>Target receives +2* DMG for 2 rounds.</Description>
     </Action>
     <Action Name = "SUP(Boost)">
       <Energy>r</Energy>
       <DMG>0</DMG>
       <RNG>2</RNG>
       <RAD>0</RAD>
-      <Description>Target receives +1* TEC for 2 rounds.</Description>
+      <Animation>Ability</Animation>
+      <Description>Target receives +2* TEC for 2 rounds.</Description>
     </Action>
     <Action Name = "ATK(AUX)">
       <Energy>r</Energy>
       <DMG>5</DMG>
       <RNG>1</RNG>
       <RAD>0</RAD>
+      <Animation>Melee</Animation>
       <Description>This attack is unnaffected by DMG.</Description>
     </Action>
     <Action Name = "ATK(Cross)">
@@ -202,27 +229,31 @@
       <DMG>4</DMG>
       <RNG>1</RNG>
       <RAD>0</RAD>
+      <Animation>Sweep</Animation>
       <Description>Attack all nearby targets.</Description>
     </Action>
     <Action Name = "ATK(Thrust)">
       <Energy>R</Energy>
-      <DMG>5</DMG>
-      <RNG>2</RNG>
+      <DMG>7</DMG>
+      <RNG>3</RNG>
       <RAD>0</RAD>
+      <Animation>Stab</Animation>
       <Description>Attack in a straight line.</Description>
     </Action>
     <Action Name = "ATK(Smash)">
       <Energy>R</Energy>
-      <DMG>4</DMG>
+      <DMG>5</DMG>
       <RNG>1</RNG>
       <RAD>0</RAD>
+      <Animation>Kick</Animation>
       <Description>Knockback target 3* spaces.</Description>
     </Action>
     <Action Name = "ATK(Bypass)">
       <Energy>R</Energy>
-      <DMG>6</DMG>
+      <DMG>7</DMG>
       <RNG>1</RNG>
       <RAD>0</RAD>
+      <Animation>Melee</Animation>
       <Description>Ignore 2* DEF from target.</Description>
     </Action>
     <Action Name = "ATK(Slash)">
@@ -230,27 +261,31 @@
       <DMG>6</DMG>
       <RNG>1</RNG>
       <RAD>1</RAD>
+      <Animation>Slash</Animation>
       <Description>Hit in cone at close range. Range and Radius not added.</Description>
     </Action>
     <Action Name = "ATK(Focus)">
       <Energy>RR</Energy>
-      <DMG>5</DMG>
+      <DMG>6</DMG>
       <RNG>1</RNG>
-      <RAD>1</RAD>
+      <RAD>0</RAD>
+      <Animation>Melee</Animation>
       <Description>Permanently increase DMG and TEC by 1 this combat.</Description>
     </Action>
     <Action Name = "ATK(Rust)">
       <Energy>RR</Energy>
-      <DMG>1</DMG>
+      <DMG>2</DMG>
       <RNG>1</RNG>
       <RAD>0</RAD>
+      <Animation>Melee</Animation>
       <Description>Target takes 2 damage for 3* turns. </Description>
     </Action>
     <Action Name = "ATK(Quake)">
       <Energy>RR</Energy>
-      <DMG>6</DMG>
+      <DMG>7</DMG>
       <RNG>0</RNG>
       <RAD>2</RAD>
+      <Animation>Sweep</Animation>
       <Description></Description>
     </Action>
     <Action Name = "SUP(Engage)"> <!--ATK(Destroy)-->
@@ -258,6 +293,7 @@
       <DMG>0</DMG>
       <RNG>0</RNG>
       <RAD>0</RAD>
+      <Animation>Ability</Animation>
       <Description>When used, turns into ATK(Destroy) (ENG: RR, RNG: 1, DMG: 16).</Description>
     </Action>
   </Red>
@@ -268,6 +304,7 @@
       <DMG>0</DMG>
       <RNG>4</RNG>
       <RAD>0</RAD>
+      <Animation>Ability</Animation>
       <Description>Target gains 2* SPD.</Description>
     </Action>
     <Action Name = "SUP(Channel)">
@@ -275,6 +312,7 @@
       <DMG>0</DMG>
       <RNG>0</RNG>
       <RAD>0</RAD>
+      <Animation>Ability</Animation>
       <Description>Gain 2 blue energy.</Description>
     </Action>
     <Action Name = "ATK(Break)">
@@ -282,6 +320,7 @@
       <DMG>4</DMG>
       <RNG>2</RNG>
       <RAD>0</RAD>
+      <Animation>Ranged</Animation>
       <Description>Target cannot use support next turn.</Description>
     </Action>
     <Action Name = "ATK(Intel)">
@@ -289,6 +328,7 @@
       <DMG>3</DMG>
       <RNG>4</RNG>
       <RAD>1</RAD>
+      <Animation>Throw</Animation>
       <Description>Reveal a random action from targets.</Description>
     </Action>
     <Action Name = "ATK(Lag)">
@@ -296,6 +336,7 @@
       <DMG>4</DMG>
       <RNG>3</RNG>
       <RAD>1</RAD>
+      <Animation>Throw</Animation>
       <Description>Target loses 2* SPD.</Description>
     </Action>
     <Action Name = "ATK(Prism)">
@@ -303,6 +344,7 @@
       <DMG>5</DMG>
       <RNG>2</RNG>
       <RAD>0</RAD>
+      <Animation>Ranged</Animation>
       <Description>Add a random energy of a color your living team members use.</Description>
     </Action>
     <Action Name = "ATK(Crash)">
@@ -310,34 +352,39 @@
       <DMG>5</DMG>
       <RNG>1</RNG>
       <RAD>0</RAD>
+      <Animation>Melee</Animation>
       <Description>Target cannot use actions that cost 2 next turn.</Description>
     </Action>
     <Action Name = "ATK(Burst)">
       <Energy>B</Energy>
-      <DMG>5</DMG>
+      <DMG>6</DMG>
       <RNG>1</RNG>
       <RAD>0</RAD>
+      <Animation>Melee</Animation>
       <Description>Gain 1* SPD.</Description>
     </Action>
     <Action Name = "ATK(Dark)">
       <Energy>BB</Energy>
-      <DMG>8</DMG>
-      <RNG>2</RNG>
-      <RAD>0</RAD>
-      <Description>Hide all of your actions.</Description>
+      <DMG>-1</DMG>
+      <RNG>-1</RNG>
+      <RAD>-1</RAD>
+      <Animation>Ranged</Animation>
+      <Description>Random stats. Hide all of your actions.</Description>
     </Action>
-    <Action Name = "ATK(Syphon)">
+    <Action Name = "ATK(Deplete)">
       <Energy>BB</Energy>
-      <DMG>4</DMG>
-      <RNG>2</RNG>
+      <DMG>7</DMG>
+      <RNG>3</RNG>
       <RAD>0</RAD>
-      <Description>Steal 3* SPD from target.</Description>
+      <Animation>Ranged</Animation>
+      <Description>Remove an energy at random from target.</Description>
     </Action>
     <Action Name = "ATK(Combo)">
       <Energy>BB</Energy>
       <DMG>5</DMG>
       <RNG>4</RNG>
       <RAD>0</RAD>
+      <Animation>Ranged</Animation>
       <Description>Add 2 random energy of colors your living team members use.</Description>
     </Action>
     <Action Name = "SUP(Queue)">
@@ -345,7 +392,8 @@
       <DMG>0</DMG>
       <RNG>3</RNG>
       <RAD>0</RAD>
-      <Description>Target is loaded into priority queue for next round. Gain 15 seconds.</Description>
+      <Animation>Ability</Animation>
+      <Description>Target is loaded into priority queue for next round and gains 3* SPD</Description>
     </Action>
   </Blue>
 </Actions>
@@ -358,10 +406,10 @@
   <Description>DMG affects this attack by 3x.</Description>
 </Action>-->
 
-<!--<Action Name = "ATK(Deplete)">
+<!--<Action Name = "ATK(Syphon)">
   <Energy>BB</Energy>
-  <DMG>8</DMG>
-  <RNG>1</RNG>
+  <DMG>4</DMG>
+  <RNG>2</RNG>
   <RAD>0</RAD>
-  <Description>Remove energy of your choice from target.</Description>
+  <Description>Steal 3* SPD from target.</Description>
 </Action>-->

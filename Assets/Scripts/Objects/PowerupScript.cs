@@ -1,10 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class PowerupScript : ObjectScript {
-
+public class PowerupScript : ObjectScript 
+{
     public enum powerups { GREEN_ENG, RED_ENG, WHITE_ENG, BLUE_ENG, ALL_ENG,
                         DMG, TEC, MOV, RNG,
                         HP, SPD,
@@ -22,8 +21,6 @@ public class PowerupScript : ObjectScript {
     public Color m_color;
     public string m_effect;
     public ParticleSystem m_particle;
-
-    private SlidingPanelManagerScript m_panMan;
 
     // Use this for initialization
     protected new void Start ()
@@ -50,7 +47,7 @@ public class PowerupScript : ObjectScript {
     new void Update ()
     {
         base.Update();
-        m_transform.LookAt(2 * m_transform.position - m_boardScript.m_camera.transform.position);
+        m_transform.LookAt(2 * m_transform.position - m_camera.transform.position);
 
         float bobSpeed = .03f;
 
@@ -360,11 +357,14 @@ public class PowerupScript : ObjectScript {
         else if (m_name == powerups.SLOW.ToString())
             _char.m_tempStats[(int)CharacterScript.sts.SPD] -= 3;
 
-        StatusScript.ApplyStatus(_char.gameObject);
+        StatusScript.ApplyStatus(_char);
         _char.PlayAnimation(CharacterScript.prtcles.GAIN_STATUS, m_color);
 
-        if (m_boardScript.m_currCharScript == _char)
+        if (m_gamMan.m_currCharScript == _char)
             m_panMan.GetPanel("HUD Panel LEFT").PopulatePanel();
+
+        if (m_boardScript.m_highlightedTile && m_boardScript.m_highlightedTile.m_holding == gameObject)
+            m_panMan.GetPanel("StatusViewer Panel").ClosePanel();
 
         Destroy(gameObject);
     }

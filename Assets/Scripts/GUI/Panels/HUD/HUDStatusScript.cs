@@ -13,9 +13,9 @@ public class HUDStatusScript : SlidingPanelScript
     }
 
     // Update is called once per frame
-    new void Update()
+    new void FixedUpdate()
     {
-        base.Update();
+        base.FixedUpdate();
     }
 
     public void HoverTrue(BaseEventData eventData)

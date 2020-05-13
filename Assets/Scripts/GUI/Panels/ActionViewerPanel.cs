@@ -19,15 +19,18 @@ public class ActionViewerPanel : SlidingPanelScript
             m_actLoad = GameObject.Find("Scene Manager").GetComponent<ActionLoaderScript>();
     }
 
-    // Update is called once per frame
-    new void Update()
+    private void Update()
     {
-        base.Update();
-
         if (!m_hovered && !m_actSlide.m_inView && m_actSlide.m_state == state.CLOSED)
             m_inView = false;
         if (m_hovered && m_inView && m_state == state.OPEN)
             m_actSlide.PopulatePanel();
+    }
+
+    // Update is called once per frame
+    new void FixedUpdate()
+    {
+        base.FixedUpdate();
     }
 
     override public void PopulatePanel()

@@ -59,7 +59,7 @@ public class SlidingPanelScript : PanelScript
     }
 	
 	// Update is called once per frame
-	protected void Update ()
+	protected void FixedUpdate ()
     {
         //if (m_slideArray)
         //    SlideArray();
@@ -74,7 +74,6 @@ public class SlidingPanelScript : PanelScript
 
     public void OpenPanel()
     {
-
         if (m_direction == dir.UP && !m_inView)
         {
             if (m_panMan.m_history.Count > 0 && name != "Confirmation Panel")
@@ -83,8 +82,7 @@ public class SlidingPanelScript : PanelScript
             m_panMan.m_history.Add(this);
         }
 
-        if (m_direction != dir.NULL)
-            m_inView = true;
+        m_inView = true;
     }
 
     virtual public void ClosePanel()
@@ -94,13 +92,15 @@ public class SlidingPanelScript : PanelScript
 
     virtual protected void Slide()
     {
+        float deltaOffset = 50;
+
         if (m_direction == dir.UP)
         {
             if (m_inView)
             {
                 if (m_rectT.anchoredPosition.y > m_inBoundryDis) //if (recTrans.offsetMax.y > m_inBoundryDis)
                 {
-                    m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x, m_rectT.anchoredPosition.y - m_slideSpeed);
+                    m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x, m_rectT.anchoredPosition.y - m_slideSpeed * Time.fixedDeltaTime * deltaOffset);
 
                     if (m_rectT.anchoredPosition.y <= m_inBoundryDis)
                         m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x, m_inBoundryDis);
@@ -108,7 +108,7 @@ public class SlidingPanelScript : PanelScript
             }
             else if (m_rectT.anchoredPosition.y < m_outBoundryDis)
             {
-                m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x, m_rectT.anchoredPosition.y + m_slideSpeed);
+                m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x, m_rectT.anchoredPosition.y + m_slideSpeed * Time.fixedDeltaTime * deltaOffset);
                 if (m_rectT.anchoredPosition.y >= m_outBoundryDis)
                     m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x, m_outBoundryDis);
             }
@@ -119,14 +119,14 @@ public class SlidingPanelScript : PanelScript
             {
                 if (m_rectT.anchoredPosition.x > m_inBoundryDis)
                 {
-                    m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x - m_slideSpeed, m_rectT.anchoredPosition.y);
+                    m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x - m_slideSpeed * Time.fixedDeltaTime * deltaOffset, m_rectT.anchoredPosition.y);
                     if (m_rectT.anchoredPosition.x <= m_inBoundryDis)
                         m_rectT.anchoredPosition = new Vector2(m_inBoundryDis, m_rectT.anchoredPosition.y);
                 }
             }
             else if (m_rectT.anchoredPosition.x < m_outBoundryDis)
             {
-                m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x + m_slideSpeed, m_rectT.anchoredPosition.y);
+                m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x + m_slideSpeed * Time.fixedDeltaTime * deltaOffset, m_rectT.anchoredPosition.y);
                 if (m_rectT.anchoredPosition.x >= m_outBoundryDis)
                     m_rectT.anchoredPosition = new Vector2(m_outBoundryDis, m_rectT.anchoredPosition.y);
             }
@@ -137,7 +137,7 @@ public class SlidingPanelScript : PanelScript
             {
                 if (m_rectT.anchoredPosition.x < m_inBoundryDis)
                 {
-                    m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x + m_slideSpeed, m_rectT.anchoredPosition.y);
+                    m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x + m_slideSpeed * Time.fixedDeltaTime * deltaOffset, m_rectT.anchoredPosition.y);
 
                     if (m_rectT.anchoredPosition.x >= m_inBoundryDis)
                         m_rectT.anchoredPosition = new Vector2(m_inBoundryDis, m_rectT.anchoredPosition.y);
@@ -145,7 +145,7 @@ public class SlidingPanelScript : PanelScript
             }
             else if (m_rectT.anchoredPosition.x > m_outBoundryDis)
             {
-                m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x - m_slideSpeed, m_rectT.anchoredPosition.y);
+                m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x - m_slideSpeed * Time.fixedDeltaTime * deltaOffset, m_rectT.anchoredPosition.y);
                 if (m_rectT.anchoredPosition.x <= m_outBoundryDis)
                     m_rectT.anchoredPosition = new Vector2(m_outBoundryDis, m_rectT.anchoredPosition.y);
             }
@@ -156,7 +156,7 @@ public class SlidingPanelScript : PanelScript
             {
                 if (m_rectT.anchoredPosition.y < m_inBoundryDis)
                 {
-                    m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x, m_rectT.anchoredPosition.y + m_slideSpeed);
+                    m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x, m_rectT.anchoredPosition.y + m_slideSpeed * Time.fixedDeltaTime * deltaOffset);
 
                     if (m_rectT.anchoredPosition.y >= m_inBoundryDis)
                         m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x, m_inBoundryDis);
@@ -166,13 +166,13 @@ public class SlidingPanelScript : PanelScript
             {
                 if (m_rectT.anchoredPosition.y > m_outBoundryDis && name != "DamagePreview")
                 {
-                    m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x, m_rectT.anchoredPosition.y - m_slideSpeed);
+                    m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x, m_rectT.anchoredPosition.y - m_slideSpeed * Time.fixedDeltaTime * deltaOffset);
                     if (m_rectT.anchoredPosition.y <= m_outBoundryDis)
                         m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x, m_outBoundryDis);
                 }
                 else if (m_rectT.anchoredPosition.y > 400)
                 {
-                    m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x, m_rectT.anchoredPosition.y - m_slideSpeed);
+                    m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x, m_rectT.anchoredPosition.y - m_slideSpeed * Time.fixedDeltaTime * deltaOffset);
                     if (m_rectT.anchoredPosition.y <= m_outBoundryDis)
                         m_rectT.anchoredPosition = new Vector2(m_rectT.anchoredPosition.x, m_outBoundryDis);
                 }

@@ -12,7 +12,7 @@ public class EnergyButtonScript : ButtonScript {
     {
         if (m_energyPanel.Length == 0)
             EnergyInit();
-	}
+    }
 
     public void EnergyInit()
     {
@@ -39,14 +39,14 @@ public class EnergyButtonScript : ButtonScript {
 
     public void SelectorButton()
     {
-        ActionScript act = m_boardScript.m_currCharScript.m_currAction;
-        CharacterScript charScript = m_boardScript.m_currCharScript;
+        ActionScript act = m_gamMan.m_currCharScript.m_currAction;
+        CharacterScript charScript = m_gamMan.m_currCharScript;
 
         if (m_parent.name == "Status Selector")
         {
             StatusScript statScript = m_parent.m_cScript.GetComponents<StatusScript>()[m_parent.m_cScript.m_currStatus];
             if (act.m_name == "SUP(Defrag)")
-                statScript.DestroyStatus(m_parent.m_cScript.transform.root.gameObject, true);
+                statScript.DestroyStatus(m_parent.transform.root.GetComponent<CharacterScript>(), true);
             else if (act.m_name == "SUP(Extension)")
             {
                 statScript.m_lifeSpan += 3 + charScript.m_tempStats[(int)CharacterScript.sts.TEC];
@@ -63,7 +63,7 @@ public class EnergyButtonScript : ButtonScript {
             //    for (int i = 0; i < statScript.m_statMod.Length; i++)
             //        m_main.m_cScript.m_stats[i] += statScript.m_statMod[i];
 
-            InputManagerScript.ResumeGame();
+            BoardInputScript.ResumeGame();
         }
         else if (m_parent.name == "Energy Selector")
         {
@@ -184,8 +184,8 @@ public class EnergyButtonScript : ButtonScript {
 
     public void ConfirmEnergySelection()
     {
-        ActionScript act = m_boardScript.m_currCharScript.m_currAction;
-        CharacterScript charScript = m_boardScript.m_currCharScript;
+        ActionScript act = m_gamMan.m_currCharScript.m_currAction;
+        CharacterScript charScript = m_gamMan.m_currCharScript;
         PlayerScript playScript = charScript.m_player;
         int added = 0;
 
@@ -212,13 +212,12 @@ public class EnergyButtonScript : ButtonScript {
                 charScript.ReceiveDamage((added - 2).ToString(), Color.white);
 
         playScript.SetEnergyPanel(charScript);
-        InputManagerScript.
-ResumeGame();
+        BoardInputScript.ResumeGame();
     }
 
     public void ResetEnergySelection()
     {
-        ActionScript act = m_boardScript.m_currCharScript.m_currAction;
+        ActionScript act = m_gamMan.m_currCharScript.m_currAction;
         if (act.m_name == "ATK(Syphon)" || act.m_name == "ATK(Deplete)")
             for (int i = 0; i < transform.parent.childCount; i++)
                 transform.parent.GetChild(i).GetComponentInChildren<Text>().text = m_main.m_cScript.m_player.m_energy[i].ToString();

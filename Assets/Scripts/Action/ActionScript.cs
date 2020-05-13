@@ -33,17 +33,12 @@ public class ActionScript : MonoBehaviour {
         FREE
     }
 
-    [XmlAttribute("Name")]
     public string m_name;
-    [XmlAttribute("Energy")]
     public string m_energy;
-    [XmlAttribute("DMG")]
     public int m_damage;
-    [XmlAttribute("RNG")]
     public int m_range;
-    [XmlAttribute("RAD")]
     public int m_radius;
-    [XmlAttribute("Description")]
+    public string m_animation;
     public string m_effect; // Description
 
     public int m_id;
@@ -53,27 +48,38 @@ public class ActionScript : MonoBehaviour {
     // References
     CharacterScript m_charScript;
     private SlidingPanelManagerScript m_panMan;
+    private GameManagerScript m_gamMan;
+    private TileLinkScript m_tLink;
+    private Camera m_camera;
 
     private void Start()
     {
         m_charScript = GetComponent<CharacterScript>();
 
         if (GameObject.Find("Scene Manager"))
+        {
+            m_gamMan = GameObject.Find("Scene Manager").GetComponent<GameManagerScript>();
             m_panMan = GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>();
+        }
+
+        if (GameObject.Find("Board"))
+            m_tLink = GameObject.Find("Board").GetComponent<TileLinkScript>();
+
+        m_camera = GameObject.Find("BoardCam/Main Camera").GetComponent<Camera>();
     }
 
 
     // Action
     public void ActionTargeting(TileScript _tile)
     {
-        TileScript.targetRestriction targetingRestriction = TileScript.targetRestriction.NONE;
+        TileLinkScript.targetRestriction targetingRestriction = TileLinkScript.targetRestriction.NONE;
 
         // RANGE MODS
 
         // If the action only targets horizontal and vertical or diagonal
-        targetingRestriction = TileScript.targetRestriction.NONE;
+        targetingRestriction = TileLinkScript.targetRestriction.NONE;
         if (UniqueActionProperties(uniAct.TAR_RES) >= 0)
-            targetingRestriction = (TileScript.targetRestriction)UniqueActionProperties(uniAct.TAR_RES);
+            targetingRestriction = (TileLinkScript.targetRestriction)UniqueActionProperties(uniAct.TAR_RES);
 
         // If the action cannot be blocked
         bool isBlockable = true;
@@ -101,36 +107,27 @@ public class ActionScript : MonoBehaviour {
         Color color = Color.white;
         // See if it's an attack or not
         if (CheckIfAttack())
-            color = TileScript.c_attack;
+            color = TileLinkScript.c_attack;
         else
-            color = TileScript.c_action;
+            color = TileLinkScript.c_action;
 
-        _tile.FetchTilesWithinRange(m_charScript, finalRNG, color, targetSelf, targetingRestriction, isBlockable);
+        TileLinkScript.FetchTilesWithinRange(_tile, m_charScript, finalRNG, color, targetSelf, targetingRestriction, isBlockable);
     }
 
-    public void ActionStart()
+    public void ActionStart(bool _isNetForced)
     {
+
         transform.LookAt(m_charScript.m_boardScript.m_selected.transform);
 
         Renderer r = m_charScript.m_boardScript.m_selected.GetComponent<Renderer>();
         TileScript selectedTileScript = m_charScript.m_boardScript.m_selected;
 
+        m_charScript.m_anim.Play(m_animation, -1, 0);
+
         if (r.material.color == Color.red
             || r.material.color == Color.green) // single
-        {
-            if (UniqueActionProperties(uniAct.MOBILITY) >= 1 && m_range <= 1)
-                m_charScript.m_anim.Play("Kick", -1, 0);
-            else if (r.material.color == Color.green)
-                m_charScript.m_anim.Play("Ability", -1, 0);
-            else if (m_range + m_charScript.m_tempStats[(int)CharacterScript.sts.RNG] > 1)
-                m_charScript.m_anim.Play("Ranged", -1, 0);
-            else
-                m_charScript.m_anim.Play("Melee", -1, 0);
-
             m_charScript.m_targets.Add(selectedTileScript.m_holding);
-        }
-        else if (r.material.color == TileScript.c_radius) // multi
-        {
+        else if (r.material.color == TileLinkScript.c_radius) // multi
             for (int i = 0; i < selectedTileScript.m_targetRadius.Count; i++)
             {
                 TileScript tarTile = selectedTileScript.m_targetRadius[i].GetComponent<TileScript>();
@@ -138,29 +135,37 @@ public class ActionScript : MonoBehaviour {
                     m_charScript.m_targets.Add(tarTile.m_holding);
             }
 
-            if (m_name == "ATK(Slash)")
-                m_charScript.m_anim.Play("Slash", -1, 0);
-            else if (UniqueActionProperties(uniAct.TAR_RES) == (int)TileScript.targetRestriction.HORVERT)
-                m_charScript.m_anim.Play("Stab", -1, 0);
-            else if (m_range <= 1)
-                m_charScript.m_anim.Play("Sweep", -1, 0);
-            else
-                m_charScript.m_anim.Play("Throw", -1, 0);
+        if (GameObject.Find("Network").GetComponent<CustomDirect>().m_isStarted && !_isNetForced)
+        {
+            BoardScript board = GameObject.Find("Board").GetComponent<BoardScript>();
+            CustomDirect s = GameObject.Find("Network").GetComponent<CustomDirect>();
+
+            string msg = "ACTSTART~" + m_charScript.m_id.ToString() + '|' + board.m_selected.m_id + '|' + m_name + '|';
+
+            for (int i = 0; i < m_charScript.m_targets.Count; i++)
+            {
+                if (i > 0)
+                    msg += ',';
+
+                msg += m_charScript.m_targets[i].GetComponent<CharacterScript>().m_id;
+            }
+
+            s.SendMessageCUSTOM(msg);
         }
 
         m_charScript.m_boardScript.m_camIsFrozen = true;
         m_panMan.CloseHistory();
 
         if (selectedTileScript.m_targetRadius.Count > 0)
-            selectedTileScript.ClearRadius();
+            TileLinkScript.ClearRadius(selectedTileScript);
 
         if (!m_charScript.m_boardScript.m_isForcedMove)
-            m_charScript.m_tile.GetComponent<TileScript>().ClearRadius();
+            TileLinkScript.ClearRadius(m_charScript.m_tile.GetComponent<TileScript>());
     }
 
     public void Action()
     {
-        m_charScript.m_boardScript.m_actionEndTimer = Time.deltaTime;
+        m_gamMan.m_actionEndTimer = Time.deltaTime;
 
         m_isRevealed = true;
 
@@ -193,13 +198,13 @@ public class ActionScript : MonoBehaviour {
 
 
             if (m_charScript.m_targets.Count > 1)
-                m_charScript.m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_charScript.m_boardScript.m_selected.gameObject;
+                m_camera.GetComponent<BoardCamScript>().m_target = m_charScript.m_boardScript.m_selected.gameObject;
             else
-                m_charScript.m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_charScript.m_targets[0];
+                m_camera.GetComponent<BoardCamScript>().m_target = m_charScript.m_targets[0];
         }
 
         if (UniqueActionProperties(uniAct.FREE) == -1)
-            m_charScript.m_hasActed[(int)CharacterScript.trn.ACT] = true;
+            m_gamMan.m_hasActed[(int)GameManagerScript.trn.ACT] = true;
 
         if (teamBuff || soloBuff && gainOK)
             Ability(gameObject, m_name);
@@ -214,17 +219,18 @@ public class ActionScript : MonoBehaviour {
 
         m_panMan.GetPanel("HUD Panel LEFT").PopulatePanel();
         if (m_panMan.GetPanel("HUD Panel RIGHT").m_inView)
-            m_panMan.GetPanel("HUD Panel RIGHT").PopulatePanel();
+            m_panMan.GetPanel("HUD Panel RIGHT").ClosePanel();
+            //m_panMan.GetPanel("HUD Panel RIGHT").PopulatePanel();
 
         m_panMan.GetPanel("ActionViewer Panel").ClosePanel();
-        if (!m_panMan.GetPanel("Choose Panel").m_inView)
-            m_charScript.m_boardScript.m_selected = null;
 
-        if (m_charScript.m_boardScript.m_currButton.GetComponent<SlidingPanelScript>())
+        if (m_charScript.m_boardScript.m_currButton && m_charScript.m_boardScript.m_currButton.GetComponent<SlidingPanelScript>())
             m_charScript.m_boardScript.m_currButton.GetComponent<SlidingPanelScript>().m_inView = false;
         m_charScript.m_boardScript.m_currButton = null;
 
         print(m_charScript.m_name + " has finished acting.");
+
+        m_charScript.m_boardScript.m_selected = null;
     }
 
     private bool Attack(ObjectScript _currTarget)
@@ -240,7 +246,7 @@ public class ActionScript : MonoBehaviour {
             friendly = true;
 
 
-        string finalDMG = finalDMG = (m_damage + m_charScript.m_tempStats[(int)CharacterScript.sts.DMG]).ToString();
+        string finalDMG = (m_damage + m_charScript.m_tempStats[(int)CharacterScript.sts.DMG]).ToString();
 
         if (UniqueActionProperties(uniAct.NO_DMG) == 1)
             finalDMG = m_damage.ToString();
@@ -331,24 +337,24 @@ public class ActionScript : MonoBehaviour {
             case "ATK(Ward)":
             case "ATK(Weaken)":
             case "ATK(Whole)":
-                StatusScript.NewStatus(_currTarget, m_charScript, this);
+                StatusScript.NewStatus(targetScript, m_charScript, this);
                 break;
-            case "ATK(Deplete)":
-                if (_name == "ATK(Prismatic)" && m_charScript.m_tempStats[(int)CharacterScript.sts.TEC] < -2 || _name == "ATK(Deplete)" && m_charScript.m_tempStats[(int)CharacterScript.sts.TEC] < -1 ||
-                    _name == "ATK(Syphon)" && m_charScript.m_tempStats[(int)CharacterScript.sts.TEC] < -2)
-                    break;
-                if (!m_charScript.m_isAI)
-                    SelectorInit(targetScript, "Energy Selector");
-                else if (_name == "ATK(Deplete)")
-                    targetScript.m_player.RemoveRandomEnergy(2 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
-                else if (_name == "ATK(Prismatic)") // REFACTOR
-                    m_charScript.m_player.GainRandomEnergyAI(2 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
-                else if (_name == "ATK(Syphon)") // REFACTOR
-                {
-                    targetScript.m_player.RemoveRandomEnergy(2 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
-                    m_charScript.m_player.GainRandomEnergyAI(2 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
-                }
-                break;
+            //case "ATK(Deplete)":
+            //    if (_name == "ATK(Prismatic)" && m_charScript.m_tempStats[(int)CharacterScript.sts.TEC] < -2 || _name == "ATK(Deplete)" && m_charScript.m_tempStats[(int)CharacterScript.sts.TEC] < -1 ||
+            //        _name == "ATK(Syphon)" && m_charScript.m_tempStats[(int)CharacterScript.sts.TEC] < -2)
+            //        break;
+            //    if (!m_charScript.m_isAI)
+            //        SelectorInit(targetScript, "Energy Selector");
+            //    else if (_name == "ATK(Deplete)")
+            //        targetScript.m_player.RemoveRandomEnergy(2 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
+            //    else if (_name == "ATK(Prismatic)") // REFACTOR
+            //        m_charScript.m_player.GainRandomEnergyAI(2 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
+            //    else if (_name == "ATK(Syphon)") // REFACTOR
+            //    {
+            //        targetScript.m_player.RemoveRandomEnergy(2 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
+            //        m_charScript.m_player.GainRandomEnergyAI(2 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
+            //    }
+            //    break;
             case "ATK(Copy)":
             case "ATK(Hack)":
             case "SUP(Redirect)":
@@ -372,13 +378,13 @@ public class ActionScript : MonoBehaviour {
                 break;
             case "ATK(Syphon)":
                 targetScript.m_tempStats[(int)CharacterScript.sts.SPD] -= 2 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC];
-                StatusScript.ApplyStatus(targetScript.gameObject);
+                StatusScript.ApplyStatus(targetScript);
                 m_charScript.m_tempStats[(int)CharacterScript.sts.SPD] += 2 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC];
-                StatusScript.ApplyStatus(gameObject);
+                StatusScript.ApplyStatus(m_charScript);
                 break;
             case "SUP(Defrag)":
-                StatusScript.DestroyAllDebuffs(_currTarget);
-                StatusScript.NewStatus(_currTarget, m_charScript, this);
+                StatusScript.DestroyAllDebuffs(targetScript);
+                StatusScript.NewStatus(targetScript, m_charScript, this);
                 break;
             //case "Cleansing ATK":
             case "ATK(Salvage)":
@@ -398,7 +404,7 @@ public class ActionScript : MonoBehaviour {
             case "ATK(Focus)":
                 m_charScript.m_stats[(int)CharacterScript.sts.DMG]++;
                 m_charScript.m_stats[(int)CharacterScript.sts.TEC]++;
-                StatusScript.ApplyStatus(gameObject);
+                StatusScript.ApplyStatus(m_charScript);
                 break;
             case "SUP(Channel)":
                 m_charScript.m_player.m_energy[(int)PlayerScript.eng.BLU] += 1;
@@ -419,35 +425,34 @@ public class ActionScript : MonoBehaviour {
                 break;
             case "ATK(Lag)":
                 targetScript.m_tempStats[(int)CharacterScript.sts.SPD] -= 2 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC];
-                StatusScript.ApplyStatus(targetScript.gameObject);
+                StatusScript.ApplyStatus(targetScript);
                 break;
             case "SUP(Synch)":
                 targetScript.m_tempStats[(int)CharacterScript.sts.SPD] += 2 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC];
-                StatusScript.ApplyStatus(targetScript.gameObject);
+                StatusScript.ApplyStatus(targetScript);
                 break;
             case "ATK(Burst)":
-                m_charScript.m_tempStats[(int)CharacterScript.sts.SPD] += 1 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC];
-                StatusScript.ApplyStatus(gO);
+                
                 break;
             case "ATK(Intel)":
                 targetScript.RevealRandomAction();
                 break;
-            case "ATK(Dark":
+            case "ATK(Dark)":
                 m_charScript.HideAllActions();
+                GameObject.Find("Scene Manager").GetComponent<ActionLoaderScript>().PopulateDark(this);
                 break;
             case "ATK(Dash)":
-                if (TileScript.CheckForEmptyNeighbor(tileScript) && !m_charScript.m_isAI)
+                if (TileLinkScript.CheckForEmptyNeighbor(tileScript) && !m_charScript.m_isAI)
                 {
-                    tileScript.ClearRadius();
+                    TileLinkScript.ClearRadius(tileScript);
                     m_charScript.m_boardScript.m_isForcedMove = m_charScript.gameObject;
                     m_charScript.MovementSelection(3 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
                 }
                 break;
-            case "ATK(Leak)":
+            case "ATK(Deplete)":
                 targetScript.m_player.RemoveRandomEnergy(1);
                 break;
             case "ATK(Overclock)":
-                m_charScript.m_tempStats[(int)CharacterScript.sts.SPD] += 3 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC];
                 break;
             case "ATK(Lunge)":
                 PullTowards(m_charScript, targetScript.m_tile, 100);
@@ -459,17 +464,17 @@ public class ActionScript : MonoBehaviour {
                 PullTowards(_currTarget.GetComponent<ObjectScript>(), tileScript, 100);
                 break;
             case "ATK(Push)":
-                if (TileScript.CheckForEmptyNeighbor(targetTile) && !m_charScript.m_isAI)
+                if (TileLinkScript.CheckForEmptyNeighbor(targetTile) && !m_charScript.m_isAI)
                 {
-                    tileScript.ClearRadius();
+                    TileLinkScript.ClearRadius(tileScript);
                     m_charScript.m_boardScript.m_isForcedMove = _currTarget;
                     _currTarget.GetComponent<ObjectScript>().MovementSelection(3 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
                 }
                 break;
             case "SUP(Passage)":
-                tileScript.ClearRadius();
+                TileLinkScript.ClearRadius(tileScript);
                 m_charScript.m_boardScript.m_isForcedMove = _currTarget;
-                TileScript.FetchAllEmptyTiles();
+                TileLinkScript.FetchAllEmptyTiles();
                 break;
             case "SUP(Reboot)":
                 targetScript.Revive((m_charScript.m_totalHealth / 2) + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC]);
@@ -494,7 +499,9 @@ public class ActionScript : MonoBehaviour {
                 m_effect = "When used, turns into ATK(Destroy) (ENG: RR, RNG: 1, DMG: 16).";
                 break;
             case "SUP(Queue)":
-                GameObject.Find("Board").GetComponent<BoardScript>().m_priorityQueue.Add(targetScript);
+                m_gamMan.m_priorityQueue.Add(targetScript);
+                targetScript.m_tempStats[(int)CharacterScript.sts.SPD] += 3 + m_charScript.m_tempStats[(int)CharacterScript.sts.TEC];
+                StatusScript.ApplyStatus(targetScript);
                 break;
             //case "ATK(Purge)":
             //    StatusScript.DestroyAll(_currTarget);
@@ -573,7 +580,7 @@ public class ActionScript : MonoBehaviour {
         else if (m_name == "ATK(Cross)")
         {
             if (_uniAct == uniAct.TAR_RES)
-                return (int)TileScript.targetRestriction.HORVERT;
+                return (int)TileLinkScript.targetRestriction.HORVERT;
             if (_uniAct == uniAct.NON_RAD)
                 return 1;
         }
@@ -585,7 +592,7 @@ public class ActionScript : MonoBehaviour {
         else if (m_name == "ATK(Diagonal)")
         {
             if (_uniAct == uniAct.TAR_RES)
-                return (int)TileScript.targetRestriction.DIAGONAL;
+                return (int)TileLinkScript.targetRestriction.DIAGONAL;
             else if (_uniAct == uniAct.IS_NOT_BLOCK)
                 return 0;
             if (_uniAct == uniAct.NON_RAD)
@@ -599,7 +606,7 @@ public class ActionScript : MonoBehaviour {
         else if (m_name == "ATK(Lunge)")
         {
             if (_uniAct == uniAct.TAR_RES)
-                return (int)TileScript.targetRestriction.HORVERT;
+                return (int)TileLinkScript.targetRestriction.HORVERT;
             else if (_uniAct == uniAct.RNG_MOD)
                 return 1;
         }
@@ -615,7 +622,7 @@ public class ActionScript : MonoBehaviour {
         else if (m_name == "ATK(Pull)")
         {
             if (_uniAct == uniAct.TAR_RES)
-                return (int)TileScript.targetRestriction.HORVERT;
+                return (int)TileLinkScript.targetRestriction.HORVERT;
             else if (_uniAct == uniAct.RNG_MOD)
                 return 1;
             else if (_uniAct == uniAct.MOBILITY)
@@ -635,7 +642,7 @@ public class ActionScript : MonoBehaviour {
         else if (m_name == "ATK(Slash)")
         {
             if (_uniAct == uniAct.TAR_RES)
-                return (int)TileScript.targetRestriction.HORVERT;
+                return (int)TileLinkScript.targetRestriction.HORVERT;
             else if (_uniAct == uniAct.IS_NOT_BLOCK)
                 return 1;
             else if (_uniAct == uniAct.NO_RNG)
@@ -658,7 +665,7 @@ public class ActionScript : MonoBehaviour {
         else if (m_name == "ATK(Thrust)")
         {
             if (_uniAct == uniAct.TAR_RES)
-                return (int)TileScript.targetRestriction.HORVERT;
+                return (int)TileLinkScript.targetRestriction.HORVERT;
             else if (_uniAct == uniAct.IS_NOT_BLOCK)
                 return 0;
             else if (_uniAct == uniAct.RNG_MOD)
@@ -680,14 +687,14 @@ public class ActionScript : MonoBehaviour {
 
         while (_force > 0)
         {
-            if (targetTileScript.m_x < _away.m_x && targetTileScript.m_neighbors[(int)TileScript.nbors.left])
-                nei = targetTileScript.m_neighbors[(int)TileScript.nbors.left].GetComponent<TileScript>();
-            else if (targetTileScript.m_x > _away.m_x && targetTileScript.m_neighbors[(int)TileScript.nbors.right])
-                nei = targetTileScript.m_neighbors[(int)TileScript.nbors.right].GetComponent<TileScript>();
-            else if (targetTileScript.m_z < _away.m_z && targetTileScript.m_neighbors[(int)TileScript.nbors.bottom])
-                nei = targetTileScript.m_neighbors[(int)TileScript.nbors.bottom].GetComponent<TileScript>();
-            else if (targetTileScript.m_z > _away.m_z && targetTileScript.m_neighbors[(int)TileScript.nbors.top])
-                nei = targetTileScript.m_neighbors[(int)TileScript.nbors.top].GetComponent<TileScript>();
+            if (targetTileScript.m_x < _away.m_x && targetTileScript.m_neighbors[(int)TileLinkScript.nbors.LEFT])
+                nei = targetTileScript.m_neighbors[(int)TileLinkScript.nbors.LEFT].GetComponent<TileScript>();
+            else if (targetTileScript.m_x > _away.m_x && targetTileScript.m_neighbors[(int)TileLinkScript.nbors.RIGHT])
+                nei = targetTileScript.m_neighbors[(int)TileLinkScript.nbors.RIGHT].GetComponent<TileScript>();
+            else if (targetTileScript.m_z < _away.m_z && targetTileScript.m_neighbors[(int)TileLinkScript.nbors.BOTTOM])
+                nei = targetTileScript.m_neighbors[(int)TileLinkScript.nbors.BOTTOM].GetComponent<TileScript>();
+            else if (targetTileScript.m_z > _away.m_z && targetTileScript.m_neighbors[(int)TileLinkScript.nbors.TOP])
+                nei = targetTileScript.m_neighbors[(int)TileLinkScript.nbors.TOP].GetComponent<TileScript>();
             else
                 nei = null;
 
@@ -731,10 +738,10 @@ public class ActionScript : MonoBehaviour {
             {
                 if (checkTargetsTiles(_targetScript, neighbors[i])) // For magnet attack.
                 {
-                    if (i == 0 && targetTileScript.m_x > _towards.m_x ||
-                        i == 1 && targetTileScript.m_x < _towards.m_x ||
-                        i == 2 && targetTileScript.m_z < _towards.m_z ||
-                        i == 3 && targetTileScript.m_z > _towards.m_z)
+                    if (i == (int)TileLinkScript.nbors.LEFT && targetTileScript.m_x > _towards.m_x ||
+                        i == (int)TileLinkScript.nbors.RIGHT && targetTileScript.m_x < _towards.m_x ||
+                        i == (int)TileLinkScript.nbors.TOP && targetTileScript.m_z < _towards.m_z ||
+                        i == (int)TileLinkScript.nbors.BOTTOM && targetTileScript.m_z > _towards.m_z)
                     {
                         nei = targetTileScript.m_neighbors[i].GetComponent<TileScript>();
                         break;
@@ -794,7 +801,7 @@ public class ActionScript : MonoBehaviour {
         selector.m_cScript = _targetScript;
         selector.PopulatePanel();
 
-        m_charScript.m_tile.GetComponent<TileScript>().ClearRadius();
+        TileLinkScript.ClearRadius(m_charScript.m_tile.GetComponent<TileScript>());
         m_charScript.m_boardScript.m_isForcedMove = m_charScript.gameObject;
     }
 

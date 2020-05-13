@@ -37,7 +37,7 @@ public class TurnButtonScript : EnergyButtonScript
 
     override public void Select()
     {
-        CameraScript cam = GameObject.Find("FreeCam").transform.Find("Main Camera").GetComponent<CameraScript>();
+        BoardCamScript cam = GameObject.Find("BoardCam/Main Camera").GetComponent<BoardCamScript>();
 
         cam.m_target = m_cScript.gameObject;
     }

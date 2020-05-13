@@ -6,12 +6,14 @@ using UnityEngine.UI;
 public class TurnPanelScript : PanelScript {
 
     private PanelScript[] m_panels;
-    private BoardScript m_board;
+    private GameManagerScript m_gamMan;
+    private float m_spacing; //.4f
 
     // Use this for initialization
-    void Start ()
+    new void Start ()
     {
         int numTurnPanels = 10;
+        float dif = 0;
 
         m_panels = new PanelScript[numTurnPanels];
 
@@ -19,18 +21,27 @@ public class TurnPanelScript : PanelScript {
         {
             GameObject turnPanel = Instantiate(Resources.Load<GameObject>("GUI/Next"));
 
-            turnPanel.transform.SetParent(gameObject.transform);
+            turnPanel.transform.SetParent(gameObject.transform, false);
+            float x = turnPanel.transform.localScale.x;
+            //dif = x - turnPanel.transform.localScale.x;
+
             m_panels[i] = turnPanel.GetComponent<PanelScript>();
-            //m_panels[i].GetComponent<EnergyButtonScript>().EnergyInit();
-            //m_panels[i].gameObject.SetActive(false);
         }
 
-        if (GameObject.Find("Board").GetComponent<BoardScript>())
-            m_board = GameObject.Find("Board").GetComponent<BoardScript>();
+        if (GameObject.Find("Scene Manager"))
+            m_gamMan = GameObject.Find("Scene Manager").GetComponent<GameManagerScript>();
+
+        RectTransform rectT = Resources.Load<GameObject>("GUI/Next").GetComponent<RectTransform>();
+        //rectT.localScale = Vector3.one;
+        m_spacing = rectT.rect.width; //*2 + (rectT.rect.width * dif);
     }
 	
 	// Update is called once per frame
 	void Update ()
+    {
+    }
+
+    private void FixedUpdate()
     {
         TurnSlide();
     }
@@ -39,8 +50,6 @@ public class TurnPanelScript : PanelScript {
     private void TurnSlide()
     {
         GameObject pan = null;
-        float width = 90.0f;
-        float start = 190.0f;
 
         // Set current panel and count 
         for (int i = 0; i < m_panels.Length; i++)
@@ -75,15 +84,16 @@ public class TurnPanelScript : PanelScript {
         //
         //    bScript.m_newTurn = false;
         //}
-        if (m_board.m_currRound.Count < m_panels.Length - 1 && m_board.m_newTurn) // if one of the panels is removed, move it every frame unitl it slides off to the left
+
+        if (m_gamMan.m_currRound.Count < m_panels.Length - 1 && m_gamMan.m_newTurn) // if one of the panels is removed, move it every frame unitl it slides off to the left
         {
-            if (pan.transform.position.y < 750)
-                pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x, pan.transform.position.y + 10.0f, pan.transform.position.z), pan.transform.rotation);
-            else if (pan.transform.position.y >= 750)
+            if (pan.transform.localPosition.y < 60)
+                pan.transform.localPosition = new Vector2(pan.transform.localPosition.x, pan.transform.localPosition.y + 8.0f);
+            else if (pan.transform.localPosition.y >= 60)
             {
                 pan.SetActive(false);
                 if (pan.GetComponent<Image>().color != new Color(1, .5f, .5f, 1))
-                    m_board.m_newTurn = false;
+                    m_gamMan.m_newTurn = false;
             }
         }
         else
@@ -91,6 +101,7 @@ public class TurnPanelScript : PanelScript {
             // if was removed, check all of the panels that are still left to see if they are in their new position. If not, slide them down each frame until they are
 
             int widthCount = 0;
+            GameObject last = null;
 
             for (int i = 0; i < m_panels.Length - 1; i++)
             {
@@ -98,24 +109,39 @@ public class TurnPanelScript : PanelScript {
                 if (!pan.activeSelf)
                     continue;
 
-                float widthMod = start + width * widthCount;
+
+                if (pan.transform.localPosition.x > m_spacing * widthCount)
+                {
+                    pan.transform.localPosition = new Vector2(pan.transform.localPosition.x - 10.0f, pan.transform.localPosition.y);
+
+                    if (pan.transform.localPosition.x < m_spacing * widthCount)
+                        pan.transform.localPosition = new Vector2(m_spacing * widthCount, pan.transform.localPosition.y);
+                }
+
+                if (pan.transform.localPosition.y > 0)
+                {
+                    if (!last || pan.transform.localPosition.y > last.transform.localPosition.y + 10)
+                    {
+                        pan.transform.localPosition = new Vector2(pan.transform.localPosition.x, pan.transform.localPosition.y - 5.0f);
+
+                        if (pan.transform.localPosition.y <= 0)
+                        {
+                            pan.transform.localPosition = new Vector2(pan.transform.localPosition.x, 0);
+                            widthCount++;
+                            last = null;
+                            continue;
+                        }
+                    }
+                }
+                else
+                {
+                    widthCount++;
+                    last = null;
+                    continue;
+                }
+
                 widthCount++;
-
-                if (pan.transform.position.x > widthMod)
-                {
-                    pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x - 10.0f, pan.transform.position.y, pan.transform.position.z), pan.transform.rotation);
-
-                    if (pan.transform.position.x < widthMod)
-                        pan.transform.SetPositionAndRotation(new Vector3(widthMod, pan.transform.position.y, pan.transform.position.z), pan.transform.rotation);
-                }
-
-                if (pan.transform.position.y > 705)
-                {
-                    pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x, pan.transform.position.y - 5.0f, pan.transform.position.z), pan.transform.rotation);
-
-                    if (pan.transform.position.y < 705)
-                        pan.transform.SetPositionAndRotation(new Vector3(pan.transform.position.x, 705, pan.transform.position.z), pan.transform.rotation);
-                }
+                last = pan;
             }
         }
     }
@@ -146,10 +172,7 @@ public class TurnPanelScript : PanelScript {
 
     public void NewTurnOrder()
     {
-        BoardScript bScript = m_board.GetComponent<BoardScript>();
-        float width = 75.0f;
-        float start = -360.0f;
-        int roundCountModded = bScript.m_currRound.Count - 1;
+        int roundCountModded = m_gamMan.m_currRound.Count - 1;
 
         if (roundCountModded == 0)
             return;
@@ -164,8 +187,8 @@ public class TurnPanelScript : PanelScript {
 
         for (int i = 0; i < roundCountModded; i++)
         {
-            m_panels[i].transform.position = new Vector3(start + transform.position.x + width * i, transform.position.y);
-            TurnPanelInit(i, bScript.m_currRound[i + 1].GetComponent<CharacterScript>()); // +1 because we are avoiding the first index
+            m_panels[i].transform.localPosition = new Vector3(m_spacing * i, 60);
+            TurnPanelInit(i, m_gamMan.m_currRound[i + 1].GetComponent<CharacterScript>()); // +1 because we are avoiding the first index
         }
     }
 }

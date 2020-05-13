@@ -12,6 +12,7 @@ public class ButtonScript : MonoBehaviour {
     public SlidingPanelScript m_main;
     public BoardScript m_boardScript;
     protected SlidingPanelManagerScript m_panMan;
+    protected GameManagerScript m_gamMan;
     public PanelScript m_parent;
 
     // References
@@ -22,7 +23,10 @@ public class ButtonScript : MonoBehaviour {
     protected void Start ()
     {
         if (GameObject.Find("Scene Manager"))
+        {
             m_panMan = GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>();
+            m_gamMan = GameObject.Find("Scene Manager").GetComponent<GameManagerScript>();
+        }
 
         m_audio = gameObject.AddComponent<AudioSource>();
 
@@ -41,7 +45,7 @@ public class ButtonScript : MonoBehaviour {
     {
         if (m_boardScript && m_boardScript.m_isForcedMove && m_parent.tag != "Selector" ||
             m_panMan.m_confirmPanel.m_inView && m_parent != m_panMan.m_confirmPanel ||
-            m_boardScript && m_boardScript.m_currCharScript.m_isAI)
+            m_gamMan && m_gamMan.m_currCharScript.m_isAI)
             return;
 
         if (GetComponent<Button>() && GetComponent<Button>().interactable)
@@ -49,23 +53,6 @@ public class ButtonScript : MonoBehaviour {
 
         if (m_boardScript && GetComponent<Button>())
             m_boardScript.m_hoverButton = GetComponent<Button>();
-
-        // REFACTOR: Make this more like how status images are handled
-        if (GetComponent<Button>() && GetComponent<Button>().name == "Turn Panel Energy Button")
-        {
-            CharacterScript charScript = m_object.GetComponent<CharacterScript>();
-
-            //Image turnPanImage = charScript.turnPanel.GetComponent<Image>();
-            //turnPanImage.color = Color.cyan;
-
-            Renderer charRenderer = charScript.GetComponentInChildren<Renderer>();
-            charRenderer.material.color = Color.cyan;
-            PanelScript hudPanScript = m_panMan.GetPanel("HUD Panel RIGHT");
-            hudPanScript.m_cScript = charScript;
-            hudPanScript.PopulatePanel();
-
-            return;
-        }
 
         if (m_boardScript && m_boardScript.m_currButton)
             return;
@@ -76,7 +63,7 @@ public class ButtonScript : MonoBehaviour {
         if (m_boardScript)
             m_boardScript.m_hoverButton = null;
 
-        if (m_boardScript && m_boardScript.m_currCharScript.m_isAI || name == "Move" && m_boardScript.m_isForcedMove)
+        if (m_gamMan && m_gamMan.m_currCharScript.m_isAI || name == "Move" && m_boardScript.m_isForcedMove)
             return;
 
         if (GetComponent<Button>() && GetComponent<Button>().name == "Turn Panel Energy Button")
@@ -103,7 +90,7 @@ public class ButtonScript : MonoBehaviour {
         {
             m_main.ClosePanel();
             if (m_boardScript)
-                m_boardScript.m_currCharScript.m_currAction = null;
+                m_gamMan.m_currCharScript.m_currAction = null;
         }
 
         if (m_boardScript && !m_boardScript.m_currButton && GetComponent<Image>().color != Color.cyan)
@@ -112,18 +99,18 @@ public class ButtonScript : MonoBehaviour {
                 GetComponent<SlidingPanelScript>().m_inView = false;
             TileScript selectedTileScript = null;
             if (GetComponent<Button>().GetComponent<Image>().color == PanelScript.b_isFree)
-                selectedTileScript = m_boardScript.m_currCharScript.m_tile;
+                selectedTileScript = m_gamMan.m_currCharScript.m_tile;
             else
                 selectedTileScript = m_object.GetComponent<CharacterScript>().m_tile;
 
             if (selectedTileScript.m_radius.Count > 0)
-                selectedTileScript.ClearRadius();
+                TileLinkScript.ClearRadius(selectedTileScript);
 
             if (m_boardScript.m_highlightedTile)
             {
                 selectedTileScript = m_boardScript.m_highlightedTile;
                 if (selectedTileScript.m_targetRadius.Count > 0)
-                    selectedTileScript.ClearRadius();
+                    TileLinkScript.ClearRadius(selectedTileScript);
             }
         }
     }
@@ -138,14 +125,14 @@ public class ButtonScript : MonoBehaviour {
         //    m_boardScript && m_boardScript.m_currCharScript.m_isAI)
         //    return;
 
-        TileScript selectedTileScript = m_boardScript.m_currCharScript.m_tile.GetComponent<TileScript>();
+        TileScript selectedTileScript = m_gamMan.m_currCharScript.m_tile.GetComponent<TileScript>();
         if (selectedTileScript.m_radius.Count > 0)
-            selectedTileScript.ClearRadius();
+            TileLinkScript.ClearRadius(selectedTileScript);
 
         if (m_boardScript.m_highlightedTile)
         {
             selectedTileScript = m_boardScript.m_highlightedTile.GetComponent<TileScript>();
-            selectedTileScript.ClearRadius();
+            TileLinkScript.ClearRadius(selectedTileScript);
         }
 
         if (m_boardScript.m_currButton)
@@ -157,7 +144,7 @@ public class ButtonScript : MonoBehaviour {
             if (gameObject == m_boardScript.m_currButton.gameObject)
             {
                 m_boardScript.m_currButton = null;
-                m_boardScript.m_currCharScript.m_currAction = null;
+                m_gamMan.m_currCharScript.m_currAction = null;
                 //if (!m_hovered)
                 //    GetComponent<ButtonScript>().m_main.ClosePanel();
                 return;
@@ -172,16 +159,16 @@ public class ButtonScript : MonoBehaviour {
         //m_main.m_cScript = m_boardScript.m_currCharScript;
         //m_main.PopulatePanel();
 
-        if (gameObject.name == "Move" && !m_panMan.GetPanel("Choose Panel").m_inView)
+        if (gameObject.name == "Move")
         {
             m_panMan.GetPanel("ActionViewer Panel").ClosePanel();
-            m_boardScript.m_currCharScript.MovementSelection(0);
+            m_gamMan.m_currCharScript.MovementSelection(0);
         }
     }
 
     public void SetCameraTarget()
     {
-        CameraScript camScript = m_camera.GetComponent<CameraScript>();
+        BoardCamScript camScript = m_camera.GetComponent<BoardCamScript>();
         camScript.m_target = m_object;
     }
 }

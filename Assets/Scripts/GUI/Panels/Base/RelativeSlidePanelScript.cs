@@ -36,7 +36,7 @@ public class RelativeSlidePanelScript : SlidingPanelScript
     }
 	
 	// Update is called once per frame
-	new void Update () 
+	new void FixedUpdate () 
     {
         Slide();
         SlideState();

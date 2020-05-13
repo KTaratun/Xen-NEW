@@ -83,8 +83,8 @@ public class PanelScript : MonoBehaviour {
         //}
         if (name == "Round Panel")
         {
-            BoardScript bScript = GameObject.Find("Board").GetComponent<BoardScript>();
-            GetComponentInChildren<Text>().text = "Round: " + bScript.m_roundCount;
+            GameManagerScript gamMan = GameObject.Find("Scene Manager").GetComponent<GameManagerScript>();
+            GetComponentInChildren<Text>().text = "Round: " + gamMan.m_roundCount;//GameObject.Find("Scene Manager").GetComponent<NetworkedGameScript>().m_netOBJs.Count.ToString();
         }
         else if (name == "Save/Load Panel")
         {

@@ -17,36 +17,64 @@ public class ActionLoaderScript : MonoBehaviour
 
         m_allActions = m_allActions.Union(m_aC.m_whiteActions).ToList();
         m_allActions = m_allActions.Union(m_aC.m_greenActions).ToList();
-        m_allActions = m_allActions.Union(m_aC.m_blueActions).ToList();
         m_allActions = m_allActions.Union(m_aC.m_redActions).ToList();
+        m_allActions = m_allActions.Union(m_aC.m_blueActions).ToList();
     }
 
     public void AddActions(CharacterScript _charScript)
     {
         string[] actNames = _charScript.m_actNames;
 
+        int count;
+
         foreach (string actName in actNames)
         {
+            count = 0;
             foreach (Act act in m_allActions)
+            {
                 if (act.m_name == actName)
                 {
-                    PopulateAction(_charScript, act);
+                    PopulateAction(_charScript, act, count);
                     break;
                 }
+                count++;
+            }
         }
     }
 
-    private void PopulateAction(CharacterScript _charScript, Act _act)
+    private void PopulateAction(CharacterScript _charScript, Act _act, int _ind)
     {
         ActionScript aS = _charScript.gameObject.AddComponent<ActionScript>();
+
         aS.m_name = _act.m_name;
         aS.m_energy = _act.m_energy;
-        aS.m_damage = _act.m_damage;
-        aS.m_range = _act.m_range;
-        aS.m_radius = _act.m_radius;
+        aS.m_animation = _act.m_animation;
         aS.m_effect = _act.m_effect;
+        aS.m_id = _ind;
+
+        if (_act.m_name == "ATK(Dark)")
+            PopulateDark(aS);
+        else
+        {
+            aS.m_damage = _act.m_damage;
+            aS.m_range = _act.m_range;
+            aS.m_radius = _act.m_radius;
+        }
 
         _charScript.m_actions.Add(aS);
+    }
+
+    public void PopulateDark(ActionScript _aS)
+    {
+        _aS.m_damage = Random.Range(4, 10);
+
+        int rangeMod = 11 - _aS.m_damage;
+        _aS.m_range = Random.Range(1, rangeMod);
+
+        if (_aS.m_range > 2 && _aS.m_damage < 6)
+            _aS.m_radius = 2;
+        if (_aS.m_range > 2 && _aS.m_damage < 8)
+            _aS.m_radius = 1;
     }
 
     public string ModifyActions(int _tec, string _action)

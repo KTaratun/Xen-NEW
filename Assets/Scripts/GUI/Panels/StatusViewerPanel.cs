@@ -20,14 +20,17 @@ public class StatusViewerPanel : SlidingPanelScript
     }
 
     // Update is called once per frame
-    new void Update()
+    void Update()
     {
-        base.Update();
-
         if (!m_hovered && !m_imagePan.m_inView && m_imagePan.m_state == state.CLOSED)
             m_inView = false;
         if (m_hovered && m_inView && m_state == state.OPEN)
             m_imagePan.PopulatePanel();
+    }
+
+    new private void FixedUpdate()
+    {
+        base.FixedUpdate();
     }
 
     override public void PopulatePanel()
@@ -45,7 +48,33 @@ public class StatusViewerPanel : SlidingPanelScript
             transform.Find("Main View/Duration").GetComponent<Text>().text = "Duration: N/A";
             transform.Find("Main View/Effect").GetComponent<Text>().text = pUP.m_effect;
         }
-        else
+        else if (ParameterIconScript.m_currParameter)
+        {
+            transform.Find("Status Image/Status Image").GetComponent<Image>().sprite = ParameterIconScript.m_currParameter.m_image.sprite;
+
+            CharacterScript.sts param = (CharacterScript.sts)System.Enum.Parse(typeof(CharacterScript.sts), ParameterIconScript.m_currParameter.name);
+
+            Color col = Color.white;
+            int statsAdded = m_cScript.m_tempStats[(int)param] - m_cScript.m_stats[(int)param];
+
+            if (statsAdded > 0)
+            {
+                col = StatusScript.c_buffColor;
+                transform.Find("Main View/Duration").GetComponent<Text>().text = ParameterIconScript.m_currParameter.m_title + m_cScript.m_stats[(int)param] + " + " + statsAdded.ToString();
+            }
+            else if (statsAdded < 0)
+            {
+                col = StatusScript.c_debuffColor;
+                transform.Find("Main View/Duration").GetComponent<Text>().text = ParameterIconScript.m_currParameter.m_title + m_cScript.m_stats[(int)param] + " - " + statsAdded.ToString();
+            }
+            else
+                transform.Find("Main View/Duration").GetComponent<Text>().text = ParameterIconScript.m_currParameter.m_title + m_cScript.m_stats[(int)param];
+
+            transform.Find("Status Image/Status Image").GetComponent<Image>().color = col;
+
+            transform.Find("Main View/Effect").GetComponent<Text>().text = ParameterIconScript.m_currParameter.m_desc;
+        }
+        else if (m_cScript && m_cScript.m_currStatus > -1)
         {
             StatusScript[] statScripts = m_cScript.GetComponents<StatusScript>();
 
@@ -61,5 +90,8 @@ public class StatusViewerPanel : SlidingPanelScript
     {
         m_hovered = false;
         m_imagePan.ClosePanel();
+        
+        if (m_cScript)
+            m_cScript.m_currStatus = -1;
     }
 }

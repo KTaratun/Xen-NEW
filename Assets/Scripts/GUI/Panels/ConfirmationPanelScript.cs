@@ -4,11 +4,16 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using System;
 
 public class ConfirmationPanelScript : SlidingPanelScript 
 {
     private BoardScript m_board;
     private TeamMenuScript m_tMenu;
+    private GameManagerScript m_gamMan;
+
+    //public System.Action m_errorCheck;
+    public Func<bool> m_errorCheck;
 
     // Use this for initialization
     new void Start ()
@@ -23,39 +28,65 @@ public class ConfirmationPanelScript : SlidingPanelScript
             m_panMan = GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>();
             if (GameObject.Find("Scene Manager").GetComponent<TeamMenuScript>())
                 m_tMenu = GameObject.Find("Scene Manager").GetComponent<TeamMenuScript>();
+            if (GameObject.Find("Scene Manager").GetComponent<GameManagerScript>())
+                m_gamMan = GameObject.Find("Scene Manager").GetComponent<GameManagerScript>();
         }
 
         if (m_slideSpeed == 0)
             m_slideSpeed = 30.0f;
 
-        if (m_direction == dir.UP)
-            m_outBoundryDis = GetComponent<RectTransform>().rect.height;
+        m_outBoundryDis = Screen.height + m_rectT.rect.height + 10;
 
         Button butt = transform.Find("Cancel").gameObject.GetComponent<ButtonScript>().GetComponent<Button>();
         butt.onClick.AddListener(() => CancelButton());
     }
 	
 	// Update is called once per frame
-	new void Update () 
+	new void FixedUpdate () 
     {
-        base.Update();
-	}
+        //base.FixedUpdate();
+        ConfSlide();
+    }
+
+    private void ConfSlide()
+    {
+        float deltaOffset = 50;
+
+        if (m_inView)
+        {
+            if (transform.position.y > m_inBoundryDis) //if (recTrans.offsetMax.y > m_inBoundryDis)
+            {
+                transform.position = new Vector2(transform.position.x, transform.position.y - m_slideSpeed * Time.fixedDeltaTime * deltaOffset);
+
+                if (transform.position.y <= m_inBoundryDis)
+                    transform.position = new Vector2(transform.position.x, m_inBoundryDis);
+            }
+        }
+        else if (transform.position.y < m_outBoundryDis)
+        {
+            transform.position = new Vector2(transform.position.x, transform.position.y + m_slideSpeed * Time.fixedDeltaTime * deltaOffset);
+            if (transform.position.y >= m_outBoundryDis)
+                transform.position = new Vector2(transform.position.x, m_outBoundryDis);
+        }
+    }
 
     new public void OpenPanel()
     {
         base.OpenPanel();
 
-        if ((int)Input.mousePosition.x < 120)
-            transform.position = new Vector3(120, transform.position.y, transform.position.z);
-        else if ((int)Input.mousePosition.x > 1160)
-            transform.position = new Vector3(1160, transform.position.y, transform.position.z);
+        if ((int)Input.mousePosition.x < m_rectT.rect.width)
+            transform.position = new Vector3(m_rectT.rect.width, transform.position.y, transform.position.z);
+        else if ((int)Input.mousePosition.x > Screen.width - m_rectT.rect.width)
+            transform.position = new Vector3(Screen.width - m_rectT.rect.width, transform.position.y, transform.position.z);
         else
             transform.position = new Vector3(Input.mousePosition.x, transform.position.y, transform.position.z);
 
-            m_inBoundryDis = -Screen.height + (int)Input.mousePosition.y + 100;
+            m_inBoundryDis = (int)Input.mousePosition.y;
 
-        if (m_inBoundryDis < -400)
-            m_inBoundryDis = -400;
+        if (m_inBoundryDis < m_rectT.rect.height)
+            m_inBoundryDis = m_rectT.rect.height;
+        else if (m_inBoundryDis > Screen.height - m_rectT.rect.height)
+            m_inBoundryDis = Screen.height - m_rectT.rect.height;
     }
 
     public void CancelButton()
@@ -68,19 +99,14 @@ public class ConfirmationPanelScript : SlidingPanelScript
 
     public void ConfirmationButton(string _confirm)
     {
+        if (m_errorCheck != null && m_errorCheck())
+            return;
+
+
         PanelScript parent = null;
         GameObject gO = transform.Find("Confirm").gameObject;
         ButtonScript buttScript = gO.GetComponent<ButtonScript>();
         Button butt = gO.GetComponent<Button>();
-
-        //transform.Find("Cancel").GetComponent<ButtonScript>().m_object = 
-
-
-        //if (!buttScript.m_main || SlidingPanelManagerScript.GetCurrentPanel() && SlidingPanelManagerScript.GetCurrentPanel().name != "Confirmation Panel")
-        //{
-        //    parent = SlidingPanelManagerScript.GetCurrentPanel();
-        //    parent.PopulatePanel();
-        //}
 
         OpenPanel();
 
@@ -88,7 +114,7 @@ public class ConfirmationPanelScript : SlidingPanelScript
 
         if (_confirm == "Action")
         {
-            butt.onClick.AddListener(() => m_board.m_currCharScript.m_currAction.ActionStart());
+            butt.onClick.AddListener(() => m_gamMan.m_currCharScript.m_currAction.ActionStart(false));
         }
         else if (_confirm == "Choose Panel")
         {
@@ -166,7 +192,8 @@ public class ConfirmationPanelScript : SlidingPanelScript
         else if (_confirm == "Pass")
         {
             m_panMan.GetPanel("HUD Panel LEFT").transform.Find("Move Pass Panel/Pass").GetComponent<ButtonScript>().Select();
-            transform.Find("Confirm").GetComponent<Button>().onClick.AddListener(() => buttScript.m_boardScript.Pass());
+            GameManagerScript gamMan = GameObject.Find("Scene Manager").GetComponent<GameManagerScript>();
+            transform.Find("Confirm").GetComponent<Button>().onClick.AddListener(() => gamMan.Pass());
         }
         else if (_confirm == "Random Team")
         {

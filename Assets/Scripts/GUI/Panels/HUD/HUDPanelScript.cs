@@ -5,16 +5,21 @@ using UnityEngine.UI;
 
 public class HUDPanelScript : SlidingPanelScript
 {
+    private CustomDirect m_cD;
+
     // Start is called before the first frame update
     new protected void Start()
     {
         base.Start();
+
+        if (GameObject.Find("Network"))
+            m_cD = GameObject.Find("Network").GetComponent<CustomDirect>();
     }
 
     // Update is called once per frame
-    new void Update()
+    new void FixedUpdate()
     {
-        base.Update();
+        base.FixedUpdate();
     }
 
     override public void PopulatePanel()
@@ -64,13 +69,31 @@ public class HUDPanelScript : SlidingPanelScript
         {
             PanelScript movePassPan = transform.Find("Move Pass Panel").GetComponent<PanelScript>();
             movePassPan.transform.Find("Move").GetComponent<ButtonScript>().m_object = m_cScript.gameObject;
-            if (m_cScript.m_effects[(int)StatusScript.effects.IMMOBILE])
+
+            //movePassPan.transform.Find("Pass").GetComponent<Button>().interactable = true;
+            if (!m_cD.CheckIfMine(m_cScript.gameObject))
+            {
+                movePassPan.transform.Find("Move").GetComponent<Button>().interactable = false;
+                movePassPan.transform.Find("Pass").GetComponent<Button>().interactable = false;
+            }
+            else if (m_cScript.m_effects[(int)StatusScript.effects.IMMOBILE])
             {
                 movePassPan.transform.Find("Move").GetComponent<Image>().color = b_isDisallowed;
                 movePassPan.transform.Find("Move").GetComponent<Button>().interactable = false;
             }
             else
                 movePassPan.transform.Find("Move").GetComponent<Image>().color = Color.white;
+        }
+    }
+
+    public override void ClosePanel()
+    {
+        base.ClosePanel();
+
+        if (name == "HUD Panel RIGHT" && m_cScript)
+        {
+            m_cScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].gameObject.SetActive(false);
+            m_cScript.m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.white;
         }
     }
 }

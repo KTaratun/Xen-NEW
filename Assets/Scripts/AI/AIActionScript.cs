@@ -44,35 +44,35 @@ public class AIActionScript : MonoBehaviour {
 
     private bool CalculateRadius(ActionScript _action, CharacterScript _owner)
     {
-        TileScript originalTile = m_targets[0].GetComponent<CharacterScript>().m_tile;
-        originalTile.FetchTilesWithinRange(_owner, _action.m_radius, TileScript.c_radius, true, TileScript.targetRestriction.NONE, false);
-        //List<TileScript> tiles = originalTile.m_targetRadius;
-
-        for (int i = 0; i < originalTile.m_targetRadius.Count; i++)
-        {
-            TileScript tarTile = originalTile.m_targetRadius[i];
-            if (tarTile.m_holding && tarTile.m_holding.tag == "Player" && tarTile.m_holding != m_targets[0] && tarTile.m_holding.GetComponent<CharacterScript>().m_isAlive)
-                m_targets.Add(tarTile.m_holding);
-        }
-
-        if (originalTile.m_targetRadius.Count > 0)
-            originalTile.ClearRadius();
-
-        int tarVal = 0;
-        for (int i = 0; i < m_targets.Count; i++)
-        {
-            if (m_targets[i].GetComponent<CharacterScript>().m_player == _owner.m_player)
-                tarVal--;
-            else
-                tarVal++;
-        }
-
-        if (tarVal > 1)
-        {
-            m_value += 200;
-            return true;
-        }
-
+        //TileScript originalTile = m_targets[0].GetComponent<CharacterScript>().m_tile;
+        //originalTile.FetchTilesWithinRange(_owner, _action.m_radius, TileScript.c_radius, true, TileScript.targetRestriction.NONE, false);
+        ////List<TileScript> tiles = originalTile.m_targetRadius;
+        //
+        //for (int i = 0; i < originalTile.m_targetRadius.Count; i++)
+        //{
+        //    TileScript tarTile = originalTile.m_targetRadius[i];
+        //    if (tarTile.m_holding && tarTile.m_holding.tag == "Player" && tarTile.m_holding != m_targets[0] && tarTile.m_holding.GetComponent<CharacterScript>().m_isAlive)
+        //        m_targets.Add(tarTile.m_holding);
+        //}
+        //
+        //if (originalTile.m_targetRadius.Count > 0)
+        //    originalTile.ClearRadius();
+        //
+        //int tarVal = 0;
+        //for (int i = 0; i < m_targets.Count; i++)
+        //{
+        //    if (m_targets[i].GetComponent<CharacterScript>().m_player == _owner.m_player)
+        //        tarVal--;
+        //    else
+        //        tarVal++;
+        //}
+        //
+        //if (tarVal > 1)
+        //{
+        //    m_value += 200;
+        //    return true;
+        //}
+        //
         return false;
 
         //for (int i = 0; i < length; i++)

@@ -16,6 +16,8 @@ public class Act
     public int m_range;
     [XmlElement("RAD")]
     public int m_radius;
+    [XmlElement("Animation")]
+    public string m_animation;
     [XmlElement("Description")]
     public string m_effect; // Description
 

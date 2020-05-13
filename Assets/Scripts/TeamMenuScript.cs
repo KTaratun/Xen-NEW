@@ -99,11 +99,11 @@ public class TeamMenuScript : MonoBehaviour {
         m_currCharScript.m_name = RandomName();
 
         if (color == 0)
-            m_currCharScript.m_color = "G";
-        else if (color == 1)
-            m_currCharScript.m_color = "R";
-        else if (color == 2)
             m_currCharScript.m_color = "W";
+        else if (color == 1)
+            m_currCharScript.m_color = "G";
+        else if (color == 2)
+            m_currCharScript.m_color = "R";
         else if (color == 3)
             m_currCharScript.m_color = "B";
 
@@ -662,9 +662,12 @@ public class TeamMenuScript : MonoBehaviour {
     public void StartGame()
     {
         CheckIfCompControlled();
-
-        DontDestroyOnLoad(GameObject.Find("Database"));
         SceneManager.LoadScene("Scene1");
+    }
+
+    public void StartTutorial()
+    {
+        SceneManager.LoadScene("Tutorial");
     }
 
     public void Rename()

@@ -12,26 +12,41 @@ public class ObjectScript : MonoBehaviour {
     public TileScript m_tile;
     public BoardScript m_boardScript;
     public int m_width;
-    public TileScript.nbors m_facing;
-
-    private SlidingPanelManagerScript m_panMan;
+    public TileLinkScript.nbors m_facing = TileLinkScript.nbors.BOTTOM;
+    
+    protected SlidingPanelManagerScript m_panMan;
+    protected Camera m_camera;
+    protected GameManagerScript m_gamMan;
 
     // Use this for initialization
     protected void Start ()
     {
         if (GameObject.Find("Scene Manager"))
+        {
             m_panMan = GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>();
+            if (GameObject.Find("Scene Manager").GetComponent<NetworkedGameScript>())
+                GameObject.Find("Scene Manager").GetComponent<NetworkedGameScript>().AddToOBJList(this);
+            if (GameObject.Find("Scene Manager").GetComponent<GameManagerScript>())
+                m_gamMan = GameObject.Find("Scene Manager").GetComponent<GameManagerScript>();
+        }
 
-        m_totalHealth = 5 * m_width;
+        if (m_totalHealth == 0)
+            m_totalHealth = 5 * m_width;
         m_currHealth = m_totalHealth;
-        m_facing = TileScript.nbors.bottom;
 
         if (GameObject.Find("Board"))
-            GameObject.Find("Board").GetComponent<BoardScript>().AddToOBJList(this);
-	}
+            m_boardScript = GameObject.Find("Board").GetComponent<BoardScript>();
+
+        if (GameObject.Find("BoardCam/Main Camera"))
+            m_camera = GameObject.Find("BoardCam/Main Camera").GetComponent<Camera>();
+    }
 	
 	// Update is called once per frame
 	protected void Update ()
+    {
+	}
+
+    protected void FixedUpdate()
     {
         if (m_boardScript && m_tile)
         {
@@ -49,7 +64,7 @@ public class ObjectScript : MonoBehaviour {
                 if (myPos.y != newPos.y)
                     myPos.x = 4;
         }
-	}
+    }
 
 
     // Movement
@@ -62,7 +77,7 @@ public class ObjectScript : MonoBehaviour {
         else if (gameObject.tag == "Player")
             move = GetComponent<CharacterScript>().m_tempStats[(int)CharacterScript.sts.MOV];
 
-        m_tile.FetchTilesWithinRange(GetComponent<CharacterScript>(), move, new Color(0, 0, 1, 0.5f), false, TileScript.targetRestriction.NONE, false);
+        TileLinkScript.FetchTilesWithinRange(m_tile, GetComponent<CharacterScript>(), move, new Color(0, 0, 1, 0.5f), false, TileLinkScript.targetRestriction.NONE, false);
     }
 
     // The entry point for all movement
@@ -71,25 +86,17 @@ public class ObjectScript : MonoBehaviour {
         if (m_tile == newScript || newScript == null)
             return;
 
-        if (GameObject.Find("Network") && !GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted &&
-            !_isNetForced)
+        if (GameObject.Find("Network").GetComponent<CustomDirect>().m_isStarted && !_isNetForced)
         {
-            ClientScript c = GameObject.Find("Network").GetComponent<ClientScript>();
+            CustomDirect s = GameObject.Find("Network").GetComponent<CustomDirect>();
             string msg = "MOVESTART~" + m_id.ToString() + '|' + newScript.m_id + '|' + _isForced.ToString();
-            c.Send(msg, c.m_reliableChannel);
-            return;
-        }
-        else if (GameObject.Find("Network") && GameObject.Find("Network").GetComponent<ServerScript>().m_isStarted)
-        {
-            ServerScript s = GameObject.Find("Network").GetComponent<ServerScript>();
-            string msg = "MOVESTART~" + m_id.ToString() + '|' + newScript.m_id + '|' + _isForced.ToString();
-            s.Send(msg, s.m_reliableChannel, s.m_clients);
+            s.SendMessageCUSTOM(msg);
         }
 
         if (m_tile)
         {
             m_tile.m_holding = null;
-            m_tile.ClearRadius();
+            TileLinkScript.ClearRadius(m_tile);
         }
         m_tile = newScript;
         m_boardScript.m_camIsFrozen = true;
@@ -118,7 +125,7 @@ public class ObjectScript : MonoBehaviour {
 
         transform.SetPositionAndRotation(new Vector3(transform.position.x + transform.forward.x * charMovement, transform.position.y, transform.position.z + transform.forward.z * charMovement), transform.rotation);
         if (!m_panMan.GetPanel("Round End Panel").m_inView)
-            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = gameObject;
+            m_camera.GetComponent<BoardCamScript>().m_target = gameObject;
 
         // Check to see if character is close enough to the point
         float snapDistance = 0.2f;
@@ -133,7 +140,7 @@ public class ObjectScript : MonoBehaviour {
     virtual public void MovingFinish()
     {
         if (!m_panMan.GetPanel("Round End Panel").m_inView)
-            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = null;
+            m_camera.GetComponent<BoardCamScript>().m_target = null;
 
         if (tag == "PowerUp" && m_tile.m_holding && m_tile.m_holding.tag == "Player")
             GetComponent<PowerupScript>().OnPickup(m_tile.m_holding.GetComponent<CharacterScript>());
@@ -184,16 +191,16 @@ public class ObjectScript : MonoBehaviour {
         transform.Rotate(0, randomRot * 90, 0);
 
         if (randomRot == 0)
-            m_facing = TileScript.nbors.bottom;
+            m_facing = TileLinkScript.nbors.BOTTOM;
         else if (randomRot == 1)
-            m_facing = TileScript.nbors.left;
+            m_facing = TileLinkScript.nbors.LEFT;
         else if (randomRot == 2)
-            m_facing = TileScript.nbors.top;
+            m_facing = TileLinkScript.nbors.TOP;
         else if (randomRot == 3)
-            m_facing = TileScript.nbors.right;
+            m_facing = TileLinkScript.nbors.RIGHT;
     }
 
-    public void SetRotation(TileScript.nbors _facing)
+    public void SetRotation(TileLinkScript.nbors _facing)
     {
         transform.Rotate(0, (int)_facing * 90, 0);
         m_facing = _facing;
@@ -213,6 +220,41 @@ public class ObjectScript : MonoBehaviour {
         {
             randX = Random.Range(0, m_boardScript.m_width - 1);
             randZ = Random.Range(0, m_boardScript.m_height - 1);
+
+            script = m_boardScript.m_tiles[randX + randZ * m_boardScript.m_width].GetComponent<TileScript>();
+
+            if (!script.m_holding)
+            {
+                if (m_width <= 1)
+                    isPlacable = true;
+                else if (m_width == 2 && script.m_neighbors[(int)m_facing] && !script.m_neighbors[(int)m_facing].GetComponent<TileScript>().m_holding)
+                {
+                    isPlacable = true;
+                    script.m_neighbors[(int)m_facing].GetComponent<TileScript>().m_holding = gameObject;
+                }
+            }
+
+        } while (!isPlacable);
+
+        script.m_holding = gameObject;
+        transform.position = m_boardScript.m_tiles[randX + randZ * m_boardScript.m_width].transform.position;
+        m_tile = m_boardScript.m_tiles[randX + randZ * m_boardScript.m_width];
+    }
+
+    virtual public void PlaceWithinRange(BoardScript bScript, int _xMin, int _xMax, int _zMin, int __zMax)
+    {
+        m_boardScript = bScript;
+
+        // Set up position
+        TileScript script;
+        bool isPlacable = false;
+        int randX;
+        int randZ;
+
+        do
+        {
+            randX = Random.Range(_xMin, _xMax - 1);
+            randZ = Random.Range(_zMin, __zMax - 1);
 
             script = m_boardScript.m_tiles[randX + randZ * m_boardScript.m_width].GetComponent<TileScript>();
 

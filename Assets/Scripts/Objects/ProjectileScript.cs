@@ -6,13 +6,15 @@ public class ProjectileScript : ObjectScript {
 
     private Vector3 m_origin;
 
-    private SlidingPanelManagerScript m_panMan;
-
     // Use this for initialization
-    new void Start () 
+    new protected void Start () 
     {
+        base.Start();
+
         if (GameObject.Find("Scene Manager"))
             m_panMan = GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>();
+
+        gameObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -30,10 +32,10 @@ public class ProjectileScript : ObjectScript {
         }
             // Set active to play the animation again
             gameObject.SetActive(true);
-            m_origin = m_boardScript.m_currCharScript.m_body[(int)CharacterScript.bod.RIGHT_HAND].transform.position;
-            transform.SetPositionAndRotation(m_boardScript.m_currCharScript.m_body[(int)CharacterScript.bod.RIGHT_HAND].transform.position, Quaternion.identity);
+            m_origin = m_gamMan.m_currCharScript.m_body[(int)CharacterScript.bod.RIGHT_HAND].transform.position;
+            transform.SetPositionAndRotation(m_gamMan.m_currCharScript.m_body[(int)CharacterScript.bod.RIGHT_HAND].transform.position, Quaternion.identity);
             m_tile = newScript;
-            m_boardScript.m_currCharScript.m_particles[(int)CharacterScript.prtcles.GUN_SHOT].SetActive(true);
+        m_gamMan.m_currCharScript.m_particles[(int)CharacterScript.prtcles.GUN_SHOT].SetActive(true);
     }
 
     override public void MovementUpdate()
@@ -68,7 +70,7 @@ public class ProjectileScript : ObjectScript {
 
         transform.SetPositionAndRotation(new Vector3(transform.position.x + transform.forward.x * charMovement,newY, transform.position.z + transform.forward.z * charMovement), transform.rotation);
         if (!m_panMan.GetPanel("Round End Panel").m_inView)
-            m_boardScript.m_camera.GetComponent<CameraScript>().m_target = gameObject;
+            m_camera.GetComponent<BoardCamScript>().m_target = gameObject;
 
         // Check to see if character is close enough to the point
         float snapDistance = 1.0f;
@@ -86,7 +88,7 @@ public class ProjectileScript : ObjectScript {
         {
             Transform[] t = gameObject.GetComponentsInChildren<Transform>(true);
             t[1].gameObject.SetActive(true);
-            m_boardScript.m_currCharScript.m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Explosion Sound 1"));
+            m_gamMan.m_currCharScript.m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Explosion Sound 1"));
         }
         else
         {
@@ -94,6 +96,6 @@ public class ProjectileScript : ObjectScript {
             //m_boardScript.m_currCharScript.m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Explosion Sound 2"));
         }
 
-        m_boardScript.m_currCharScript.m_currAction.Action();
+        m_gamMan.m_currCharScript.m_currAction.Action();
     }
 }

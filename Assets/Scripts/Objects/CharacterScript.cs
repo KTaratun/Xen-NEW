@@ -7,7 +7,6 @@ public class CharacterScript : ObjectScript {
 
     public enum weaps { SWORD, HGUN };
     public enum sts { SPD, DMG, DEF, MOV, RNG, TEC, RAD, TOT };
-    public enum trn { MOV, ACT };
     public enum bod { HIPS, LEFT_UP_LEG, RIGHT_UP_LEG, SPINE, LEFT_LEG, RIGHT_LEG,
         SPINE_1, LEFT_FOOT, RIGHT_FOOT, SPINE_2, LEFT_TOE_BASE, RIGHT_TOE_BASE,
         LEFT_SHOULDER, NECK, RIGHT_SHOULDER, LEFT_TOE_END, RIGHT_TOE_END, LEFT_ARM,
@@ -40,9 +39,8 @@ public class CharacterScript : ObjectScript {
     // State Info
     public bool m_isAlive;
     public bool m_isAI;
-    public bool[] m_hasActed;
     public StatusScript[] m_statuses;
-    public int m_currStatus;
+    public int m_currStatus = -1;
     public bool[] m_effects;
 
     // GUI
@@ -59,13 +57,12 @@ public class CharacterScript : ObjectScript {
     public Animator m_anim;
     public GameObject[] m_particles;
     public AudioSource m_audio;
-    private SlidingPanelManagerScript m_panMan;
 
 
     // Use this for initialization
     new void Start ()
     {
-        //base.Start();
+        base.Start();
 
         if (GameObject.Find("Scene Manager"))
             m_panMan = GameObject.Find("Scene Manager").GetComponent<SlidingPanelManagerScript>();
@@ -73,10 +70,12 @@ public class CharacterScript : ObjectScript {
         // Stats
         if (m_stats.Length == 0)
             InitializeStats();
-
-        m_tempStats = new int[(int)sts.TOT];
-        for (int i = 0; i < m_stats.Length; i++)
-            m_tempStats[i] = m_stats[i];
+        else
+        {
+            m_tempStats = new int[(int)sts.TOT];
+            for (int i = 0; i < m_stats.Length; i++)
+                m_tempStats[i] = m_stats[i];
+        }
 
         // Status
         for (int i = 0; i < m_statuses.Length; i++)
@@ -92,7 +91,6 @@ public class CharacterScript : ObjectScript {
         m_popupText.SetActive(false);
 
         InitBones();
-        InitColors();
 
         // If characters have just action names, find full action data
         //if (m_actions.Length > 0)
@@ -113,8 +111,7 @@ public class CharacterScript : ObjectScript {
         Renderer rend = transform.GetComponentInChildren<Renderer>();
         rend.materials[0].color = m_teamColor;
 
-        if (m_hasActed.Length == 0)
-            m_hasActed = new bool[2];
+        InitColors();
     }
 
     public void InitializeStats()
@@ -128,7 +125,11 @@ public class CharacterScript : ObjectScript {
         
         m_stats[(int)sts.MOV] = 4;
         m_stats[(int)sts.SPD] = 10;
-     
+
+        m_tempStats = new int[(int)sts.TOT];
+        for (int i = 0; i < m_stats.Length; i++)
+            m_tempStats[i] = m_stats[i];
+
         m_level = 1;
     }
 
@@ -173,7 +174,12 @@ public class CharacterScript : ObjectScript {
     // Update is called once per frame
     new void Update()
     {
-        base.Update();
+        
+    }
+
+    new protected void FixedUpdate()
+    {
+        base.FixedUpdate();
         if (m_boardScript)
         {
             UpdateOverheadItems();
@@ -197,8 +203,8 @@ public class CharacterScript : ObjectScript {
         {
             Transform outline = m_healthBar.transform.parent;
 
-            outline.LookAt(2 * outline.position - m_boardScript.m_camera.transform.position);
-            m_healthBar.transform.LookAt(2 * m_healthBar.transform.position - m_boardScript.m_camera.transform.position);
+            outline.LookAt(2 * outline.position - m_camera.transform.position);
+            m_healthBar.transform.LookAt(2 * m_healthBar.transform.position - m_camera.transform.position);
             float ratio = (float)(m_totalHealth - m_currHealth) / (float)m_totalHealth;
 
             Renderer hpRend = m_healthBar.GetComponent<Renderer>();
@@ -206,12 +212,12 @@ public class CharacterScript : ObjectScript {
             m_healthBar.transform.localScale = new Vector3(0.95f - ratio, m_healthBar.transform.localScale.y, m_healthBar.transform.localScale.z);
         }
         else
-            m_statusSymbol.transform.LookAt(2 * m_statusSymbol.transform.position - m_boardScript.m_camera.transform.position);
+            m_statusSymbol.transform.LookAt(2 * m_statusSymbol.transform.position - m_camera.transform.position);
 
         // Update character's color spheres
         for (int i = 0; i < m_colorDisplay.Length; i++)
             if (m_colorDisplay[i].activeSelf)
-                m_colorDisplay[i].transform.LookAt(2 * m_colorDisplay[i].transform.position - m_boardScript.m_camera.transform.position);
+                m_colorDisplay[i].transform.LookAt(2 * m_colorDisplay[i].transform.position - m_camera.transform.position);
 
         float fadeSpeed = .01f;
 
@@ -220,7 +226,7 @@ public class CharacterScript : ObjectScript {
         {
             if (m_popupSpheres[i].activeSelf)
             {
-                m_popupSpheres[i].transform.LookAt(2 * m_popupSpheres[i].transform.position - m_boardScript.m_camera.transform.position);
+                m_popupSpheres[i].transform.LookAt(2 * m_popupSpheres[i].transform.position - m_camera.transform.position);
 
                 MeshRenderer[] meshRends = m_popupSpheres[i].GetComponentsInChildren<MeshRenderer>();
                 for (int j = 0; j < meshRends.Length; j++)
@@ -231,7 +237,7 @@ public class CharacterScript : ObjectScript {
                     if (meshRends[j].material.color.a <= 0)
                     {
                         m_popupSpheres[i].SetActive(false);
-                        m_boardScript.m_camera.GetComponent<CameraScript>().m_target = m_boardScript.m_currCharScript.gameObject;
+                        m_camera.GetComponent<BoardCamScript>().m_target = m_gamMan.m_currCharScript.gameObject;
                     }
                 }
             }
@@ -240,7 +246,7 @@ public class CharacterScript : ObjectScript {
         // Update character's popup text
         if (m_popupText.activeSelf)
         {
-            m_popupText.transform.LookAt(2 * m_popupText.transform.position - m_boardScript.m_camera.transform.position);
+            m_popupText.transform.LookAt(2 * m_popupText.transform.position - m_camera.transform.position);
             TextMesh textMesh = m_popupText.GetComponent<TextMesh>();
             textMesh.color = new Color(textMesh.color.r, textMesh.color.g, textMesh.color.b, textMesh.color.a - fadeSpeed);
 
@@ -264,8 +270,9 @@ public class CharacterScript : ObjectScript {
 
         if (!_isForced)
         {
-            m_hasActed[(int)trn.MOV] = true;
-            m_panMan.GetPanel("HUD Panel LEFT").transform.Find("Move Pass Panel").transform.Find("Move").GetComponent<Button>().interactable = false;
+            m_panMan.GetPanel("HUD Panel LEFT").transform.Find("Move Pass Panel/Move").GetComponent<Button>().interactable = false;
+            m_gamMan.m_hasActed[(int)GameManagerScript.trn.MOV] = true;
+            
             if (m_boardScript.m_currButton)
                 m_boardScript.m_currButton.GetComponent<Image>().color = Color.white;
         }
@@ -314,7 +321,7 @@ public class CharacterScript : ObjectScript {
         else
         {
             m_anim.Play("Hit", -1, 0);
-            m_particles[(int)prtcles.PROJECTILE_HIT].transform.LookAt(m_boardScript.m_currCharScript.transform);
+            m_particles[(int)prtcles.PROJECTILE_HIT].transform.LookAt(m_gamMan.m_currCharScript.transform);
             m_particles[(int)prtcles.PROJECTILE_HIT].SetActive(false);
             m_particles[(int)prtcles.PROJECTILE_HIT].SetActive(true);
             m_audio.PlayOneShot(Resources.Load<AudioClip>("Sounds/Explosion Sound 3"));
@@ -344,7 +351,7 @@ public class CharacterScript : ObjectScript {
         m_healthBar.transform.parent.gameObject.SetActive(false);
         m_statusSymbol.SetActive(true);
 
-        StatusScript.DestroyAll(gameObject);
+        StatusScript.DestroyAll(this);
         //GetComponentInChildren<Renderer>().material.color = new Color(.5f, .5f, .5f, 1);
         m_anim.Play("Death", -1, 0);
         
@@ -372,7 +379,7 @@ public class CharacterScript : ObjectScript {
 
         textMesh.text = _hp.ToString();
 
-        if (this == m_boardScript.m_currCharScript)
+        if (this == m_gamMan.m_currCharScript)
         {
             PanelScript actPanScript = m_panMan.GetPanel("HUD Panel LEFT");
             actPanScript.PopulatePanel();
@@ -411,7 +418,7 @@ public class CharacterScript : ObjectScript {
             turnPanImage.color = Color.cyan;
         }
 
-        if (this != m_boardScript.m_currCharScript && m_isAlive)
+        if (this != m_gamMan.m_currCharScript && m_isAlive)
         {
             // Reveal right HUD with highlighted character's data
             PanelScript hudPanScript = m_panMan.GetPanel("HUD Panel RIGHT");
@@ -422,10 +429,6 @@ public class CharacterScript : ObjectScript {
 
     public void DeselectCharacter()
     {
-        if (m_particles[(int)CharacterScript.prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor == Color.magenta ||
-            m_panMan.GetPanel("Choose Panel").m_inView)
-            return;
-
         for (int i = 0; i < m_turnPanels.Count; i++)
         {
             Image turnPanImage = m_turnPanels[i].GetComponent<Image>();
@@ -440,6 +443,9 @@ public class CharacterScript : ObjectScript {
             m_panMan.GetPanel("ActionViewer Panel").transform.Find("ActionView Slide/DamagePreview").GetComponent<DamagePreviewPanelScript>().m_cScript = null;
             m_panMan.GetPanel("ActionViewer Panel").transform.Find("ActionView Slide/DamagePreview").GetComponent<DamagePreviewPanelScript>().m_inView = false;
         }
+
+        m_particles[(int)prtcles.CHAR_MARK].gameObject.SetActive(false);
+        m_particles[(int)prtcles.CHAR_MARK].GetComponent<ParticleSystem>().startColor = Color.white;
 
         m_panMan.GetPanel("HUD Panel RIGHT").ClosePanel();
     }
@@ -530,6 +536,15 @@ public class CharacterScript : ObjectScript {
         }
     }
 
+    public ActionScript FindActionByName(string _actName)
+    {
+        for (int i = 0; i < m_actions.Count; i++)
+            if (_actName == m_actions[i].m_name)
+                return m_actions[i];
+
+        return null;
+    }
+
     public void DisableRandomAction()
     {
         List<ActionScript> viableActs = new List<ActionScript>();
@@ -585,7 +600,7 @@ public class CharacterScript : ObjectScript {
     // The only reason why this exists is because statusscript needs a way to get to HUD LEFT
     public void UpdateStatusImages()
     {
-        if (this == m_boardScript.m_currCharScript)
+        if (this == m_gamMan.m_currCharScript)
             m_panMan.GetPanel("HUD Panel LEFT").PopulatePanel();
     }
 

@@ -93,7 +93,7 @@ public class CharacterViewerPanel : PanelScript
     //         }
     //     }
     //     else if (m_main.name == "Board")
-    //         m_cScript = m_main.GetComponent<BoardScript>().m_selected.GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>();
+    //         m_cScript = m_main.GetComponent<NetworkedBoardScript>().m_selected.GetComponent<TileScript>().m_holding.GetComponent<CharacterScript>();
     //
     //     // Fill out Action Panel
     //     actionScript.m_cScript = m_cScript;

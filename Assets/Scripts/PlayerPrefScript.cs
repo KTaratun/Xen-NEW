@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerPrefScript : MonoBehaviour {
 
-    public enum netwrkPak { NAME, COLOR, ACTIONS, EXP, LVL, GENDER, AI, STATS, TEAM, POS}
+    public enum netwrkPak { NAME, COLOR, ACTIONS, EXP, LVL, GENDER, AI, STATS, HP, TEAM, POS}
 
 	// Use this for initialization
 	void Start () {
@@ -94,8 +94,45 @@ public class PlayerPrefScript : MonoBehaviour {
         netString += PlayerPrefs.GetString(key + ",level") + symbol;
         netString += PlayerPrefs.GetString(key + ",gender") + symbol;
         netString += PlayerPrefs.GetString(key + ",AI") + symbol;
-        netString += PlayerPrefs.GetString(key + ",stats");
+        netString += PlayerPrefs.GetString(key + ",stats") + symbol;
+        netString += PlayerPrefs.GetString(key + ",HP");
 
         return netString;
+    }
+
+    static public CharacterScript ReadCharNetData(string[] _data, CharacterScript _char)
+    {
+        _char.m_name = _data[(int)netwrkPak.NAME];
+        _char.m_color = _data[(int)netwrkPak.COLOR];
+
+        _char.m_actNames = _data[(int)netwrkPak.ACTIONS].Split(',');
+        GameObject.Find("Scene Manager").GetComponent<ActionLoaderScript>().AddActions(_char);
+
+        //_char.m_actions = actionsForChar;
+        _char.m_exp = int.Parse(_data[(int)netwrkPak.EXP]);
+        _char.m_level = int.Parse(_data[(int)netwrkPak.LVL]);
+        _char.m_gender = int.Parse(_data[(int)netwrkPak.GENDER]);
+        _char.m_isAI = bool.Parse(_data[(int)netwrkPak.AI]);
+
+        // Load in stats
+        string[] stats = _data[(int)netwrkPak.STATS].Split(',');
+
+        if (_char.m_stats.Length == 0)
+        {
+            _char.m_stats = new int[(int)CharacterScript.sts.TOT];
+            _char.m_tempStats = new int[(int)CharacterScript.sts.TOT];
+            _char.InitializeStats();
+        }
+
+        for (int k = 0; k < _char.m_stats.Length; k++)
+        {
+            _char.m_stats[k] = int.Parse(stats[k]);
+            _char.m_tempStats[k] = int.Parse(stats[k]);
+        }
+
+        _char.m_totalHealth = int.Parse(_data[(int)netwrkPak.HP]);
+        _char.m_currHealth = _char.m_totalHealth;
+
+        return _char;
     }
 }
